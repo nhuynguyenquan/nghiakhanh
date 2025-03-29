@@ -3,77 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu Quán Bánh Bèo Nhụy Nguyên</title>
+    <title>Quán Bánh Bèo Nhụy Nguyên</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f8f1e4;
-            text-align: center;
+            font-family: "Arial", sans-serif;
             margin: 0;
             padding: 0;
+            background-color: #f4e1d2;
+            color: #5a3e2b;
         }
-        .menu-container {
-            max-width: 600px;
-            margin: 20px auto;
-            background: white;
+        header {
+            background-color: #8c5a3c;
+            color: white;
+            text-align: center;
             padding: 20px;
-            border-radius: 10px;
+            font-size: 24px;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            background-color: #d9a382;
+            padding: 10px;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 18px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: #fff8f0;
+            padding: 20px;
+            border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        h1 {
-            color: #d35400;
+        .image {
+            width: 100%;
+            border-radius: 8px;
         }
-        .menu-item {
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid #ddd;
-            padding: 10px 0;
+        h2 {
+            color: #8c5a3c;
         }
-        .menu-item:last-child {
-            border-bottom: none;
-        }
-        .price {
-            color: #e74c3c;
-            font-weight: bold;
+        footer {
+            text-align: center;
+            padding: 10px;
+            background: #8c5a3c;
+            color: white;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <div class="menu-container">
-        <h1>Menu Quán Bánh Bèo Nhụy Nguyên</h1>
-        <div class="menu-item">
-            <span>Bánh bèo nước nhân thịt</span>
-            <span class="price">20k/dĩa</span>
-        </div>
-        <div class="menu-item">
-            <span>Bánh bèo nước nhân thịt tép</span>
-            <span class="price">25k/dĩa</span>
-        </div>
-		<div class="menu-item">
-            <span>Bánh bèo nước nhân thịt tôm</span>
-            <span class="price">30k/dĩa</span>
-        </div>
-        <div class="menu-item">
-            <span>Bánh bèo nước nhân đậu xanh thịt</span>
-            <span class="price">20k/dĩa</span>
-        </div>
-        
-        <div class="menu-item">
-            <span>Bánh bèo gói lá nhân thịt</span>
-            <span class="price">20k/10 cái </span>
-        </div>
-        <div class="menu-item">
-            <span>Bánh bèo gói lá nhân thịt tép</span>
-            <span class="price">25k/10 cái</span>
-        </div>
-        <div class="menu-item">
-            <span>Bánh bèo gói lá nhân đậu xanh thịt</span>
-            <span class="price">20k/10 cái</span>
-        </div>
-        <div class="menu-item">
-            <span>Bánh bèo gói lá nhân thịt tôm</span>
-            <span class="price">30k/10 cái</span>
-        </div>
+    <header>
+        <h1>Quán Bánh Bèo Nhụy Nguyên</h1>
+    </header>
+    <nav>
+        <a href="#gioi-thieu">Giới Thiệu</a>
+        <a href="#menu">Thực Đơn</a>
+        <a href="#dat-hang">Đặt Bàn</a>
+        <a href="#lien-he">Liên Hệ</a>
+    </nav>
+    <div class="container" id="gioi-thieu">
+        <img src="image/Banh-Beo.jpeg" alt="Bánh Bèo Nhụy Nguyên" class="image">
+        <h2>Giới thiệu về quán</h2>
+        <p>Quán Bánh Bèo Nhụy Nguyên mang đến hương vị truyền thống với không gian ấm áp, an toàn và thân thiện. Tại đây, chúng tôi sử dụng nguyên liệu tươi ngon nhất để tạo ra những chiếc bánh lọc đậm đà, thơm ngon.</p>
     </div>
+    <div class="container" id="menu">
+        <h2>Thực Đơn</h2>
+        <p>Chúng tôi phục vụ bánh bèo, bánh lọc, bánh chưng và nhiều món ăn vặt khác.</p>
+        <p><a href="nghiakhanh/menu">Xem chi tiết thực đơn tại đây</a></p>
+    </div>
+    <div class="container" id="dat-hang">
+        <h2>Đặt Hàng</h2>
+        <p>Liên hệ ngay để đặt bàn và tận hưởng không gian ấm cúng.</p>
+    </div>
+    <div class="container" id="lien-he">
+        <h2>Liên Hệ</h2>
+        <p>Địa chỉ: Tân Khánh, Nghĩa Khánh, Nghĩa Đàn, Nghệ An</p>
+        <p>Số điện thoại: 0349-969-537</p>
+        <p>Chat với chúng tôi:</p>
+        <p>
+            <a href="https://zalo.me/0349969537" target="_blank">Chat Zalo</a> | 
+            <a href="https://m.me/trannguyennhuy9998@gmail.com" target="_blank">Chat Messenger</a>
+        </p>
+    </div>
+    <footer>
+        &copy; 2025 Quán Bánh Bèo Nhụy Nguyên. All rights reserved.
+    </footer>
 </body>
 </html>
