@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh Toán - Nhụy Nguyên Quán</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f1e4;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #d35400;
+        }
+        .bank-info {
+            text-align: left;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+        .bank-info p {
+            margin: 10px 0;
+        }
+        .bank-info strong {
+            color: #8c5a3c;
+        }
+        .copy-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 15px;
+            background-color: #d35400;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .bank-logo {
+            width: 150px;
+            margin: 20px 0;
+        }
+    </style>
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Đã sao chép: " + text);
+            });
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Thông Tin Thanh Toán</h1>
+        <p>Vui lòng chuyển khoản theo thông tin bên dưới để hoàn tất đơn hàng.</p>
+        
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Logo_MB_new.png/640px-Logo_MB_new.png" alt="MB Bank Logo" class="bank-logo">
+        
+        <div class="bank-info">
+            <p><strong>Ngân hàng:</strong> MB Bank <button class="copy-btn" onclick="copyToClipboard('MB Bank')">Sao chép</button></p>
+            <p><strong>Chủ tài khoản:</strong> NGUYEN THI KIEU <button class="copy-btn" onclick="copyToClipboard('Nguyễn Văn A')">Sao chép</button></p>
+            <p><strong>Số tài khoản:</strong> 190015292 <button class="copy-btn" onclick="copyToClipboard('0123456789')">Sao chép</button></p>
+        </div>
+        
+        <p><em>Quý khách vui lòng ghi rõ nội dung chuyển khoản: "Thanh toán + Tên khách hàng".</em></p>
+    </div>
+</body>
+</html>
