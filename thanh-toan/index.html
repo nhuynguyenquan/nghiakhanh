@@ -43,32 +43,30 @@
         }
         .copy-btn {
             display: inline-block;
-            margin-top: 10px;
-            padding: 10px 15px;
+            margin-left: 10px;
+            padding: 5px 10px;
             background-color: #d35400;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
         }
-        #qrcode {
-            margin-top: 20px;
+        .bank-logo {
+            width: 150px;
+            margin: 20px 0;
+        }
+        .qr-code {
+            width: 150px;
+            margin-top: 10px;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <script>
-        window.onload = function() {
-            // Tạo mã QR cho Vietcombank
-            QRCode.toCanvas(document.getElementById('qrcode-vietcombank'), 'Vietcombank\nNguyễn Thi Kiều\n0351001010142', function (error) {
-                if (error) console.error(error);
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Đã sao chép: " + text);
             });
-
-            // Tạo mã QR cho MB Bank
-            QRCode.toCanvas(document.getElementById('qrcode-mbbank'), 'MB Bank\nNguyễn Thi Kiều\n190015292', function (error) {
-                if (error) console.error(error);
-            });
-        };
+        }
     </script>
 </head>
 <body>
@@ -78,35 +76,31 @@
     <div class="container">
         <h1>Ngân hàng Vietcombank</h1>
         <p>Vui lòng chuyển khoản theo thông tin bên dưới để hoàn tất đơn hàng.</p>
+        
+        <img src="https://upload.wikimedia.org/wikipedia/vi/8/85/Vietcombank_Logo.png" alt="Vietcombank Logo" class="bank-logo">
+        
         <div class="bank-info">
             <p><strong>Ngân hàng:</strong> Vietcombank <button class="copy-btn" onclick="copyToClipboard('Vietcombank')">Sao chép</button></p>
-            <p><strong>Chủ tài khoản:</strong> NGUYEN THI KIEU <button class="copy-btn" onclick="copyToClipboard('Nguyễn Thi Kiều')">Sao chép</button></p>
+            <p><strong>Chủ tài khoản:</strong> NGUYEN THI KIEU <button class="copy-btn" onclick="copyToClipboard('NGUYEN THI KIEU')">Sao chép</button></p>
             <p><strong>Số tài khoản:</strong> 0351001010142 <button class="copy-btn" onclick="copyToClipboard('0351001010142')">Sao chép</button></p>
+            <p><strong>Mã QR:</strong></p>
+            <img src="vietcombank_qr.png" alt="QR Code Vietcombank" class="qr-code">
         </div>
-        
-        <div id="qrcode-vietcombank"></div>
-        <p><em>Quý khách vui lòng ghi rõ nội dung chuyển khoản: "TT + Tên khách hàng".</em></p>
     </div>
-
+    
     <div class="container">
-        <h1>Ngân hàng Quân đội (MB Bank)</h1>
+        <h1>Ngân hàng MB Bank</h1>
         <p>Vui lòng chuyển khoản theo thông tin bên dưới để hoàn tất đơn hàng.</p>
+        
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Logo_MB_new.png/640px-Logo_MB_new.png" alt="MB Bank Logo" class="bank-logo">
+        
         <div class="bank-info">
             <p><strong>Ngân hàng:</strong> MB Bank <button class="copy-btn" onclick="copyToClipboard('MB Bank')">Sao chép</button></p>
-            <p><strong>Chủ tài khoản:</strong> NGUYEN THI KIEU <button class="copy-btn" onclick="copyToClipboard('Nguyễn Thi Kiều')">Sao chép</button></p>
+            <p><strong>Chủ tài khoản:</strong> NGUYEN THI KIEU <button class="copy-btn" onclick="copyToClipboard('NGUYEN THI KIEU')">Sao chép</button></p>
             <p><strong>Số tài khoản:</strong> 190015292 <button class="copy-btn" onclick="copyToClipboard('190015292')">Sao chép</button></p>
+            <p><strong>Mã QR:</strong></p>
+            <img src="mbbank_qr.png" alt="QR Code MB Bank" class="qr-code">
         </div>
-        
-        <div id="qrcode-mbbank"></div>
-        <p><em>Quý khách vui lòng ghi rõ nội dung chuyển khoản: "TT + Tên khách hàng".</em></p>
     </div>
-
-    <script>
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                alert("Đã sao chép: " + text);
-            });
-        }
-    </script>
 </body>
 </html>
