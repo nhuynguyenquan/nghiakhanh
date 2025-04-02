@@ -49,6 +49,19 @@ function removeItem(index) {
     order.splice(index, 1); // Xóa món ở vị trí index trong mảng order
     displayOrder(); // Cập nhật lại giỏ hàng
 }
+// Lưu thông tin khách hàng vào localStorage khi nhập
+document.getElementById("name").addEventListener("input", function() {
+    localStorage.setItem("customer_name", this.value);
+});
+document.getElementById("phone").addEventListener("input", function() {
+    localStorage.setItem("customer_phone", this.value);
+});
+
+// Khi trang tải lại, lấy thông tin đã lưu
+window.onload = function() {
+    document.getElementById("name").value = localStorage.getItem("customer_name") || "";
+    document.getElementById("phone").value = localStorage.getItem("customer_phone") || "";
+};
 
         function sendToTelegram() {
                 let name = document.getElementById("name").value;
