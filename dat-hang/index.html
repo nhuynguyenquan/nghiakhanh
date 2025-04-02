@@ -119,24 +119,25 @@
         <h3>Đặt món</h3>
         <form id="orderForm">
             <label>Chọn món:</label>
-            <select id="food">
-                <option value="Bánh bèo nước nhân thịt">Bánh bèo nước nhân thịt</option>
-                <option value="Bánh bèo nước nhân thịt tép">Bánh bèo nước nhân thịt tép</option>
-                <option value="Bánh bèo nước nhân thịt tôm">Bánh bèo nước nhân thịt tôm</option>
-                <option value="Bánh bèo nước nhân đậu xanh thịt">Bánh bèo nước nhân đậu xanh thịt</option>
-                <option value="Bánh bèo gói lá nhân thịt">Bánh bèo gói lá nhân thịt</option>
-                <option value="Bánh bèo gói lá nhân thịt tép">Bánh bèo gói lá nhân thịt tép</option>
-                <option value="Bánh bèo gói lá nhân đậu xanh thịt">Bánh bèo gói lá nhân đậu xanh thịt</option>
-                <option value="Bánh bèo gói lá nhân thịt tôm">Bánh bèo gói lá nhân thịt tôm</option>
-                <option value="Bánh bèo rán nhân thịt">Bánh bèo rán nhân thịt</option>
-                <option value="Bánh bèo rán nhân thịt tép">Bánh bèo rán nhân thịt tép</option>
-                <option value="Bánh bèo rán nhân đậu xanh thịt">Bánh bèo rán nhân đậu xanh thịt</option>
-                <option value="Bánh bèo rán nhân thịt tôm">Bánh bèo rán nhân thịt tôm</option>
+            <select id="food" onchange="updatePrice()">
+                <option value="Bánh bèo nước nhân thịt" data-price="20000">Bánh bèo nước nhân thịt - 20k</option>
+                <option value="Bánh bèo nước nhân thịt tép" data-price="25000">Bánh bèo nước nhân thịt tép - 25k</option>
+                <option value="Bánh bèo nước nhân thịt tôm" data-price="30000">Bánh bèo nước nhân thịt tôm - 30k</option>
+                <option value="Bánh bèo nước nhân đậu xanh thịt" data-price="20000">Bánh bèo nước nhân đậu xanh thịt - 20k</option>
+                <option value="Bánh bèo gói lá nhân thịt" data-price="20000">Bánh bèo gói lá nhân thịt - 20k/10 cái</option>
+                <option value="Bánh bèo gói lá nhân thịt tép" data-price="25000">Bánh bèo gói lá nhân thịt tép - 25k/10 cái</option>
+                <option value="Bánh bèo gói lá nhân đậu xanh thịt" data-price="20000">Bánh bèo gói lá nhân đậu xanh thịt - 20k/10 cái</option>
+                <option value="Bánh bèo gói lá nhân thịt tôm" data-price="30000">Bánh bèo gói lá nhân thịt tôm - 30k/10 cái</option>
+                <option value="Bánh bèo rán nhân thịt" data-price="20000">Bánh bèo rán nhân thịt - 20k</option>
+                <option value="Bánh bèo rán nhân thịt tép" data-price="25000">Bánh bèo rán nhân thịt tép - 25k</option>
+                <option value="Bánh bèo rán nhân đậu xanh thịt" data-price="20000">Bánh bèo rán nhân đậu xanh thịt - 20k</option>
+                <option value="Bánh bèo rán nhân thịt tôm" data-price="30000">Bánh bèo rán nhân thịt tôm - 30k</option>
             </select><br>
 
             <label>Số lượng:</label>
             <input type="number" id="quantity" min="1" value="1"><br>
-
+            <label>Giá tiền:</label>
+            <span id="priceDisplay">20,000 VND</span><br>
             <label>Tên khách hàng:</label>
             <input type="text" id="name" required><br>
 
@@ -233,7 +234,14 @@
         }
     });
 }
+function updatePrice() {
+    let selectedFood = document.getElementById("food").selectedOptions[0];
+    let price = selectedFood.getAttribute("data-price");
+    let quantity = document.getElementById("quantity").value;
 
+    let totalPrice = price * quantity;
+    document.getElementById("priceDisplay").innerText = totalPrice.toLocaleString("vi-VN") + " VND";
+}
     </script>
 </body>
 </html>
