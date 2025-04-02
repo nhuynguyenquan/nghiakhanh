@@ -33,7 +33,20 @@ let order = [];
 
                     // Cộng dồn vào tổng tiền
                     total += itemTotalPrice;
+                    let deleteButton = document.createElement('button');
+                    deleteButton.textContent = "Xóa";
+                    deleteButton.onclick = function() {
+                        removeItem(index); // Xóa món khi nhấn nút
+                    };
+            
+                    li.appendChild(deleteButton); // Thêm nút xóa vào mỗi mục trong giỏ hàng
+                    orderList.appendChild(li); // Thêm món vào giỏ hàng
                 });
+                function removeItem(index) {
+                    order.splice(index, 1); // Xóa món ở vị trí index trong mảng order
+                    displayOrder(); // Cập nhật lại giỏ hàng
+                }
+                
 
                 // Hiển thị tổng tiền
                 let totalPrice = document.getElementById("totalPrice");
