@@ -1,11 +1,16 @@
 let order = [];
-
+function sanitizeInput(input) {
+    return input.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
 function addToOrder() {
     let food = document.getElementById("food").value;
     let quantity = document.getElementById("quantity").value;
     let price = document.querySelector("#food option:checked").getAttribute("data-price");
 
     if (food && quantity && price) {
+        food = sanitizeInput(food); //
+        quantity = sanitizeInput(quantity); // 
+        
         // Thêm món vào giỏ hàng
         order.push({ food, quantity: parseInt(quantity), price: parseInt(price) });
         displayOrder();
@@ -62,7 +67,9 @@ window.onload = function() {
     document.getElementById("name").value = localStorage.getItem("customer_name") || "";
     document.getElementById("phone").value = localStorage.getItem("customer_phone") || "";
 };
-
+function sanitizeMessage(message) {
+    return message.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
         function sendToTelegram() {
                 let name = document.getElementById("name").value;
                 let phone = document.getElementById("phone").value;
