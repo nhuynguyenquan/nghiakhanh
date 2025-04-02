@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menu Quán Bánh Bèo Nhụy Nguyên</title>
     <style>
-	header {
+        header {
             background-color: #8c5a3c;
             color: white;
             text-align: center;
@@ -43,17 +43,24 @@
             color: #e74c3c;
             font-weight: bold;
         }
+        .order-summary {
+            margin-top: 20px;
+            background-color: #f1c40f;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .order-summary ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .order-summary li {
+            padding: 5px 0;
+        }
+        .order-summary strong {
+            color: #8c5a3c;
+        }
     </style>
 </head>
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-WGYWXSKNTW"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-WGYWXSKNTW');
-</script>
 <body>
     <header>
         <h1><a href="../" style="text-decoration: none; color: white;">NHỤY NGUYÊN QUÁN</a></h1>
@@ -68,7 +75,7 @@
             <span>Bánh bèo nước nhân thịt tép</span>
             <span class="price">25k/đĩa</span>
         </div>
-		<div class="menu-item">
+        <div class="menu-item">
             <span>Bánh bèo nước nhân thịt tôm</span>
             <span class="price">30k/đĩa</span>
         </div>
@@ -76,10 +83,9 @@
             <span>Bánh bèo nước nhân đậu xanh thịt</span>
             <span class="price">20k/đĩa</span>
         </div>
-        
         <div class="menu-item">
             <span>Bánh bèo gói lá nhân thịt</span>
-            <span class="price">20k/10 cái </span>
+            <span class="price">20k/10 cái</span>
         </div>
         <div class="menu-item">
             <span>Bánh bèo gói lá nhân thịt tép</span>
@@ -93,9 +99,9 @@
             <span>Bánh bèo gói lá nhân thịt tôm</span>
             <span class="price">30k/10 cái</span>
         </div>
-	    <div class="menu-item">
+        <div class="menu-item">
             <span>Bánh bèo rán nhân thịt</span>
-            <span class="price">20k/đĩa </span>
+            <span class="price">20k/đĩa</span>
         </div>
         <div class="menu-item">
             <span>Bánh bèo rán nhân thịt tép</span>
@@ -109,63 +115,103 @@
             <span>Bánh bèo rán nhân thịt tôm</span>
             <span class="price">30k/đĩa</span>
         </div>
-        <div>
-            <p>
-                <a href="../">Home</a> | 
-                
-            </p>
-        </div>
-    
-    <form id="orderForm">
+
         <h3>Đặt món</h3>
-        <label>Chọn món:</label>
-        <select id="food">
-            <option value="Bánh bèo">Bánh bèo</option>
-            <option value="Bánh lọc">Bánh lọc</option>
-            <option value="Bánh nậm">Bánh nậm</option>
-        </select><br>
-    
-        <label>Số lượng:</label>
-        <input type="number" id="quantity" min="1" value="1"><br>
-    
-        <label>Tên khách hàng:</label>
-        <input type="text" id="name" required><br>
-    
-        <label>Số điện thoại:</label>
-        <input type="text" id="phone" required><br>
-    
-        <button type="button" onclick="sendToTelegram()">Đặt hàng</button>
-    </form>
-    
+        <form id="orderForm">
+            <label>Chọn món:</label>
+            <select id="food">
+                <option value="Bánh bèo nước nhân thịt">Bánh bèo nước nhân thịt</option>
+                <option value="Bánh bèo nước nhân thịt tép">Bánh bèo nước nhân thịt tép</option>
+                <option value="Bánh bèo nước nhân thịt tôm">Bánh bèo nước nhân thịt tôm</option>
+                <option value="Bánh bèo nước nhân đậu xanh thịt">Bánh bèo nước nhân đậu xanh thịt</option>
+                <option value="Bánh bèo gói lá nhân thịt">Bánh bèo gói lá nhân thịt</option>
+                <option value="Bánh bèo gói lá nhân thịt tép">Bánh bèo gói lá nhân thịt tép</option>
+                <option value="Bánh bèo gói lá nhân đậu xanh thịt">Bánh bèo gói lá nhân đậu xanh thịt</option>
+                <option value="Bánh bèo gói lá nhân thịt tôm">Bánh bèo gói lá nhân thịt tôm</option>
+                <option value="Bánh bèo rán nhân thịt">Bánh bèo rán nhân thịt</option>
+                <option value="Bánh bèo rán nhân thịt tép">Bánh bèo rán nhân thịt tép</option>
+                <option value="Bánh bèo rán nhân đậu xanh thịt">Bánh bèo rán nhân đậu xanh thịt</option>
+                <option value="Bánh bèo rán nhân thịt tôm">Bánh bèo rán nhân thịt tôm</option>
+            </select><br>
+
+            <label>Số lượng:</label>
+            <input type="number" id="quantity" min="1" value="1"><br>
+
+            <label>Tên khách hàng:</label>
+            <input type="text" id="name" required><br>
+
+            <label>Số điện thoại:</label>
+            <input type="text" id="phone" required><br>
+
+            <button type="button" onclick="addToOrder()">Thêm vào giỏ</button>
+        </form>
+
+        <div id="orderSummary" class="order-summary">
+            <h4>Danh sách món đã đặt</h4>
+            <ul id="orderList">
+                <!-- Các món sẽ được thêm vào đây -->
+            </ul>
+            <button type="button" onclick="sendToTelegram()">Gửi đơn hàng</button>
+        </div>
+    </div>
+
     <script>
-    function sendToTelegram() {
-        let food = document.getElementById("food").value;
-        let quantity = document.getElementById("quantity").value;
-        let name = document.getElementById("name").value;
-        let phone = document.getElementById("phone").value;
-    
-        if (!name || !phone) {
-            alert("Vui lòng nhập đầy đủ thông tin!");
-            return;
-        }
-    
-        let message = `📌 Đơn hàng mới:\n🍽️ Món: ${food}\n🔢 Số lượng: ${quantity}\n👤 Khách hàng: ${name}\n📞 SĐT: ${phone}`;
-    
-        let botToken = "YOUR_BOT_TOKEN";  // Thay bằng TOKEN bot của bạn
-        let chatID = "YOUR_CHAT_ID"; // Thay bằng Chat ID của bạn
-    
-        let url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatID}&text=${encodeURIComponent(message)}`;
-    
-        fetch(url).then(response => {
-            if (response.ok) {
-                alert("✅ Đơn hàng đã gửi!");
+        let order = [];
+
+        function addToOrder() {
+            let food = document.getElementById("food").value;
+            let quantity = document.getElementById("quantity").value;
+
+            if (food && quantity) {
+                order.push({ food, quantity });
+                displayOrder();
                 document.getElementById("orderForm").reset();
             } else {
-                alert("❌ Gửi thất bại, vui lòng thử lại!");
+                alert("Vui lòng chọn món và nhập số lượng!");
             }
-        });
-    }
+        }
+
+        function displayOrder() {
+            let orderList = document.getElementById("orderList");
+            orderList.innerHTML = '';
+            order.forEach(item => {
+                let li = document.createElement('li');
+                li.textContent = `${item.food} - Số lượng: ${item.quantity}`;
+                orderList.appendChild(li);
+            });
+        }
+
+        function sendToTelegram() {
+            let name = document.getElementById("name").value;
+            let phone = document.getElementById("phone").value;
+
+            if (!name || !phone) {
+                alert("Vui lòng nhập đầy đủ thông tin!");
+                return;
+            }
+
+            let message = `📌 Đơn hàng mới:\n👤 Khách hàng: ${name}\n📞 SĐT: ${phone}\n\nMón đã đặt:\n`;
+
+            order.forEach(item => {
+                message += `🍽️ Món: ${item.food}\n🔢 Số lượng: ${item.quantity}\n`;
+            });
+
+            let botToken = "YOUR_BOT_TOKEN";  // Thay bằng TOKEN bot của bạn
+            let chatID = "YOUR_CHAT_ID"; // Thay bằng Chat ID của bạn
+
+            let url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatID}&text=${encodeURIComponent(message)}`;
+
+            fetch(url).then(response => {
+                if (response.ok) {
+                    alert("✅ Đơn hàng đã gửi!");
+                    document.getElementById("orderForm").reset();
+                    order = [];  // Xóa giỏ hàng sau khi gửi
+                    displayOrder();
+                } else {
+                    alert("❌ Gửi thất bại, vui lòng thử lại!");
+                }
+            });
+        }
     </script>
-    </div>
 </body>
 </html>
