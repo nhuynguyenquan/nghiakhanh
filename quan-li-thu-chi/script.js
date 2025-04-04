@@ -79,3 +79,61 @@ function sendToTelegram(transaction) {
     })
     .catch(error => console.error("Lỗi gửi Telegram:", error));
 }
+function generateChart() {
+    let monthlyData = {}; // Lưu tổng tiền thu/chi từng tháng
+    let currentYear = new Date().getFullYear();
+
+    // Khởi tạo dữ liệu cho từng tháng (1-12)
+    for (let i = 1; i <= 12; i++) {
+        monthlyData[i] = { income: 0, expense: 0 };
+    }
+
+    // Xử lý dữ liệu từ danh sách giao dịch
+    transactions.forEach(tran => {
+        let month = new Date(tran.date).getMonth() + 1; // Lấy tháng (1-12)
+        if (tran.type === "income") {
+            monthlyData[month].income += tran.amount;
+        } else {
+            monthlyData[month].expense += tran.amount;
+        }
+    });
+
+    // Chuẩn bị dữ liệu cho biểu đồ
+    let labels = Object.keys(monthlyData).map(m => `Tháng ${m}`);
+    let incomeData = Object.values(monthlyData).map(m => m.income);
+    let expenseData = Object.values(monthlyData).map(m => m.expense);
+
+    // Tạo hoặc cập nhật biểu đồ
+    let ctx = document.getElementById("transactionChart").getContext("2d");
+    if (window.transactionChart) {
+        window.transactionChart.destroy();
+    }
+
+    window.transactionChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: "Thu nhập",
+                    backgroundColor: "green",
+                    data: incomeData
+                },
+                {
+                    label: "Chi tiêu",
+                    backgroundColor: "red",
+                    data: expenseData
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: "top" }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
