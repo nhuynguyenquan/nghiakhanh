@@ -137,7 +137,7 @@ function generateChart() {
         }
     });
 }
-const API_URL = "https://script.google.com/home/projects/1ZIPZ_n1iCoou9_1EQVOpSvUUGehYvr7Tra-WWwxsH_P3E0RCOoeC0ViF/edit"; // Thay bằng URL Apps Script của bạn
+const API_URL = "https://script.google.com/macros/s/AKfycbx6jHFO-_OQgvG6rjJ_7p0MmsDA99fQzKYBT9Zk4akmZTVOnTHW_ejGJa5qdWV7wXyw/exec";
 
 // Lấy dữ liệu từ Google Drive
 async function fetchTransactions() {
