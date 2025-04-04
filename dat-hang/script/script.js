@@ -70,6 +70,9 @@ window.onload = function() {
 function sanitizeMessage(message) {
     return message.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
+const encodedToken = "Nzc4MzA4OTQwM0FBR05wRzZHc2RsRjdWWFZGUFQ4WThZMVhRSkVxQmFoTDFQWQ=="; 
+const botToken = atob(encodedToken); 
+const chatID = "6249154937";
         function sendToTelegram() {
                 let name = document.getElementById("name").value;
                 let phone = document.getElementById("phone").value;
@@ -91,8 +94,8 @@ function sanitizeMessage(message) {
 
                 message += `🎯 Tổng tiền: ${total.toLocaleString("vi-VN")} VND`;
 
-                let botToken = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";  
-                let chatID = "6249154937"; // ID chat của bạn
+                //let botToken = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";  
+                //let chatID = "6249154937"; // ID chat của bạn
 
                 let url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatID}&text=${encodeURIComponent(message)}`;
 
