@@ -14,6 +14,7 @@ function addTransaction() {
     transactions.push(transaction);
     updateUI();
     saveToLocalStorage();
+    sendToTelegram(transaction);
 }
 
 function updateUI() {
@@ -49,3 +50,31 @@ function loadFromLocalStorage() {
 }
 
 window.onload = loadFromLocalStorage;
+const TELEGRAM_BOT_TOKEN = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";
+const TELEGRAM_CHAT_ID = "6249154937"; 
+
+function sendToTelegram(transaction) {
+    let message = `📌 *Giao dịch mới*:\n💰 *Số tiền:* ${transaction.amount.toLocaleString("vi-VN")} VND\n📂 *Loại:* ${transaction.type === "income" ? "Thu nhập" : "Chi tiêu"}\n📝 *Mô tả:* ${transaction.note}`;
+    
+    let url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    let data = {
+        chat_id: TELEGRAM_CHAT_ID,
+        text: message,
+        parse_mode: "Markdown"
+    };
+
+    fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.ok) {
+            alert("✅ Giao dịch đã gửi lên Telegram!");
+        } else {
+            alert("❌ Gửi thất bại, kiểm tra lại token!");
+        }
+    })
+    .catch(error => console.error("Lỗi gửi Telegram:", error));
+}
