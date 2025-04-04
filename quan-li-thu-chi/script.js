@@ -28,7 +28,7 @@ async function saveTransaction(transaction) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ transaction }),
-            mode: "cors" // ✅ FIX LỖI CORS
+            mode: "no-cors" // Thử tắt kiểm tra CORS 
         });
 
         let result = await response.json();
