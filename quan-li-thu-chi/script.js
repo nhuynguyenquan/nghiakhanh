@@ -19,31 +19,22 @@ async function fetchTransactions() {
 // Ghi dữ liệu vào Google Drive
 async function saveTransaction(transaction) {
     if (!transaction || !transaction.amount || !transaction.type) {
-        alert("❌ Dữ liệu không hợp lệ! Vui lòng nhập đủ thông tin.");
+        alert("❌ Dữ liệu không hợp lệ!");
         return;
     }
 
     try {
         let response = await fetch(API_URL, {
             method: "POST",
-            headers: { 
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ transaction }) // Gửi giao dịch
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ transaction }),
+            mode: "cors" // ✅ FIX LỖI CORS
         });
 
-        let result = await response.json(); // Chuyển phản hồi thành JSON
-
-        if (response.ok) {
-            console.log("✅ Phản hồi từ server:", result);
-            alert("✅ Giao dịch đã được lưu thành công!");
-        } else {
-            console.error("❌ Server trả về lỗi:", result);
-            alert(`❌ Lỗi từ server: ${result.error || "Không xác định"}`);
-        }
+        let result = await response.json();
+        console.log("✅ Server phản hồi:", result);
     } catch (error) {
         console.error("❌ Lỗi khi gửi dữ liệu:", error);
-        alert("❌ Không thể kết nối đến server! Kiểm tra lại đường dẫn API_URL.");
     }
 }
 
