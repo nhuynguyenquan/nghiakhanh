@@ -10,7 +10,7 @@ function addTransaction() {
         return;
     }
 
-    let transaction = { amount: parseInt(amount), type, note };
+    let transaction = { amount: parseInt(amount), type, note,date: new Date().toISOString() };
     transactions.push(transaction);
     updateUI();
     saveToLocalStorage();
