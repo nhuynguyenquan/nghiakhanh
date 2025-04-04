@@ -3,7 +3,7 @@ let transactions = [];
 const API_URL = "https://script.google.com/macros/s/AKfycbzBBfJB1S13GcK9vIMFuKEEM3w3NtYRGwuK9w98qbxRN9ugyd8P0zFtDQNg53C3m2PL/exec";
 const TELEGRAM_BOT_TOKEN = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";
 const TELEGRAM_CHAT_ID = "6249154937"; 
-
+//https://drive.google.com/file/d/1GFPr__AeZN9Y79AIx1hD-EgtloapHdJB/view?usp=sharing
 // Lấy dữ liệu từ Google Drive
 async function fetchTransactions() {
     try {
@@ -18,22 +18,24 @@ async function fetchTransactions() {
 
 // Ghi dữ liệu vào Google Drive
 async function saveTransaction(transaction) {
-    if (!transaction || !transaction.amount || !transaction.type) {
-        alert("❌ Dữ liệu không hợp lệ!");
-        return;
-    }
-
     try {
         let response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ transaction }) // Gửi từng giao dịch riêng lẻ
+            body: JSON.stringify({ transaction }) // Đúng format
         });
 
         let result = await response.text();
-        console.log("Phản hồi từ server:", result);
+        console.log("Kết quả từ server:", result);
+
+        if (result.includes("Cập nhật thành công")) {
+            alert("✅ Giao dịch đã lưu thành công!");
+        } else {
+            alert("❌ Lỗi khi lưu giao dịch!");
+        }
     } catch (error) {
-        console.error("❌ Lỗi ghi dữ liệu:", error);
+        console.error("Lỗi ghi dữ liệu:", error);
+        alert("❌ Không thể kết nối tới server!");
     }
 }
 
