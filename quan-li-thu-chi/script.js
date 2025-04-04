@@ -148,17 +148,20 @@ async function fetchTransactions() {
 
 // Ghi dữ liệu vào Google Drive
 async function saveTransaction(transaction) {
-    let transactions = await fetchTransactions();
-    transactions.push(transaction);
+    if (!transaction || !transaction.amount || !transaction.type) {
+        console.error("Dữ liệu không hợp lệ:", transaction);
+        alert("❌ Dữ liệu không hợp lệ!");
+        return;
+    }
 
     let response = await fetch(API_URL, {
         method: "POST",
-        body: JSON.stringify({ transactions }),
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transactions: [transaction] }) // Đảm bảo gửi đúng định dạng
     });
 
     let result = await response.text();
-    console.log(result);
+    console.log("Phản hồi từ server:", result);
 }
 async function loadTransactions() {
     let transactions = await fetchTransactions();
