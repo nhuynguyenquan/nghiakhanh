@@ -15,6 +15,7 @@ function addTransaction() {
     updateUI();
     saveToLocalStorage();
     sendToTelegram(transaction);
+    generateChart();
 }
 
 function updateUI() {
