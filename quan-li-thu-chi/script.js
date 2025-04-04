@@ -137,3 +137,58 @@ function generateChart() {
         }
     });
 }
+const API_URL = "https://script.google.com/home/projects/1ZIPZ_n1iCoou9_1EQVOpSvUUGehYvr7Tra-WWwxsH_P3E0RCOoeC0ViF/edit"; // Thay bằng URL Apps Script của bạn
+
+// Lấy dữ liệu từ Google Drive
+async function fetchTransactions() {
+    let response = await fetch(API_URL);
+    let data = await response.json();
+    return data.transactions || [];
+}
+
+// Ghi dữ liệu vào Google Drive
+async function saveTransaction(transaction) {
+    let transactions = await fetchTransactions();
+    transactions.push(transaction);
+
+    let response = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ transactions }),
+        headers: { "Content-Type": "application/json" }
+    });
+
+    let result = await response.text();
+    console.log(result);
+}
+async function loadTransactions() {
+    let transactions = await fetchTransactions();
+    let transactionList = document.getElementById("transaction-list");
+    transactionList.innerHTML = "";
+
+    transactions.forEach(t => {
+        let li = document.createElement("li");
+        li.textContent = `${t.type === "income" ? "+" : "-"}${t.amount.toLocaleString("vi-VN")} VND - ${t.note}`;
+        transactionList.appendChild(li);
+    });
+}
+
+// Gọi hàm khi tải trang
+window.onload = loadTransactions;
+async function addTransaction() {
+    let amount = document.getElementById("amount").value;
+    let type = document.getElementById("type").value;
+    let note = document.getElementById("note").value;
+
+    if (!amount || isNaN(amount)) {
+        alert("Vui lòng nhập số tiền hợp lệ!");
+        return;
+    }
+
+    let transaction = { amount: parseInt(amount), type, note };
+    await saveTransaction(transaction);
+    alert("Giao dịch đã được lưu!");
+
+    // Tải lại danh sách giao dịch
+    loadTransactions();
+}
+
