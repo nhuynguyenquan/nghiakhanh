@@ -141,38 +141,25 @@ const API_URL = "https://script.google.com/macros/s/AKfycbx6jHFO-_OQgvG6rjJ_7p0M
 
 // Lấy dữ liệu từ Google Drive
 async function fetchTransactions() {
-    try {
-        let response = await fetch(API_URL);
-        if (!response.ok) throw new Error("Lỗi khi tải dữ liệu!");
-
-        let data = await response.json();
-        return data.transactions || [];
-    } catch (error) {
-        console.error("Lỗi lấy dữ liệu:", error);
-        return [];
-    }
+    let response = await fetch(API_URL);
+    let data = await response.json();
+    return data.transactions || [];
 }
-
 
 // Ghi dữ liệu vào Google Drive
 async function saveTransaction(transaction) {
     let transactions = await fetchTransactions();
     transactions.push(transaction);
 
-    try {
-        let response = await fetch(API_URL, {
-            method: "POST",
-            body: JSON.stringify({ transactions }),
-            headers: { "Content-Type": "application/json" }
-        });
+    let response = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ transactions }),
+        headers: { "Content-Type": "application/json" }
+    });
 
-        let result = await response.text();
-        console.log("Phản hồi từ server:", result);
-    } catch (error) {
-        console.error("Lỗi ghi dữ liệu:", error);
-    }
+    let result = await response.text();
+    console.log(result);
 }
-
 async function loadTransactions() {
     let transactions = await fetchTransactions();
     let transactionList = document.getElementById("transaction-list");
@@ -186,11 +173,7 @@ async function loadTransactions() {
 }
 
 // Gọi hàm khi tải trang
-window.onload = async function () {
-    transactions = await fetchTransactions();
-    updateUI();
-    generateChart();
-};
+window.onload = loadTransactions;
 async function addTransaction() {
     let amount = document.getElementById("amount").value;
     let type = document.getElementById("type").value;
@@ -201,11 +184,11 @@ async function addTransaction() {
         return;
     }
 
-    let transaction = { amount: parseInt(amount), type, note, date: new Date().toISOString() };
-
+    let transaction = { amount: parseInt(amount), type, note };
     await saveTransaction(transaction);
-    transactions = await fetchTransactions(); // Cập nhật dữ liệu từ Drive
-    updateUI();
-    generateChart();
+    alert("Giao dịch đã được lưu!");
+
+    // Tải lại danh sách giao dịch
+    loadTransactions();
 }
 
