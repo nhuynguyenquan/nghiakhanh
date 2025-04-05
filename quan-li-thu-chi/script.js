@@ -164,18 +164,19 @@ async function editTransaction(index) {
 async function deleteTransaction(index) {
     if (!confirm("Bạn có chắc muốn xóa giao dịch này?")) return;
 
-    // Đánh dấu bản ghi là đã xóa
+    // Đánh dấu bản ghi là đã xóa (thay đổi trạng thái thành 'deleted')
     transactions[index].status = "deleted";
 
-    // Gửi bản ghi đã cập nhật (status: deleted) lên server
+    // Lưu bản ghi đã thay đổi lên Google Drive
     await saveTransaction(transactions[index]);
 
-    // Làm mới danh sách từ server
+    // Làm mới danh sách từ server (lấy lại tất cả giao dịch)
     transactions = await fetchTransactions();
 
     // Cập nhật lại giao diện
     updateUI();
 }
+
 // Reset form sau khi thêm/sửa
 function resetForm() {
     document.getElementById("amount").value = "";
