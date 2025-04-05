@@ -3,7 +3,7 @@ let transactions = [];
 const API_URL = "https://script.google.com/macros/s/AKfycbzaaylyRMuHUrx4UkBS30bGKfQXozCwSaNhJBlKYkDx5tHl-oBghK-kokxMSfTLyJPL/exec";
 const TELEGRAM_BOT_TOKEN = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";
 const TELEGRAM_CHAT_ID = "6249154937"; 
-//https://drive.google.com/file/d/1GFPr__AeZN9Y79AIx1hD-EgtloapHdJB/view?usp=sharing
+
 // Lấy dữ liệu từ Google Drive
 async function fetchTransactions() {
     try {
@@ -59,6 +59,11 @@ function updateUI() {
             </td>
         `;
 
+        // Nếu giao dịch đã bị xóa, đánh dấu và không hiển thị
+        if (t.status === "deleted") {
+            row.style.backgroundColor = "#f2f2f2";  // Giao dịch đã xóa
+        }
+
         tableBody.appendChild(row);
 
         if (t.type === "income") totalIncome += t.amount;
@@ -68,15 +73,18 @@ function updateUI() {
     document.getElementById("total-income").textContent = totalIncome.toLocaleString("vi-VN");
     document.getElementById("total-expense").textContent = totalExpense.toLocaleString("vi-VN");
 }
-//
+
+// Xóa giao dịch và đánh dấu trạng thái
 async function deleteTransaction(index) {
     if (!confirm("Bạn có chắc muốn xóa giao dịch này?")) return;
 
-    transactions.splice(index, 1);
+    // Đánh dấu giao dịch là đã xóa thay vì xóa hoàn toàn
+    transactions[index].status = "deleted";
     await saveAllTransactions(); // Ghi lại toàn bộ danh sách
     updateUI();
 }
-//
+
+// Chỉnh sửa giao dịch
 function editTransaction(index) {
     let t = transactions[index];
     document.getElementById("amount").value = t.amount;
@@ -89,14 +97,16 @@ function editTransaction(index) {
             amount: parseInt(document.getElementById("amount").value),
             type: document.getElementById("type").value,
             note: document.getElementById("note").value,
-            date: new Date().toISOString()
+            date: new Date().toISOString(),
+            status: transactions[index].status // Giữ nguyên trạng thái cũ (đã xóa hoặc chưa)
         };
         await saveAllTransactions();
         updateUI();
         resetForm();
     };
 }
-//
+
+// Lưu toàn bộ giao dịch
 async function saveAllTransactions() {
     try {
         let response = await fetch(API_URL, {
@@ -110,6 +120,7 @@ async function saveAllTransactions() {
         console.error("Lỗi khi lưu toàn bộ:", err);
     }
 }
+
 // Thêm giao dịch
 async function addTransaction() {
     let amount = document.getElementById("amount").value;
@@ -121,7 +132,7 @@ async function addTransaction() {
         return;
     }
 
-    let transaction = { amount: parseInt(amount), type, note, date: new Date().toISOString() };
+    let transaction = { amount: parseInt(amount), type, note, date: new Date().toISOString(), status: "active" }; // Trạng thái mặc định là "active"
 
     await saveTransaction(transaction);
     transactions = await fetchTransactions(); // Cập nhật từ Google Drive
