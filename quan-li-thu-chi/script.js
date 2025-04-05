@@ -86,23 +86,35 @@ async function deleteTransaction(index) {
 
 // Chỉnh sửa giao dịch
 function editTransaction(index) {
-    let t = transactions[index];
-    document.getElementById("amount").value = t.amount;
-    document.getElementById("type").value = t.type;
-    document.getElementById("note").value = t.note;
+    let oldTransaction = transactions[index];
+    
+    // Gán dữ liệu cũ lên form
+    document.getElementById("amount").value = oldTransaction.amount;
+    document.getElementById("type").value = oldTransaction.type;
+    document.getElementById("note").value = oldTransaction.note;
 
-    // Ghi đè lại giao dịch khi nhấn "Thêm"
+    // Khi nhấn "Thêm", tạo bản ghi mới và đánh dấu bản ghi cũ là đã xóa
     document.getElementById("submit-btn").onclick = async function () {
-        transactions[index] = {
+        // Tạo bản ghi mới với dữ liệu mới
+        let newTransaction = {
             amount: parseInt(document.getElementById("amount").value),
             type: document.getElementById("type").value,
             note: document.getElementById("note").value,
             date: new Date().toISOString(),
-            status: transactions[index].status // Giữ nguyên trạng thái cũ (đã xóa hoặc chưa)
+            status: "active"
         };
 
-        // Cập nhật chỉ giao dịch bị thay đổi
-        await updateTransaction(transactions[index]);
+        // Đánh dấu bản ghi cũ là đã xóa
+        transactions[index].status = "deleted";
+
+        // Gửi bản ghi cũ (đã đánh dấu deleted) lên
+        await saveTransaction(transactions[index]);
+
+        // Gửi bản ghi mới (active) lên
+        await saveTransaction(newTransaction);
+
+        // Cập nhật lại danh sách
+        transactions = await fetchTransactions();
         updateUI();
         resetForm();
     };
@@ -115,28 +127,27 @@ function updateUI() {
     let totalIncome = 0;
     let totalExpense = 0;
 
-    // Lọc chỉ giao dịch có trạng thái 'active'
-    let activeTransactions = transactions.filter(t => t.status === "active");
+    transactions
+        .filter(t => t.status !== "deleted") // 🧠 Chỉ hiển thị bản ghi chưa bị xóa
+        .forEach((t, index) => {
+            let row = document.createElement("tr");
 
-    activeTransactions.forEach((t, index) => {
-        let row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${t.amount.toLocaleString("vi-VN")} VND</td>
+                <td>${t.type === "income" ? "Thu" : "Chi"}</td>
+                <td>${t.note}</td>
+                <td>${new Date(t.date).toLocaleString("vi-VN")}</td>
+                <td>
+                    <button onclick="editTransaction(${index})">✏️</button>
+                    <button onclick="deleteTransaction(${index})">🗑️</button>
+                </td>
+            `;
 
-        row.innerHTML = `
-            <td>${t.amount.toLocaleString("vi-VN")} VND</td>
-            <td>${t.type === "income" ? "Thu" : "Chi"}</td>
-            <td>${t.note}</td>
-            <td>${new Date(t.date).toLocaleString("vi-VN")}</td>
-            <td>
-                <button onclick="editTransaction(${index})">✏️</button>
-                <button onclick="deleteTransaction(${index})">🗑️</button>
-            </td>
-        `;
+            tableBody.appendChild(row);
 
-        tableBody.appendChild(row);
-
-        if (t.type === "income") totalIncome += t.amount;
-        else totalExpense += t.amount;
-    });
+            if (t.type === "income") totalIncome += t.amount;
+            else totalExpense += t.amount;
+        });
 
     document.getElementById("total-income").textContent = totalIncome.toLocaleString("vi-VN");
     document.getElementById("total-expense").textContent = totalExpense.toLocaleString("vi-VN");
@@ -152,16 +163,16 @@ async function addTransaction() {
         return;
     }
 
-    let transaction = { 
-        amount: parseInt(amount), 
-        type, 
-        note, 
+    let transaction = {
+        amount: parseInt(amount),
+        type,
+        note,
         date: new Date().toISOString(),
-        status: "active"  // Mặc định trạng thái là active khi thêm giao dịch
+        status: "active" // 🆕 Thêm trường status
     };
 
     await saveTransaction(transaction);
-    transactions = await fetchTransactions(); // Cập nhật từ Google Drive
+    transactions = await fetchTransactions(); // Làm mới danh sách
     updateUI();
     sendToTelegram(transaction);
 }
