@@ -4,32 +4,40 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzaaylyRMuHUrx4UkBS30bG
 const TELEGRAM_BOT_TOKEN = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";
 const TELEGRAM_CHAT_ID = "6249154937";
 
-// Fetch giao dịch từ Google Drive
+// Lấy dữ liệu từ Google Drive và chỉ giữ bản ghi active
 async function fetchTransactions() {
     try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-        return data.transactions?.filter(t => t.status === "active") || [];
-    } catch (err) {
-        console.error("❌ Lỗi khi fetch:", err);
+        let response = await fetch(API_URL);
+        let data = await response.json();
+        return (data.transactions || []).filter(t => t.status === "active");
+    } catch (error) {
+        console.error("❌ Lỗi lấy dữ liệu từ Google Drive:", error);
         return [];
     }
 }
 
-// Gửi giao dịch lên Google Drive
+// Gửi một bản ghi lên Google Drive
 async function saveTransaction(transaction) {
+    if (!transaction || !transaction.amount || !transaction.type) {
+        alert("❌ Dữ liệu không hợp lệ!");
+        return;
+    }
+
     try {
-        await fetch(API_URL, {
+        let response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ transaction }),
+            mode: "no-cors"
         });
-    } catch (err) {
-        console.error("❌ Gửi dữ liệu thất bại:", err);
+
+        console.log("✅ Gửi bản ghi lên server:", transaction);
+    } catch (error) {
+        console.error("❌ Lỗi khi gửi dữ liệu:", error);
     }
 }
 
-// Cập nhật giao diện
+// Hiển thị danh sách giao dịch
 function updateUI() {
     const tableBody = document.querySelector("#transaction-table tbody");
     tableBody.innerHTML = "";
@@ -61,19 +69,19 @@ function updateUI() {
     document.getElementById("total-expense").textContent = totalExpense.toLocaleString("vi-VN");
 }
 
-// Thêm giao dịch
+// Xử lý thêm giao dịch
 async function addTransaction() {
-    const amount = parseInt(document.getElementById("amount").value);
-    const type = document.getElementById("type").value;
-    const note = document.getElementById("note").value;
+    let amount = document.getElementById("amount").value;
+    let type = document.getElementById("type").value;
+    let note = document.getElementById("note").value;
 
     if (!amount || isNaN(amount)) {
-        alert("❗ Vui lòng nhập số tiền hợp lệ!");
+        alert("Vui lòng nhập số tiền hợp lệ!");
         return;
     }
 
-    const transaction = {
-        amount,
+    let transaction = {
+        amount: parseInt(amount),
         type,
         note,
         date: new Date().toISOString(),
@@ -87,20 +95,27 @@ async function addTransaction() {
     sendToTelegram(transaction);
 }
 
-// Chỉnh sửa giao dịch
+// Xóa giao dịch: chỉ cập nhật trạng thái
+async function deleteTransaction(index) {
+    if (!confirm("Bạn có chắc muốn xóa giao dịch này?")) return;
+
+    let deletedTransaction = { ...transactions[index], status: "deleted" };
+
+    await saveTransaction(deletedTransaction);
+    transactions = await fetchTransactions();
+    updateUI();
+}
+
+// Sửa giao dịch: tạo bản ghi mới và đánh dấu bản cũ là deleted
 function editTransaction(index) {
-    const t = transactions[index];
-    document.getElementById("amount").value = t.amount;
-    document.getElementById("type").value = t.type;
-    document.getElementById("note").value = t.note;
+    let oldTransaction = transactions[index];
 
-    document.getElementById("submit-btn").onclick = async () => {
-        // Đánh dấu bản ghi cũ là deleted
-        transactions[index].status = "deleted";
-        await saveTransaction(transactions[index]);
+    document.getElementById("amount").value = oldTransaction.amount;
+    document.getElementById("type").value = oldTransaction.type;
+    document.getElementById("note").value = oldTransaction.note;
 
-        // Ghi bản ghi mới
-        const newTransaction = {
+    document.getElementById("submit-btn").onclick = async function () {
+        let newTransaction = {
             amount: parseInt(document.getElementById("amount").value),
             type: document.getElementById("type").value,
             note: document.getElementById("note").value,
@@ -108,36 +123,28 @@ function editTransaction(index) {
             status: "active"
         };
 
+        let deletedTransaction = { ...transactions[index], status: "deleted" };
+
+        await saveTransaction(deletedTransaction);
         await saveTransaction(newTransaction);
+
         transactions = await fetchTransactions();
         updateUI();
         resetForm();
-        sendToTelegram(newTransaction);
     };
 }
 
-// Xóa giao dịch (chỉ đổi trạng thái)
-async function deleteTransaction(index) {
-    if (!confirm("Bạn chắc chắn muốn xóa giao dịch này?")) return;
-    transactions[index].status = "deleted";
-    await saveTransaction(transactions[index]);
-    transactions = await fetchTransactions();
-    updateUI();
+// Reset form sau khi thêm/sửa
+function resetForm() {
+    document.getElementById("amount").value = "";
+    document.getElementById("type").value = "income";
+    document.getElementById("note").value = "";
+    document.getElementById("submit-btn").onclick = addTransaction;
 }
-async function fetchTransactions() {
-    try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-        // 🧠 Chỉ trả về các bản ghi có trạng thái 'active'
-        return (data.transactions || []).filter(t => t.status === "active");
-    } catch (err) {
-        console.error("❌ Lỗi khi fetch:", err);
-        return [];
-    }
-}
-// Gửi Telegram
+
+// Gửi thông báo Telegram
 function sendToTelegram(transaction) {
-    const message = `📌 *Giao dịch mới*:\n💰 *Số tiền:* ${transaction.amount.toLocaleString("vi-VN")} VND\n📂 *Loại:* ${transaction.type === "income" ? "Thu nhập" : "Chi tiêu"}\n📝 *Mô tả:* ${transaction.note}`;
+    let message = `📌 *Giao dịch mới*:\n💰 *Số tiền:* ${transaction.amount.toLocaleString("vi-VN")} VND\n📂 *Loại:* ${transaction.type === "income" ? "Thu nhập" : "Chi tiêu"}\n📝 *Mô tả:* ${transaction.note}`;
 
     fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: "POST",
@@ -148,27 +155,17 @@ function sendToTelegram(transaction) {
             parse_mode: "Markdown"
         })
     })
-        .then(res => res.json())
-        .then(data => {
-            if (data.ok) {
-                alert("✅ Gửi Telegram thành công!");
-            } else {
-                alert("❌ Gửi Telegram thất bại!");
-            }
-        })
-        .catch(err => console.error("Telegram error:", err));
+    .then(res => res.json())
+    .then(data => {
+        if (!data.ok) {
+            alert("❌ Gửi Telegram thất bại!");
+        }
+    })
+    .catch(err => console.error("Lỗi gửi Telegram:", err));
 }
 
-// Reset form
-function resetForm() {
-    document.getElementById("amount").value = "";
-    document.getElementById("type").value = "income";
-    document.getElementById("note").value = "";
-    document.getElementById("submit-btn").onclick = addTransaction;
-}
-
-// Load khi mở trang
-window.onload = async () => {
+// Tải dữ liệu khi mở trang
+window.onload = async function () {
     transactions = await fetchTransactions();
     updateUI();
     resetForm();
