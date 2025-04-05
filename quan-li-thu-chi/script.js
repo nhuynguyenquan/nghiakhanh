@@ -119,7 +119,7 @@ async function addTransaction() {
     updateUI(); // Cập nhật giao diện
 }
 // Sửa giao dịch
-function editTransaction(index) {
+async function editTransaction(index) {
     let oldTransaction = transactions[index];
 
     // Gán dữ liệu cũ lên form
@@ -137,16 +137,25 @@ function editTransaction(index) {
             status: "active"
         };
 
-        // Cập nhật bản ghi cũ
-        transactions[index].status = "deleted"; // Đánh dấu bản ghi cũ là đã xóa
+        // Đánh dấu bản ghi cũ là đã xóa (thay đổi trạng thái)
+        transactions[index].status = "deleted";
+
+        // Lưu bản ghi cũ (đã đánh dấu deleted)
         await saveTransaction(transactions[index]);
+
+        // Thêm bản ghi mới vào danh sách giao dịch
+        transactions.push(newTransaction); // Thêm giao dịch mới vào mảng
 
         // Lưu bản ghi mới
         await saveTransaction(newTransaction);
-        
-        // Làm mới danh sách và cập nhật giao diện
+
+        // Làm mới danh sách giao dịch từ Google Drive
         transactions = await fetchTransactions();
+
+        // Cập nhật giao diện
         updateUI();
+
+        // Đặt lại form
         resetForm();
     };
 }
