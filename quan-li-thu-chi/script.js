@@ -39,13 +39,17 @@ async function saveTransaction(transaction) {
 }
 
 // Cập nhật giao diện
+// Cập nhật giao diện
 function updateUI() {
     let tableBody = document.querySelector("#transaction-table tbody");
     tableBody.innerHTML = "";
     let totalIncome = 0;
     let totalExpense = 0;
 
-    transactions.forEach((t, index) => {
+    // Lọc chỉ giao dịch có trạng thái 'active'
+    let activeTransactions = transactions.filter(t => t.status === "active");
+
+    activeTransactions.forEach((t, index) => {
         let row = document.createElement("tr");
 
         row.innerHTML = `
@@ -58,11 +62,6 @@ function updateUI() {
                 <button onclick="deleteTransaction(${index})">🗑️</button>
             </td>
         `;
-
-        // Nếu giao dịch đã bị xóa, đánh dấu và không hiển thị
-        if (t.status === "deleted") {
-            row.style.backgroundColor = "#f2f2f2";  // Giao dịch đã xóa
-        }
 
         tableBody.appendChild(row);
 
