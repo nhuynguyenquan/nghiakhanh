@@ -33,11 +33,13 @@ async function saveTransaction(transaction) {
 function updateUI() {
     const tableBody = document.querySelector("#transaction-table tbody");
     tableBody.innerHTML = "";
+
     let totalIncome = 0;
     let totalExpense = 0;
 
     transactions.forEach((t, index) => {
         const row = document.createElement("tr");
+
         row.innerHTML = `
             <td>${t.amount.toLocaleString("vi-VN")} VND</td>
             <td>${t.type === "income" ? "Thu" : "Chi"}</td>
@@ -48,6 +50,7 @@ function updateUI() {
                 <button onclick="deleteTransaction(${index})">🗑️</button>
             </td>
         `;
+
         tableBody.appendChild(row);
 
         if (t.type === "income") totalIncome += t.amount;
@@ -121,7 +124,17 @@ async function deleteTransaction(index) {
     transactions = await fetchTransactions();
     updateUI();
 }
-
+async function fetchTransactions() {
+    try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        // 🧠 Chỉ trả về các bản ghi có trạng thái 'active'
+        return (data.transactions || []).filter(t => t.status === "active");
+    } catch (err) {
+        console.error("❌ Lỗi khi fetch:", err);
+        return [];
+    }
+}
 // Gửi Telegram
 function sendToTelegram(transaction) {
     const message = `📌 *Giao dịch mới*:\n💰 *Số tiền:* ${transaction.amount.toLocaleString("vi-VN")} VND\n📂 *Loại:* ${transaction.type === "income" ? "Thu nhập" : "Chi tiêu"}\n📝 *Mô tả:* ${transaction.note}`;
