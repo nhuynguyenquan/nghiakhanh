@@ -1,6 +1,6 @@
 let transactions = [];
 
-const API_URL = "https://script.google.com/macros/s/AKfycbzm0L8dO8HFSvDhBRzjcon6gfR5fFImjcC3eNQDJa-q3p8_ca_8WExhJVsM-oLt1YJm/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwlSCJS2MDQKbtKxneIhkkLZbCkEn3SXqebCdjVSnKDcTu7A71eYf6D4NdSSHj3J_ca/exec";
 const TELEGRAM_BOT_TOKEN = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";
 const TELEGRAM_CHAT_ID = "6249154937";
 
