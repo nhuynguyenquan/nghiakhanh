@@ -39,32 +39,58 @@ async function saveTransaction(transaction) {
 
 // Hiển thị danh sách giao dịch
 function updateUI() {
-    const tableBody = document.querySelector("#transaction-table tbody");
+    let tableBody = document.querySelector("#transaction-table tbody");
     tableBody.innerHTML = "";
-
     let totalIncome = 0;
     let totalExpense = 0;
 
-    transactions.forEach((t, index) => {
-        const row = document.createElement("tr");
+    // Lọc và phân loại giao dịch theo loại (thu/chi)
+    let incomeTransactions = transactions.filter(t => t.type === "income" && t.status === "active");
+    let expenseTransactions = transactions.filter(t => t.type === "expense" && t.status === "active");
+
+    // Sắp xếp các giao dịch theo ngày tháng (từ mới nhất đến cũ nhất)
+    incomeTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+    expenseTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    // Thêm các giao dịch thu vào bảng
+    incomeTransactions.forEach(t => {
+        let row = document.createElement("tr");
 
         row.innerHTML = `
             <td>${t.amount.toLocaleString("vi-VN")} VND</td>
-            <td>${t.type === "income" ? "Thu" : "Chi"}</td>
+            <td>Thu</td>
             <td>${t.note}</td>
             <td>${new Date(t.date).toLocaleString("vi-VN")}</td>
             <td>
-                <button onclick="editTransaction(${index})">✏️</button>
-                <button onclick="deleteTransaction(${index})">🗑️</button>
+                <button onclick="editTransaction(${transactions.indexOf(t)})">✏️</button>
+                <button onclick="deleteTransaction(${transactions.indexOf(t)})">🗑️</button>
             </td>
         `;
 
         tableBody.appendChild(row);
-
-        if (t.type === "income") totalIncome += t.amount;
-        else totalExpense += t.amount;
+        totalIncome += t.amount;
     });
 
+    // Thêm các giao dịch chi vào bảng
+    expenseTransactions.forEach(t => {
+        let row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td>${t.amount.toLocaleString("vi-VN")} VND</td>
+            <td>Chi</td>
+            <td>${t.note}</td>
+            <td>${new Date(t.date).toLocaleString("vi-VN")}</td>
+            <td>
+                <button onclick="editTransaction(${transactions.indexOf(t)})">✏️</button>
+                <button onclick="deleteTransaction(${transactions.indexOf(t)})">🗑️</button>
+            </td>
+        `;
+
+        tableBody.appendChild(row);
+        totalExpense += t.amount;
+    });
+
+    // Cập nhật tổng thu chi
     document.getElementById("total-income").textContent = totalIncome.toLocaleString("vi-VN");
     document.getElementById("total-expense").textContent = totalExpense.toLocaleString("vi-VN");
 }
@@ -103,6 +129,7 @@ async function deleteTransaction(index) {
 
     await saveTransaction(deletedTransaction);
     transactions = await fetchTransactions();
+    resetForm();
     updateUI();
 }
 
@@ -129,8 +156,8 @@ function editTransaction(index) {
         await saveTransaction(newTransaction);
 
         transactions = await fetchTransactions();
-        updateUI();
         resetForm();
+        updateUI();
     };
 }
 
