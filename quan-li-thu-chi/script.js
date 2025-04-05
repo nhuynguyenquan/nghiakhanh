@@ -40,15 +40,26 @@ async function saveTransaction(transaction) {
 
 // Cập nhật giao diện
 function updateUI() {
-    let transactionList = document.getElementById("transaction-list");
+    let tableBody = document.querySelector("#transaction-table tbody");
+    tableBody.innerHTML = "";
     let totalIncome = 0;
     let totalExpense = 0;
 
-    transactionList.innerHTML = "";
-    transactions.forEach((t) => {
-        let li = document.createElement("li");
-        li.textContent = `${t.type === "income" ? "+" : "-"}${t.amount.toLocaleString("vi-VN")} VND - ${t.note}`;
-        transactionList.appendChild(li);
+    transactions.forEach((t, index) => {
+        let row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td>${t.amount.toLocaleString("vi-VN")} VND</td>
+            <td>${t.type === "income" ? "Thu" : "Chi"}</td>
+            <td>${t.note}</td>
+            <td>${new Date(t.date).toLocaleString("vi-VN")}</td>
+            <td>
+                <button onclick="editTransaction(${index})">✏️</button>
+                <button onclick="deleteTransaction(${index})">🗑️</button>
+            </td>
+        `;
+
+        tableBody.appendChild(row);
 
         if (t.type === "income") totalIncome += t.amount;
         else totalExpense += t.amount;
@@ -57,7 +68,48 @@ function updateUI() {
     document.getElementById("total-income").textContent = totalIncome.toLocaleString("vi-VN");
     document.getElementById("total-expense").textContent = totalExpense.toLocaleString("vi-VN");
 }
+//
+async function deleteTransaction(index) {
+    if (!confirm("Bạn có chắc muốn xóa giao dịch này?")) return;
 
+    transactions.splice(index, 1);
+    await saveAllTransactions(); // Ghi lại toàn bộ danh sách
+    updateUI();
+}
+//
+function editTransaction(index) {
+    let t = transactions[index];
+    document.getElementById("amount").value = t.amount;
+    document.getElementById("type").value = t.type;
+    document.getElementById("note").value = t.note;
+
+    // Ghi đè lại giao dịch khi nhấn "Thêm"
+    document.getElementById("submit-btn").onclick = async function () {
+        transactions[index] = {
+            amount: parseInt(document.getElementById("amount").value),
+            type: document.getElementById("type").value,
+            note: document.getElementById("note").value,
+            date: new Date().toISOString()
+        };
+        await saveAllTransactions();
+        updateUI();
+        resetForm();
+    };
+}
+//
+async function saveAllTransactions() {
+    try {
+        let response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ transactions }) // Gửi toàn bộ danh sách
+        });
+        let result = await response.text();
+        console.log("Lưu toàn bộ:", result);
+    } catch (err) {
+        console.error("Lỗi khi lưu toàn bộ:", err);
+    }
+}
 // Thêm giao dịch
 async function addTransaction() {
     let amount = document.getElementById("amount").value;
