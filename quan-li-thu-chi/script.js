@@ -77,12 +77,10 @@ function updateUI() {
 async function deleteTransaction(index) {
     if (!confirm("Bạn có chắc muốn xóa giao dịch này?")) return;
 
-    // Đánh dấu giao dịch là đã xóa thay vì xóa hoàn toàn
+    // Chỉ thay đổi trạng thái thành 'deleted', không xóa hoàn toàn.
     transactions[index].status = "deleted";
-
-    // Cập nhật chỉ giao dịch bị thay đổi
-    await updateTransaction(transactions[index]);
-
+    
+    await saveAllTransactions(); // Ghi lại toàn bộ danh sách (bao gồm các thay đổi trạng thái)
     updateUI();
 }
 
@@ -111,20 +109,38 @@ function editTransaction(index) {
 }
 
 // Cập nhật chỉ giao dịch đã thay đổi
-async function updateTransaction(transaction) {
-    try {
-        let response = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ transaction }) // Chỉ gửi giao dịch đã thay đổi
-        });
-        let result = await response.text();
-        console.log("Cập nhật giao dịch:", result);
-    } catch (err) {
-        console.error("Lỗi khi cập nhật giao dịch:", err);
-    }
-}
+function updateUI() {
+    let tableBody = document.querySelector("#transaction-table tbody");
+    tableBody.innerHTML = "";
+    let totalIncome = 0;
+    let totalExpense = 0;
 
+    // Lọc chỉ giao dịch có trạng thái 'active'
+    let activeTransactions = transactions.filter(t => t.status === "active");
+
+    activeTransactions.forEach((t, index) => {
+        let row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td>${t.amount.toLocaleString("vi-VN")} VND</td>
+            <td>${t.type === "income" ? "Thu" : "Chi"}</td>
+            <td>${t.note}</td>
+            <td>${new Date(t.date).toLocaleString("vi-VN")}</td>
+            <td>
+                <button onclick="editTransaction(${index})">✏️</button>
+                <button onclick="deleteTransaction(${index})">🗑️</button>
+            </td>
+        `;
+
+        tableBody.appendChild(row);
+
+        if (t.type === "income") totalIncome += t.amount;
+        else totalExpense += t.amount;
+    });
+
+    document.getElementById("total-income").textContent = totalIncome.toLocaleString("vi-VN");
+    document.getElementById("total-expense").textContent = totalExpense.toLocaleString("vi-VN");
+}
 // Thêm giao dịch
 async function addTransaction() {
     let amount = document.getElementById("amount").value;
@@ -136,7 +152,13 @@ async function addTransaction() {
         return;
     }
 
-    let transaction = { amount: parseInt(amount), type, note, date: new Date().toISOString(), status: "active" }; // Trạng thái mặc định là "active"
+    let transaction = { 
+        amount: parseInt(amount), 
+        type, 
+        note, 
+        date: new Date().toISOString(),
+        status: "active"  // Mặc định trạng thái là active khi thêm giao dịch
+    };
 
     await saveTransaction(transaction);
     transactions = await fetchTransactions(); // Cập nhật từ Google Drive
