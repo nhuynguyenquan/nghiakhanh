@@ -18,24 +18,33 @@ async function fetchTransactions() {
 
 // Gửi một bản ghi lên Google Drive
 async function saveTransaction(transaction) {
+    // Kiểm tra dữ liệu giao dịch
     if (!transaction || !transaction.amount || !transaction.type) {
         alert("❌ Dữ liệu không hợp lệ!");
         return;
     }
 
     try {
+        // Gửi bản ghi lên Google Apps Script (API_URL là URL của Apps Script Web App)
         let response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ transaction }),
-            mode: "no-cors"
+            body: JSON.stringify({ transaction }) // Chuyển giao dịch vào trong payload
         });
 
-        console.log("✅ Gửi bản ghi lên server:", transaction);
+        // Kiểm tra phản hồi từ server
+        if (response.ok) {
+            console.log("✅ Gửi bản ghi lên server thành công:", transaction);
+            let result = await response.json(); // Giả sử server trả về JSON
+            console.log("✅ Phản hồi từ server:", result);
+        } else {
+            console.error("❌ Lỗi khi gửi dữ liệu:", response.status, response.statusText);
+        }
     } catch (error) {
         console.error("❌ Lỗi khi gửi dữ liệu:", error);
     }
 }
+
 
 // Hàm cập nhật giao diện
 function updateUI() {
