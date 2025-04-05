@@ -1,4 +1,5 @@
 let transactions = [];
+
 const API_URL = "https://script.google.com/macros/s/AKfycbyRKYmeCtcVkWmXupLkyR4CFHLzSP0o4YDKETltmvRFwvxZg76Sjf6oKv3OjcbEXS5h/exec";
 const TELEGRAM_BOT_TOKEN = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";
 const TELEGRAM_CHAT_ID = "6249154937";
@@ -69,23 +70,31 @@ function updateUI() {
 }
 
 // Xử lý thêm giao dịch
-async function saveTransaction(transaction) {
-    try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transaction: transaction, status: "active" }) // Dữ liệu cần gửi
-      });
-  
-      if (!response.ok) {
-        throw new Error("Lỗi khi gửi dữ liệu");
-      }
-      const result = await response.json();
-      console.log("✅ Server phản hồi:", result);
-    } catch (error) {
-      console.error("❌ Lỗi khi gửi dữ liệu:", error);
+async function addTransaction() {
+    let amount = document.getElementById("amount").value;
+    let type = document.getElementById("type").value;
+    let note = document.getElementById("note").value;
+
+    if (!amount || isNaN(amount)) {
+        alert("Vui lòng nhập số tiền hợp lệ!");
+        return;
     }
-  }
+
+    let transaction = {
+        amount: parseInt(amount),
+        type,
+        note,
+        date: new Date().toISOString(),
+        status: "active"
+    };
+
+    await saveTransaction(transaction);
+    transactions = await fetchTransactions();
+    updateUI();
+    resetForm();
+    sendToTelegram(transaction);
+}
+
 // Xóa giao dịch: chỉ cập nhật trạng thái
 async function deleteTransaction(index) {
     if (!confirm("Bạn có chắc muốn xóa giao dịch này?")) return;
