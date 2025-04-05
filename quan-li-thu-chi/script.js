@@ -18,7 +18,6 @@ async function fetchTransactions() {
 
 // Gửi một bản ghi lên Google Drive
 async function saveTransaction(transaction) {
-    const API_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"; // Đổi bằng script ID của bạn
     try {
       const response = await fetch(API_URL, {
         method: "POST",
