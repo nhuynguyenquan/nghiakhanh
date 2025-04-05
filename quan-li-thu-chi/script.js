@@ -77,10 +77,16 @@ function updateUI() {
 async function deleteTransaction(index) {
     if (!confirm("Bạn có chắc muốn xóa giao dịch này?")) return;
 
-    // Chỉ thay đổi trạng thái thành 'deleted', không xóa hoàn toàn.
+    // Đánh dấu bản ghi là đã xóa
     transactions[index].status = "deleted";
-    
-    await saveAllTransactions(); // Ghi lại toàn bộ danh sách (bao gồm các thay đổi trạng thái)
+
+    // Gửi bản ghi đã cập nhật (status: deleted) lên server
+    await saveTransaction(transactions[index]);
+
+    // Làm mới danh sách từ server
+    transactions = await fetchTransactions();
+
+    // Cập nhật lại giao diện
     updateUI();
 }
 
