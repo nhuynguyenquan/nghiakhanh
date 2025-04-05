@@ -1,6 +1,5 @@
 let transactions = [];
-
-const API_URL = "https://script.google.com/macros/s/AKfycbztaTsyYoGVY7dKztMhfEbkM994qLn33fHZ-mLxIZrmCO3TNCTu9tQI1DTeDqSbyiBA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzaaylyRMuHUrx4UkBS30bGKfQXozCwSaNhJBlKYkDx5tHl-oBghK-kokxMSfTLyJPL/exec";
 const TELEGRAM_BOT_TOKEN = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";
 const TELEGRAM_CHAT_ID = "6249154937";
 
@@ -18,21 +17,25 @@ async function fetchTransactions() {
 
 // Gửi một bản ghi lên Google Drive
 async function saveTransaction(transaction) {
-    try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ transaction, status: 'active' }) // Gửi cả transaction và status
-      });
-  
-      const result = await response.json();
-      console.log(result.message);
-    } catch (error) {
-      console.error("Lỗi khi gửi dữ liệu:", error);
+    if (!transaction || !transaction.amount || !transaction.type) {
+        alert("❌ Dữ liệu không hợp lệ!");
+        return;
     }
-  }
+
+    try {
+        let response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ transaction }),
+            mode: "no-cors"
+        });
+
+        console.log("✅ Gửi bản ghi lên server:", transaction);
+    } catch (error) {
+        console.error("❌ Lỗi khi gửi dữ liệu:", error);
+    }
+}
+
 // Hiển thị danh sách giao dịch
 function updateUI() {
     const tableBody = document.querySelector("#transaction-table tbody");
