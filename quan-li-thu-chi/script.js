@@ -74,13 +74,16 @@ function updateUI() {
     document.getElementById("total-expense").textContent = totalExpense.toLocaleString("vi-VN");
 }
 
-// Xóa giao dịch và đánh dấu trạng thái
+// Xóa giao dịch và chỉ cập nhật trạng thái
 async function deleteTransaction(index) {
     if (!confirm("Bạn có chắc muốn xóa giao dịch này?")) return;
 
     // Đánh dấu giao dịch là đã xóa thay vì xóa hoàn toàn
     transactions[index].status = "deleted";
-    await saveAllTransactions(); // Ghi lại toàn bộ danh sách
+
+    // Cập nhật chỉ giao dịch bị thay đổi
+    await updateTransaction(transactions[index]);
+
     updateUI();
 }
 
@@ -100,24 +103,26 @@ function editTransaction(index) {
             date: new Date().toISOString(),
             status: transactions[index].status // Giữ nguyên trạng thái cũ (đã xóa hoặc chưa)
         };
-        await saveAllTransactions();
+
+        // Cập nhật chỉ giao dịch bị thay đổi
+        await updateTransaction(transactions[index]);
         updateUI();
         resetForm();
     };
 }
 
-// Lưu toàn bộ giao dịch
-async function saveAllTransactions() {
+// Cập nhật chỉ giao dịch đã thay đổi
+async function updateTransaction(transaction) {
     try {
         let response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ transactions }) // Gửi toàn bộ danh sách
+            body: JSON.stringify({ transaction }) // Chỉ gửi giao dịch đã thay đổi
         });
         let result = await response.text();
-        console.log("Lưu toàn bộ:", result);
+        console.log("Cập nhật giao dịch:", result);
     } catch (err) {
-        console.error("Lỗi khi lưu toàn bộ:", err);
+        console.error("Lỗi khi cập nhật giao dịch:", err);
     }
 }
 
