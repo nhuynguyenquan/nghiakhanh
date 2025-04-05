@@ -75,6 +75,7 @@ async function deleteTransaction(index) {
     transactions.splice(index, 1);
     await saveAllTransactions(); // Ghi lại toàn bộ danh sách
     updateUI();
+    alert("✅ Đã xoá và lưu giao dịch thành công!");
 }
 //
 function editTransaction(index) {
@@ -102,12 +103,16 @@ async function saveAllTransactions() {
         let response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ transactions }) // Gửi toàn bộ danh sách
+            body: JSON.stringify({ transactions })
         });
+
         let result = await response.text();
-        console.log("Lưu toàn bộ:", result);
-    } catch (err) {
-        console.error("Lỗi khi lưu toàn bộ:", err);
+        console.log("📁 Đã lưu toàn bộ giao dịch:", result);
+        return true;
+    } catch (error) {
+        console.error("❌ Lỗi khi lưu toàn bộ giao dịch:", error);
+        alert("❌ Không thể lưu dữ liệu! Vui lòng kiểm tra lại.");
+        return false;
     }
 }
 // Thêm giao dịch
