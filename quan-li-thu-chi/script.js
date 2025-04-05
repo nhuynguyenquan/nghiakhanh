@@ -147,3 +147,32 @@ window.onload = async function () {
     transactions = await fetchTransactions();
     updateUI();
 };
+async function editTransaction(index) {
+    const t = transactions[index];
+    const newAmount = prompt("Số tiền mới:", t.amount);
+    const newNote = prompt("Ghi chú mới:", t.note);
+    const newType = prompt("Loại (income/expense):", t.type);
+
+    if (!newAmount || isNaN(newAmount) || !["income", "expense"].includes(newType)) {
+        alert("❌ Dữ liệu không hợp lệ!");
+        return;
+    }
+
+    transactions[index] = {
+        ...t,
+        amount: parseInt(newAmount),
+        note: newNote,
+        type: newType
+    };
+
+    await saveAllTransactions(); // Lưu lại tất cả sau khi chỉnh sửa
+    updateUI();
+}
+async function deleteTransaction(index) {
+    if (confirm("Bạn có chắc muốn xóa giao dịch này?")) {
+        transactions.splice(index, 1);
+        await saveAllTransactions(); // Lưu lại sau khi xóa
+        updateUI();
+    }
+}
+
