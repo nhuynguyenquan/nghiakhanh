@@ -198,3 +198,17 @@ window.onload = async function () {
     transactions = await fetchTransactions();
     updateUI();
 };
+// Ghi lại toàn bộ danh sách giao dịch vào Google Drive
+async function saveAllTransactions() {
+    try {
+        let response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ transactions }) // Gửi toàn bộ danh sách giao dịch
+        });
+        let result = await response.text();
+        console.log("Lưu toàn bộ:", result);
+    } catch (err) {
+        console.error("Lỗi khi lưu toàn bộ:", err);
+    }
+}
