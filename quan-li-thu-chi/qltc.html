@@ -13,34 +13,37 @@
   </style>
 </head>
 <body>
-  <h2>Quản lý thu chi Nhụy Nguyên</h2>
+  <h1>📊 Quản lý thu chi - Quán Nhụy Nguyên</h1>
+  <p class="subtitle">Theo dõi giao dịch, tổng thu chi, biểu đồ thống kê</p>
 
-  <label for="amount">Số tiền:</label>
-  <input type="number" id="amount" placeholder="VD: 100000">
-  <label for="type">Loại:</label>
-  <select id="type">
-    <option value="income">Thu</option>
-    <option value="expense">Chi</option>
-  </select>
-  <label for="note">Mô tả:</label>
-  <input type="text" id="note" placeholder="VD: Bán hàng">
-  <button id="submit-btn" onclick="addTransaction()">Thêm</button>
-
-  <div class="summary">
-    Tổng thu: <span id="total-income">0</span> VND | Tổng chi: <span id="total-expense">0</span> VND
+  <div class="summary-boxes">
+    <div class="summary income">Tổng thu: <span id="total-income">0 VND</span></div>
+    <div class="summary expense">Tổng chi: <span id="total-expense">0 VND</span></div>
   </div>
+
+  <form id="transaction-form">
+    <input type="number" id="amount" placeholder="Số tiền" required />
+    <select id="type">
+      <option value="income">Thu</option>
+      <option value="expense">Chi</option>
+    </select>
+    <input type="text" id="note" placeholder="Ghi chú" required />
+    <button type="button" id="submit-btn">➕ Thêm</button>
+  </form>
 
   <table id="transaction-table">
     <thead>
       <tr>
         <th>Số tiền</th>
         <th>Loại</th>
-        <th>Mô tả</th>
+        <th>Ghi chú</th>
         <th>Ngày</th>
-        <th>Hành động</th>
+        <th>Thao tác</th>
       </tr>
     </thead>
-    <tbody></tbody>
+    <tbody>
+      <!-- Dữ liệu sẽ được thêm ở đây -->
+    </tbody>
   </table>
 
   <script src="script1.js"></script>
