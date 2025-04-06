@@ -1,10 +1,9 @@
 let transactions = [];
-const API_URL = "https://script.google.com/macros/s/AKfycby2m73b0hTEgX-Wvb4VXa_sOcCshRa9cj4bmKvQz6ggPm99mctiQFjUXYcDAkxZPRte/exec";
-//const API_URL = "https://script.google.com/macros/s/AKfycbzaaylyRMuHUrx4UkBS30bGKfQXozCwSaNhJBlKYkDx5tHl-oBghK-kokxMSfTLyJPL/exec";
+
+const API_URL = "https://script.google.com/macros/s/AKfycbzaaylyRMuHUrx4UkBS30bGKfQXozCwSaNhJBlKYkDx5tHl-oBghK-kokxMSfTLyJPL/exec";
 const TELEGRAM_BOT_TOKEN = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";
 const TELEGRAM_CHAT_ID = "6249154937"; 
-//https://drive.google.com/file/d/1GFPr__AeZN9Y79AIx1hD-EgtloapHdJB/view?usp=sharing
-// Lấy dữ liệu từ Google Drive
+
 async function fetchTransactions() {
     try {
         let response = await fetch(API_URL);
@@ -27,8 +26,8 @@ async function saveTransaction(transaction) {
         let response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ transaction }),
-            mode: "no-cors" // Thử tắt kiểm tra CORS 
+            body: JSON.stringify({ transaction })
+            //mode: "no-cors" 
         });
 
         let result = await response.json();
