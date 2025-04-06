@@ -133,6 +133,18 @@
     };
 
     // 👉 Gửi đến webhook Telegram, Google Sheet hoặc Google Apps Script tùy bạn
+    try {
+        // Gửi tin nhắn Telegram
+        const message = `📢 Đánh giá mới từ khách hàng:\n\n👤 Tên: ${data.name}\n⭐ Đánh giá: ${data.rating}\n📝 Góp ý: ${data.comment}`;
+        await sendTelegram(message);
+  
+        result.textContent = "✅ Cảm ơn bạn đã đánh giá!";
+        form.reset();
+      } catch (error) {
+        result.textContent = "❌ Gửi không thành công.";
+        console.error(error);
+      }
+    });
     console.log("📤 Đánh giá:", data);
 
     document.getElementById("message").textContent = "✅ Cảm ơn bạn đã đánh giá!";
@@ -141,6 +153,30 @@
     selectedRating = 0;
     updateStars(0);
   }
+  async function sendTelegram(message) {
+      const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+      const payload = {
+        chat_id: TELEGRAM_CHAT_ID,
+        text: message,
+        parse_mode: 'HTML'
+      };
+  
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (data.ok) {
+          console.log('✅ Đã gửi tin nhắn Telegram');
+        } else {
+          console.error('❌ Lỗi khi gửi tin nhắn Telegram:', data.description);
+        }
+      } catch (error) {
+        console.error('❌ Lỗi khi gửi tin nhắn Telegram:', error);
+      }
+    }
 </script>
 
 </body>
