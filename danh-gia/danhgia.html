@@ -1,127 +1,104 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Đánh Giá Quán Bánh Bèo Nhụy Nguyên</title>
-  <style>
-    header {
-      background-color: #8c5a3c;
-      color: white;
-      text-align: center;
-      padding: 20px;
-      font-size: 24px;
-    }
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f8f1e4;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-    }
-    .menu-container {
-      max-width: 600px;
-      margin: 20px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    h1 {
-      color: #d35400;
-    }
-    label {
-      display: block;
-      margin-top: 15px;
-      text-align: left;
-    }
-    input, select, textarea, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 16px;
-    }
-    button {
-      background-color: #d35400;
-      color: white;
-      cursor: pointer;
-      margin-top: 20px;
-    }
-    button:disabled {
-      background-color: #aaa;
-      cursor: not-allowed;
-    }
-    #result {
-      margin-top: 20px;
-      color: green;
-      font-weight: bold;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Quán Bánh Bèo Nhụy Nguyên</title>
+    <style>
+	header {
+            background-color: #8c5a3c;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 24px;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f1e4;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .menu-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #d35400;
+        }
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+        .price {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+    </style>
 </head>
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WGYWXSKNTW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
+  gtag('config', 'G-WGYWXSKNTW');
+</script>
 <body>
-  <header>
-    <h1><a href="../" style="text-decoration: none; color: white;">NHỤY NGUYÊN QUÁN</a></h1>
-  </header>
+    <header>
+        <h1><a href="../" style="text-decoration: none; color: white;">NHỤY NGUYÊN QUÁN</a></h1>
+    </header>
+    <div class="menu-container">
+        <h1>Trang Đánh Giá Bánh Bèo Nhụy Nguyên</h1>
+        <h2>✨ Đánh giá quán Nhụy Nguyên</h2>
+  <form id="feedback-form">
+    <label for="name">Tên của bạn:</label>
+    <input type="text" id="name" required>
 
-  <div class="menu-container">
-    <h1>Trang Đánh Giá</h1>
-    <h2>✨ Góp ý cho quán Nhụy Nguyên</h2>
+    <label for="rating">Đánh giá (1 - 5 sao):</label>
+    <select id="rating" required>
+      <option value="">Chọn số sao</option>
+      <option>5</option>
+      <option>4</option>
+      <option>3</option>
+      <option>2</option>
+      <option>1</option>
+    </select>
 
-    <form id="feedback-form">
-      <label for="name">Tên của bạn:</label>
-      <input type="text" id="name" name="name" required>
+    <label for="comment">Góp ý:</label>
+    <textarea id="comment" rows="4" required></textarea>
 
-      <label for="rating">Đánh giá (1 - 5 sao):</label>
-      <select id="rating" name="rating" required>
-        <option value="">Chọn số sao</option>
-        <option>5</option>
-        <option>4</option>
-        <option>3</option>
-        <option>2</option>
-        <option>1</option>
-      </select>
+    <button type="submit">Gửi đánh giá</button>
+  </form>
 
-      <label for="comment">Góp ý:</label>
-      <textarea id="comment" name="comment" rows="4" required></textarea>
-
-      <button type="submit">Gửi đánh giá</button>
-    </form>
-
-    <p id="result"></p>
-  </div>
+  <p id="result" style="margin-top: 20px; color: green;"></p>
 
   <script>
     const form = document.getElementById('feedback-form');
     const result = document.getElementById('result');
-    const API_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec'; // <- Thay YOUR_SCRIPT_ID_HERE bằng ID thực tế
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzDcQaqPRJoY4LhqkBQKj-Qh5XDA7Bw8SExM1XMJty_H8bNfLNYwO8tQpdtCk_xDhNZJw/exec';
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const button = form.querySelector('button');
-      const name = document.getElementById('name').value.trim();
-      const rating = document.getElementById('rating').value;
-      const comment = document.getElementById('comment').value.trim();
-
-      if (name.length < 2) {
-        result.textContent = "❗ Vui lòng nhập tên hợp lệ (tối thiểu 2 ký tự).";
-        return;
-      }
-
       const data = {
-        name,
-        rating,
-        comment,
+        name: document.getElementById('name').value,
+        rating: document.getElementById('rating').value,
+        comment: document.getElementById('comment').value,
         date: new Date().toISOString()
       };
 
       try {
-        result.textContent = "⏳ Đang gửi đánh giá...";
-        button.disabled = true;
-
         const res = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -131,12 +108,12 @@
         result.textContent = "✅ Cảm ơn bạn đã đánh giá!";
         form.reset();
       } catch (error) {
-        result.textContent = "❌ Gửi không thành công. Vui lòng thử lại.";
+        result.textContent = "❌ Gửi không thành công.";
         console.error(error);
-      } finally {
-        button.disabled = false;
       }
     });
+
+
   </script>
 </body>
 </html>
