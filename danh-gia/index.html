@@ -78,11 +78,14 @@
       margin-top: 15px;
       text-align: center;
     }
+    h1 {
+            color: #d35400;
+        }
   </style>
 </head>
 <body>
-
 <div class="container">
+    
   <h2>Đánh Giá Quán Nhụy Nguyên</h2>
   <div class="stars" id="stars">
     <span class="star" data-value="1">★</span>
@@ -97,10 +100,16 @@
   <button onclick="submitReview()">Gửi đánh giá</button>
 
   <div class="message" id="message"></div>
+  <a href="../">Quay lại trang chủ</a> | 
 </div>
-
+    
+<div>
+   
+</div>
 <script>
-  let selectedRating = 0;
+    const TELEGRAM_TOKEN = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";
+    const TELEGRAM_CHAT_ID = "6249154937";
+    let selectedRating = 0;
   const stars = document.querySelectorAll('.star');
 
   stars.forEach(star => {
@@ -132,52 +141,42 @@
       date: new Date().toISOString()
     };
 
-    // 👉 Gửi đến webhook Telegram, Google Sheet hoặc Google Apps Script tùy bạn
+    // Gửi dữ liệu tới Google Apps Script hoặc Webhook
     try {
-        // Gửi tin nhắn Telegram
-        const message = `📢 Đánh giá mới từ khách hàng:\n\n👤 Tên: ${data.name}\n⭐ Đánh giá: ${data.rating}\n📝 Góp ý: ${data.comment}`;
-        await sendTelegram(message);
-  
-        result.textContent = "✅ Cảm ơn bạn đã đánh giá!";
-        form.reset();
-      } catch (error) {
-        result.textContent = "❌ Gửi không thành công.";
-        console.error(error);
-      }
-    });
-    console.log("📤 Đánh giá:", data);
-
-    document.getElementById("message").textContent = "✅ Cảm ơn bạn đã đánh giá!";
-    document.getElementById("comment").value = "";
-    document.getElementById("name").value = "";
-    selectedRating = 0;
-    updateStars(0);
-  }
-  async function sendTelegram(message) {
-      const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-      const payload = {
-        chat_id: TELEGRAM_CHAT_ID,
-        text: message,
-        parse_mode: 'HTML'
-      };
-  
-      try {
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await response.json();
-        if (data.ok) {
-          console.log('✅ Đã gửi tin nhắn Telegram');
-        } else {
-          console.error('❌ Lỗi khi gửi tin nhắn Telegram:', data.description);
-        }
-      } catch (error) {
-        console.error('❌ Lỗi khi gửi tin nhắn Telegram:', error);
-      }
+      await sendTelegram(data); // Gửi đến Telegram
+      document.getElementById("message").textContent = "✅ Cảm ơn bạn đã đánh giá!";
+      document.getElementById("name").value = "";
+      document.getElementById("comment").value = "";
+      selectedRating = 0;
+      updateStars(0);
+    } catch (error) {
+      document.getElementById("message").textContent = "❌ Gửi không thành công.";
+      console.error(error);
     }
-</script>
+  }
 
+  async function sendTelegram(data) {
+    const message = `📢 Đánh giá mới từ khách hàng:\n\n👤 Tên: ${data.name}\n⭐ Đánh giá: ${data.rating}\n📝 Góp ý: ${data.comment}`;
+
+    const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+    const payload = {
+      chat_id: TELEGRAM_CHAT_ID,
+      text: message,
+      parse_mode: 'HTML'
+    };
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+    if (!result.ok) {
+      throw new Error(result.description);
+    }
+    console.log("✅ Đã gửi tin nhắn Telegram");
+  }
+</script>
 </body>
 </html>
