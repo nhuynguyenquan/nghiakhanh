@@ -101,13 +101,6 @@
       };
   
       try {
-        // Gửi dữ liệu đến Google Sheets
-        const res = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-  
         // Gửi tin nhắn Telegram
         const message = `📢 Đánh giá mới từ khách hàng:\n\n👤 Tên: ${data.name}\n⭐ Đánh giá: ${data.rating}\n📝 Góp ý: ${data.comment}`;
         await sendTelegram(message);
