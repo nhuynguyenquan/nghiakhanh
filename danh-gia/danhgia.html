@@ -102,9 +102,9 @@
 <script>
     const TELEGRAM_BOT_TOKEN = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";
     const TELEGRAM_CHAT_ID = "6249154937";
-  let selectedRating = 0;
+    let selectedRating = 0;
   const stars = document.querySelectorAll('.star');
- 
+
   stars.forEach(star => {
     star.addEventListener('click', () => {
       selectedRating = parseInt(star.dataset.value);
@@ -150,7 +150,7 @@
 
   async function sendTelegram(data) {
     const message = `📢 Đánh giá mới từ khách hàng:\n\n👤 Tên: ${data.name}\n⭐ Đánh giá: ${data.rating}\n📝 Góp ý: ${data.comment}`;
-    
+
     const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
     const payload = {
       chat_id: TELEGRAM_CHAT_ID,
@@ -171,6 +171,5 @@
     console.log("✅ Đã gửi tin nhắn Telegram");
   }
 </script>
-
 </body>
 </html>
