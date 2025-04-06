@@ -8,40 +8,48 @@
   <style>
     body {
       font-family: 'Quicksand', sans-serif;
-      background: #f6f8fc;
+      background: #f1f3f7;
       margin: 0;
       padding: 0;
       display: flex;
       justify-content: center;
-      align-items: flex-start;
+      align-items: center;
       min-height: 100vh;
+    }
+
+    h1 {
+      color: #d35400;
+      text-align: center;
+      margin-top: 30px;
+      font-size: 2.5rem;
     }
 
     .container {
       background: white;
       padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-      margin-top: 50px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
       width: 100%;
       max-width: 500px;
+      margin-top: 50px;
     }
 
     h2 {
       margin-bottom: 20px;
       text-align: center;
       color: #333;
+      font-size: 1.8rem;
     }
 
     .stars {
       display: flex;
       justify-content: center;
-      gap: 10px;
+      gap: 15px;
       margin-bottom: 20px;
     }
 
     .star {
-      font-size: 32px;
+      font-size: 40px;
       cursor: pointer;
       color: #ccc;
     }
@@ -50,24 +58,25 @@
       color: gold;
     }
 
-    textarea, input {
+    input, textarea {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       margin-bottom: 15px;
       border-radius: 8px;
       border: 1px solid #ccc;
-      resize: none;
+      font-size: 16px;
     }
 
     button {
       background: #ff6600;
       color: white;
-      padding: 12px;
+      padding: 14px;
       width: 100%;
       border: none;
       border-radius: 8px;
-      font-size: 16px;
+      font-size: 18px;
       cursor: pointer;
+      transition: background 0.3s ease;
     }
 
     button:hover {
@@ -77,17 +86,27 @@
     .message {
       margin-top: 15px;
       text-align: center;
+      font-size: 1.2rem;
     }
-    h1 {
-            color: #d35400;
-        }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .footer a {
+      text-decoration: none;
+      color: #ff6600;
+      font-weight: bold;
+    }
+
   </style>
 </head>
 <body>
-    
-    <h1>Đánh Giá Quán Bánh Bèo Nhụy Nguyên</h1>
+
+<h1>Đánh Giá Quán Bánh Bèo Nhụy Nguyên</h1>
+
 <div class="container">
-    
   <h2>Đánh Giá Quán Nhụy Nguyên</h2>
   <div class="stars" id="stars">
     <span class="star" data-value="1">★</span>
@@ -97,22 +116,22 @@
     <span class="star" data-value="5">★</span>
   </div>
 
-  <input type="text" id="name" placeholder="Tên của bạn (không bắt buộc)">
+  <input type="text" id="name" placeholder="Tên của bạn (không bắt buộc)" />
   <textarea id="comment" rows="4" placeholder="Viết nhận xét của bạn..."></textarea>
   <button onclick="submitReview()">Gửi đánh giá</button>
 
   <div class="message" id="message"></div>
 </div>
-<div>
-    <p>
-        <a href="../">Home</a> | 
-        
-    </p>
+
+<div class="footer">
+  <p><a href="../">Quay lại trang chủ</a></p>
 </div>
+
 <script>
-    const TELEGRAM_TOKEN = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";
-    const TELEGRAM_CHAT_ID = "6249154937";
-    let selectedRating = 0;
+  const TELEGRAM_TOKEN = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";
+  const TELEGRAM_CHAT_ID = "6249154937";
+
+  let selectedRating = 0;
   const stars = document.querySelectorAll('.star');
 
   stars.forEach(star => {
@@ -181,5 +200,6 @@
     console.log("✅ Đã gửi tin nhắn Telegram");
   }
 </script>
+
 </body>
 </html>
