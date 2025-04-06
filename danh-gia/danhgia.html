@@ -86,25 +86,32 @@
   <script>
     const form = document.getElementById('feedback-form');
     const result = document.getElementById('result');
-    const API_URL = 'https://script.google.com/macros/s/AKfycbykhht9XC57JO4iVeY49tISix3ciL5jPOtH_TpUeFonFH_qnStjtzdh5BMsmU55TBdB9Q/exec';
-
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzDcQaqPRJoY4LhqkBQKj-Qh5XDA7Bw8SExM1XMJty_H8bNfLNYwO8tQpdtCk_xDhNZJw/exec';
+    const TELEGRAM_TOKEN = '7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY';  
+    const TELEGRAM_CHAT_ID = '6249154937';  
+  
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-
+  
       const data = {
         name: document.getElementById('name').value,
         rating: document.getElementById('rating').value,
         comment: document.getElementById('comment').value,
         date: new Date().toISOString()
       };
-
+  
       try {
+        // Gửi dữ liệu đến Google Sheets
         const res = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
-
+  
+        // Gửi tin nhắn Telegram
+        const message = `📢 Đánh giá mới từ khách hàng:\n\n👤 Tên: ${data.name}\n⭐ Đánh giá: ${data.rating}\n📝 Góp ý: ${data.comment}`;
+        await sendTelegram(message);
+  
         result.textContent = "✅ Cảm ơn bạn đã đánh giá!";
         form.reset();
       } catch (error) {
@@ -112,8 +119,31 @@
         console.error(error);
       }
     });
-
-
+  
+    async function sendTelegram(message) {
+      const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+      const payload = {
+        chat_id: TELEGRAM_CHAT_ID,
+        text: message,
+        parse_mode: 'HTML'
+      };
+  
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (data.ok) {
+          console.log('✅ Đã gửi tin nhắn Telegram');
+        } else {
+          console.error('❌ Lỗi khi gửi tin nhắn Telegram:', data.description);
+        }
+      } catch (error) {
+        console.error('❌ Lỗi khi gửi tin nhắn Telegram:', error);
+      }
+    }
   </script>
 </body>
 </html>
