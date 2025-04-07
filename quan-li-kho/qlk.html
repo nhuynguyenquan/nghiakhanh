@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quản Lý Kho - Nhụy Nguyên</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: #f2f4f8;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+
+    form {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    button {
+      background: #27ae60;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #219150;
+    }
+
+    .history {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .history h2 {
+      margin-bottom: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    table th, table td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+
+    table th {
+      background: #f0f0f0;
+    }
+
+    @media (max-width: 600px) {
+      input, select, button {
+        font-size: 15px;
+      }
+
+      table th, table td {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📦 Quản Lý Kho</h1>
+
+    <form id="stockForm">
+      <label for="item">Tên hàng</label>
+      <input type="text" id="item" placeholder="VD: Bánh bèo, Chả, Bột gạo..." required>
+
+      <label for="quantity">Số lượng</label>
+      <input type="number" id="quantity" min="1" required>
+
+      <label for="action">Loại giao dịch</label>
+      <select id="action" required>
+        <option value="import">Nhập kho</option>
+        <option value="export">Xuất kho</option>
+      </select>
+
+      <label for="note">Ghi chú (nếu có)</label>
+      <input type="text" id="note" placeholder="VD: Nhập thêm từ chợ...">
+
+      <button type="submit">Lưu giao dịch</button>
+    </form>
+
+    <div class="history">
+      <h2>📜 Lịch sử kho</h2>
+      <table id="historyTable">
+        <thead>
+          <tr>
+            <th>Thời gian</th>
+            <th>Hàng hóa</th>
+            <th>Số lượng</th>
+            <th>Loại</th>
+            <th>Ghi chú</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Dữ liệu sẽ được chèn ở đây bằng JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("stockForm");
+    const tableBody = document.querySelector("#historyTable tbody");
+
+    form.addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const item = document.getElementById("item").value.trim();
+      const quantity = parseInt(document.getElementById("quantity").value);
+      const action = document.getElementById("action").value;
+      const note = document.getElementById("note").value.trim();
+
+      const record = {
+        timestamp: new Date().toLocaleString("vi-VN"),
+        item,
+        quantity,
+        action,
+        note
+      };
+
+      // Gửi tới Apps Script (thêm sau)
+      try {
+        await fetch("https://script.google.com/macros/s/AKfycbzr1IXK0EaPDt1YTXU0J3Jy3RFHwEHbAJtNIOxYUZw/dev", {
+          method: "POST",
+          body: JSON.stringify(record),
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+
+        addRecordToTable(record);
+        form.reset();
+      } catch (err) {
+        alert("Lỗi khi gửi dữ liệu: " + err.message);
+      }
+    });
+
+    function addRecordToTable(record) {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${record.timestamp}</td>
+        <td>${record.item}</td>
+        <td>${record.quantity}</td>
+        <td>${record.action === "import" ? "Nhập" : "Xuất"}</td>
+        <td>${record.note || ""}</td>
+      `;
+      tableBody.prepend(row);
+    }
+  </script>
+</body>
+</html>
