@@ -242,7 +242,43 @@
         renderStock();
         renderHistory();
     });
+    async function checkTokenAccess(accessToken) {
+  const response = await fetch('https://api.dropboxapi.com/2/users/get_current_account', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
 
+  const data = await response.json();
+  console.log(data);
+  if (data.error) {
+    console.error('Token không hợp lệ hoặc không có quyền truy cập:', data.error);
+  } else {
+    console.log('Token hợp lệ, người dùng có quyền truy cập vào tài khoản Dropbox:', data);
+  }
+}
+async function checkFileAccess(accessToken) {
+  const response = await fetch('https://api.dropboxapi.com/2/files/get_metadata', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      path: '/kho/kho.json',  // Đường dẫn tệp bạn muốn kiểm tra quyền truy cập
+    }),
+  });
+
+  const data = await response.json();
+  console.log(data);
+  if (data.error) {
+    console.error('Không có quyền truy cập tệp:', data.error);
+  } else {
+    console.log('Tệp có sẵn và bạn có quyền truy cập:', data);
+  }
+}
 </script>
 
 </body>
