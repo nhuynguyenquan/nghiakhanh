@@ -99,12 +99,19 @@
     let history = [];
 
     async function loadData() {
-      const res = await fetch(SCRIPT_URL, {
+        const res = await fetch(SCRIPT_URL, {
   method: 'POST',
   body: JSON.stringify({ stock, history }),
   headers: { 'Content-Type': 'application/json' },
-  mode: 'no-cors'  // Thử dùng no-cors
 });
+
+// Kiểm tra phản hồi và xử lý
+if (!res.ok) {
+  console.error('Lỗi khi gửi dữ liệu:', res.statusText);
+  return;
+}
+
+
       const data = await res.json();
       stock = data.stock || {};
       history = data.history || [];
