@@ -189,7 +189,7 @@
 
         try {
             const response = await dbx.filesUpload({
-                path: '/kho.json', // Path to the kho.json file on Dropbox
+                path: '/kho/kho.json', // Path to the kho.json file on Dropbox
                 contents: jsonData,
                 mode: 'overwrite' // Overwrite the file if it already exists
             });
