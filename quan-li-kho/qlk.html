@@ -98,14 +98,21 @@
     //const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-wG5Ie-02jz0LqHZMrBqzehu5WYiO3CW77dyrxTcSiWgPzOvm3zxofZXCAhRADAYo/exec';
     let stock = {};
     let history = [];
+    const APP_KEY = '91gch0ud8qxqd26';
+const REDIRECT_URI = 'Yhttps://nhuynguyenquan.github.io/nghiakhanh/quan-li-kho/';  // Địa chỉ URL mà người dùng sẽ được chuyển hướng đến sau khi đăng nhập
 
+// URL xác thực OAuth của Dropbox
+const authUrl = `https://www.dropbox.com/oauth2/authorize?client_id=${APP_KEY}&response_type=code&redirect_uri=${REDIRECT_URI}`;
+
+// Chuyển người dùng đến URL xác thực
+window.location.href = authUrl;
     const DROPBOX_ACCESS_TOKEN = 'sl.u.AFrIfE_Auyy9HTPD6WL_k5Nf6-ZtwEwK1UG3ZGJ34zSO-V2PQHgKgRBTTC8ayt6ZTOCemHDu13OKUgsbDFNwX7V6J5w20h9wUp1NKHL4yt6P_LdaiOBQNWIp1hKwowKpvfzfTpHK4qXznnsZzcbxlRteLWrBzDLylAlggMjPaozR-zS9m6DVzqfPaSZIT8xFvFJtojus2OZOSC442klpdTnK-zsI_n3ckuQdNT6xlMXK3Q4nQ-emQTfHM3MuE3JasX3wK0yabkwx5iX3nMWdiafW7XN6yVxZs7kZZ6CE7PfBeXRfUt4rWy4nVtuNtT9hNPVKfzIdaGsOe3Fy2SfBf3HNA_9zAQVWnj_8OM96YOsHk9h-lqJNkq4rrxB90ewv6X1VkKU8kGvmqnZw1Ih_NS5crPgf_mrKexxqs3nIZ0ydQ69q9DseObPMit0Kg6m-UGOztGWbIkjh2-Uzr84LA8cVWrw4NLkysivQLHWEB7jULSdqZ-AoXQEA3fk8sY3KM-17QpYCOy0bFGvVJEeoa9hfZAg5_2H_xwb4BLaKDWyxveXIoFPw_WHMiQoowMiE9nacCJRNASHHxYy0QoWzvQuDdcPndrmtlFcliVIUSkk9pmrI4h3QzMKKYdf0hb7SdaW58nBRt2zJcouU-GpIlTve32JsJldwrMhAyCL0mRnnKY0j60qY6PMFHXaBY_p7UP2FwhZEvfhypvPq8oprwPtplzB84C0thv9-3R_GxB0sVMnhOYdRyiEwGI-AJnK-T6Qy5k1m09n4nEcZDLcqFgteHRI6hWRDNRq9zmuVAi5tjQxeAX9y9F5GvF6wKltQCuwa3qHNNmXC9CaEVdhJqRSEzioPNkegd2oEVgzCLy6BmxHyXydVzpO5-8Zq4Im6mmLIOjd76fDFDHebHiHCDt_URrqtsONgz8QC3qtsCsSFln-565j6GOpUFurKe2pjf64jznE1sCe7c1wqJr4Jrf0fR9tYnhKl8_p__DnYASUNwjECc50XMgA6hswlgp_u9AFV9YLwJ_wBOTbaofN8yCnvRDQlOi8InMcY4v-u-MQpNCoPu5SCb-KHoHX6zIKy_wgzifG6h8m4BH1wb-vw3K70RFWj6jcqbK47pg9jnBsT7t0mp51JT9OCOg4x_IiSVROCBvjJDnimfkga4OboEq9xvp8cgTCwiCFrlD1qYSZSvcMq3kJZnhBASv51UL-NgXvSBx9yD0NcRgPKHlrHNLPnUnGID02G3TjUp_BEbOgBaTDRRfdPDneV8bTW_QvqNTa8GOHo4AKoYXfF3Ob9ITaB';  // Thay bằng token của bạn
 const dbx = new Dropbox.Dropbox({ accessToken: DROPBOX_ACCESS_TOKEN });
 
 // Hàm lấy dữ liệu từ tệp kho.json
 async function loadData() {
   try {
-    const response = await dbx.filesDownload({ path: 'https://www.dropbox.com/scl/fi/i5mewppcia8r7ocjuomur/kho.json?dl=0' }); 
+    const response = await dbx.filesDownload({ path: '/kho.json' }); 
     const jsonData = await response.fileBlob.text();
     return JSON.parse(jsonData);
   } catch (error) {
