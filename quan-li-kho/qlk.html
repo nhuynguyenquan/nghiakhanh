@@ -2,186 +2,175 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quản Lý Kho - Nhụy Nguyên</title>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Quicksand', sans-serif;
-      background: #f2f4f8;
       margin: 0;
       padding: 0;
+      background: #f4f6f8;
     }
-
     .container {
-      padding: 20px;
-      max-width: 600px;
+      max-width: 480px;
       margin: auto;
-    }
-
-    h1 {
-      text-align: center;
-      color: #2c3e50;
-      margin-bottom: 20px;
-    }
-
-    form {
-      background: white;
       padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      margin-bottom: 30px;
     }
-
+    h2 {
+      text-align: center;
+      color: #d35400;
+    }
+    .section {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
     input, select, button {
       width: 100%;
       padding: 12px;
       margin-top: 10px;
       margin-bottom: 15px;
-      border-radius: 8px;
+      border-radius: 10px;
       border: 1px solid #ccc;
       font-size: 16px;
     }
-
     button {
       background: #27ae60;
       color: white;
       border: none;
-      font-weight: bold;
-      cursor: pointer;
+      transition: 0.2s;
     }
-
     button:hover {
       background: #219150;
     }
-
-    .history {
+    .log {
       background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-
-    .history h2 {
-      margin-bottom: 10px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    table th, table td {
-      border: 1px solid #ddd;
+      border-radius: 8px;
       padding: 10px;
-      text-align: left;
+      font-size: 14px;
+      max-height: 300px;
+      overflow-y: auto;
     }
-
-    table th {
-      background: #f0f0f0;
-    }
-
-    @media (max-width: 600px) {
-      input, select, button {
-        font-size: 15px;
-      }
-
-      table th, table td {
-        font-size: 14px;
-      }
+    .log-entry {
+      border-bottom: 1px solid #eee;
+      padding: 8px 0;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>📦 Quản Lý Kho</h1>
+    <h2>📦 Quản Lý Kho - Nhụy Nguyên</h2>
 
-    <form id="stockForm">
-      <label for="item">Tên hàng</label>
-      <input type="text" id="item" placeholder="VD: Bánh bèo, Chả, Bột gạo..." required>
+    <div class="section">
+      <h3>➕ Thêm Hàng Mới</h3>
+      <input type="text" id="itemName" placeholder="Tên hàng">
+      <input type="number" id="itemQty" placeholder="Số lượng ban đầu">
+      <button onclick="addItem()">Thêm vào kho</button>
+    </div>
 
-      <label for="quantity">Số lượng</label>
-      <input type="number" id="quantity" min="1" required>
-
-      <label for="action">Loại giao dịch</label>
-      <select id="action" required>
-        <option value="import">Nhập kho</option>
-        <option value="export">Xuất kho</option>
+    <div class="section">
+      <h3>🔁 Nhập / Xuất Kho</h3>
+      <select id="itemSelect"></select>
+      <input type="number" id="qtyChange" placeholder="Số lượng thay đổi">
+      <select id="actionType">
+        <option value="import">Nhập hàng</option>
+        <option value="export">Xuất hàng</option>
       </select>
+      <button onclick="updateStock()">Cập nhật</button>
+    </div>
 
-      <label for="note">Ghi chú (nếu có)</label>
-      <input type="text" id="note" placeholder="VD: Nhập thêm từ chợ...">
+    <div class="section">
+      <h3>📋 Hàng Tồn Kho</h3>
+      <ul id="stockList"></ul>
+    </div>
 
-      <button type="submit">Lưu giao dịch</button>
-    </form>
-
-    <div class="history">
-      <h2>📜 Lịch sử kho</h2>
-      <table id="historyTable">
-        <thead>
-          <tr>
-            <th>Thời gian</th>
-            <th>Hàng hóa</th>
-            <th>Số lượng</th>
-            <th>Loại</th>
-            <th>Ghi chú</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Dữ liệu sẽ được chèn ở đây bằng JS -->
-        </tbody>
-      </table>
+    <div class="section">
+      <h3>🕒 Lịch Sử Giao Dịch</h3>
+      <div class="log" id="logHistory"></div>
     </div>
   </div>
 
   <script>
-    const form = document.getElementById("stockForm");
-    const tableBody = document.querySelector("#historyTable tbody");
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzr1IXK0EaPDt1YTXU0J3Jy3RFHwEHbAJtNIOxYUZw/dev';
+    let stock = {};
+    let history = [];
 
-    form.addEventListener("submit", async function(e) {
-      e.preventDefault();
-
-      const item = document.getElementById("item").value.trim();
-      const quantity = parseInt(document.getElementById("quantity").value);
-      const action = document.getElementById("action").value;
-      const note = document.getElementById("note").value.trim();
-
-      const record = {
-        timestamp: new Date().toLocaleString("vi-VN"),
-        item,
-        quantity,
-        action,
-        note
-      };
-
-      // Gửi tới Apps Script (thêm sau)
-      try {
-        await fetch("https://script.google.com/macros/s/AKfycbzr1IXK0EaPDt1YTXU0J3Jy3RFHwEHbAJtNIOxYUZw/dev", {
-          method: "POST",
-          body: JSON.stringify(record),
-          headers: {
-            "Content-Type": "application/json"
-          }
-        });
-
-        addRecordToTable(record);
-        form.reset();
-      } catch (err) {
-        alert("Lỗi khi gửi dữ liệu: " + err.message);
-      }
-    });
-
-    function addRecordToTable(record) {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${record.timestamp}</td>
-        <td>${record.item}</td>
-        <td>${record.quantity}</td>
-        <td>${record.action === "import" ? "Nhập" : "Xuất"}</td>
-        <td>${record.note || ""}</td>
-      `;
-      tableBody.prepend(row);
+    async function loadData() {
+      const res = await fetch(SCRIPT_URL);
+      const data = await res.json();
+      stock = data.stock || {};
+      history = data.history || [];
+      renderStock();
+      renderHistory();
     }
+
+    function renderStock() {
+      const list = document.getElementById("stockList");
+      const select = document.getElementById("itemSelect");
+      list.innerHTML = "";
+      select.innerHTML = "";
+
+      for (const item in stock) {
+        list.innerHTML += `<li>${item}: ${stock[item]}</li>`;
+        select.innerHTML += `<option value="${item}">${item}</option>`;
+      }
+    }
+
+    function renderHistory() {
+      const log = document.getElementById("logHistory");
+      log.innerHTML = "";
+      history.slice().reverse().forEach(entry => {
+        log.innerHTML += `<div class="log-entry">📦 <strong>${entry.item}</strong> | ${entry.action === 'import' ? '➕' : '➖'} ${entry.qty} | 🕒 ${entry.time}</div>`;
+      });
+    }
+
+    async function saveData() {
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ stock, history }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    async function addItem() {
+      const name = document.getElementById("itemName").value.trim();
+      const qty = parseInt(document.getElementById("itemQty").value);
+      if (!name || isNaN(qty)) return alert("Vui lòng nhập tên và số lượng");
+      if (stock[name]) return alert("Mặt hàng đã tồn tại");
+
+      stock[name] = qty;
+      history.push({ item: name, qty, action: 'import', time: new Date().toLocaleString() });
+
+      renderStock();
+      renderHistory();
+      await saveData();
+
+      document.getElementById("itemName").value = "";
+      document.getElementById("itemQty").value = "";
+    }
+
+    async function updateStock() {
+      const item = document.getElementById("itemSelect").value;
+      const qty = parseInt(document.getElementById("qtyChange").value);
+      const action = document.getElementById("actionType").value;
+
+      if (!item || isNaN(qty)) return alert("Vui lòng nhập thông tin đầy đủ");
+      if (action === "export" && stock[item] < qty) return alert("Không đủ hàng");
+
+      stock[item] += (action === "import" ? qty : -qty);
+      history.push({ item, qty, action, time: new Date().toLocaleString() });
+
+      renderStock();
+      renderHistory();
+      await saveData();
+
+      document.getElementById("qtyChange").value = "";
+    }
+
+    loadData();
   </script>
 </body>
 </html>
