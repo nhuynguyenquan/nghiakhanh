@@ -145,14 +145,20 @@
 
     // Function to load data from Dropbox
     async function loadData() {
-        try {
-            const response = await dbx.filesDownload({ path: 'kho/kho.json' });
-            const jsonData = await response.fileBlob.text();
-            return JSON.parse(jsonData);
-        } catch (error) {
-            console.error('Lỗi khi tải tệp kho.json:', error);
+    try {
+        const response = await dbx.filesDownload({ path: '/kho/kho.json' });
+        const jsonData = await response.fileBlob.text();
+        const data = JSON.parse(jsonData);
+        if (!data || !data.stock) {
+            console.error('Stock data is missing.');
+            return { stock: {}, history: [] }; // Return empty stock and history if data is missing
         }
+        return data;
+    } catch (error) {
+        console.error('Error loading data:', error);
+        return { stock: {}, history: [] }; // Fallback to empty data
     }
+}
 
     // Function to render stock data to the screen
     function renderStock() {
