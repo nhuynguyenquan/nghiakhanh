@@ -93,139 +93,157 @@
       <div class="log" id="logHistory"></div>
     </div>
   </div>
-
   <script>
-    //const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-wG5Ie-02jz0LqHZMrBqzehu5WYiO3CW77dyrxTcSiWgPzOvm3zxofZXCAhRADAYo/exec';
     let stock = {};
     let history = [];
-    const APP_KEY = '91gch0ud8qxqd26';
+    const APP_KEY = '91gch0ud8qxqd26';  // Replace with your Dropbox app key
+    const CLIENT_SECRET = '0bkwykqkfbxu4en';  // Replace with your Dropbox app secret
+    const REDIRECT_URI = 'https://nhuynguyenquan.github.io/nghiakhanh/quan-li-kho/';
 
+    // Function to get the access token from Dropbox
     async function getAccessToken(code) {
-    const response = await fetch('https://api.dropboxapi.com/oauth2/token', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-            code: code,
-            grant_type: 'authorization_code',
-            client_id: '91gch0ud8qxqd26',
-            client_secret: '0bkwykqkfbxu4en', // Thay thế bằng Client Secret của bạn
-            redirect_uri: 'https://nhuynguyenquan.github.io/nghiakhanh/quan-li-kho/',
-        }),
-    });
+        const response = await fetch('https://api.dropboxapi.com/oauth2/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                code: code,
+                grant_type: 'authorization_code',
+                client_id: APP_KEY,
+                client_secret: CLIENT_SECRET,
+                redirect_uri: REDIRECT_URI,
+            }),
+        });
 
-    const data = await response.json();
-    console.log(data);
-    return data.access_token;
-}
+        const data = await response.json();
+        console.log('Access Token:', data);
+        return data.access_token;
+    }
 
-//const REDIRECT_URI = 'https://nhuynguyenquan.github.io/nghiakhanh/quan-li-kho/';  // Địa chỉ URL mà người dùng sẽ được chuyển hướng đến sau khi đăng nhập
+    // URL for Dropbox OAuth authentication
+    const authUrl = `https://www.dropbox.com/oauth2/authorize?client_id=${APP_KEY}&response_type=code&redirect_uri=${REDIRECT_URI}`;
 
-// URL xác thực OAuth của Dropbox
-//const authUrl = `https://www.dropbox.com/oauth2/authorize?client_id=${APP_KEY}&response_type=code&redirect_uri=${REDIRECT_URI}`;
+    // Trigger the authentication flow by redirecting to Dropbox's OAuth URL
+    if (!window.location.search.includes('code=')) {
+        window.location.href = authUrl;
+    } else {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        if (code) {
+            getAccessToken(code).then(token => {
+                console.log('Authenticated with token:', token);
+                // Now you can proceed with file operations using Dropbox API
+            });
+        }
+    }
 
-// Chuyển người dùng đến URL xác thực
-window.location.href = authUrl;
-    const DROPBOX_ACCESS_TOKEN = 'sl.u.AFrIfE_Auyy9HTPD6WL_k5Nf6-ZtwEwK1UG3ZGJ34zSO-V2PQHgKgRBTTC8ayt6ZTOCemHDu13OKUgsbDFNwX7V6J5w20h9wUp1NKHL4yt6P_LdaiOBQNWIp1hKwowKpvfzfTpHK4qXznnsZzcbxlRteLWrBzDLylAlggMjPaozR-zS9m6DVzqfPaSZIT8xFvFJtojus2OZOSC442klpdTnK-zsI_n3ckuQdNT6xlMXK3Q4nQ-emQTfHM3MuE3JasX3wK0yabkwx5iX3nMWdiafW7XN6yVxZs7kZZ6CE7PfBeXRfUt4rWy4nVtuNtT9hNPVKfzIdaGsOe3Fy2SfBf3HNA_9zAQVWnj_8OM96YOsHk9h-lqJNkq4rrxB90ewv6X1VkKU8kGvmqnZw1Ih_NS5crPgf_mrKexxqs3nIZ0ydQ69q9DseObPMit0Kg6m-UGOztGWbIkjh2-Uzr84LA8cVWrw4NLkysivQLHWEB7jULSdqZ-AoXQEA3fk8sY3KM-17QpYCOy0bFGvVJEeoa9hfZAg5_2H_xwb4BLaKDWyxveXIoFPw_WHMiQoowMiE9nacCJRNASHHxYy0QoWzvQuDdcPndrmtlFcliVIUSkk9pmrI4h3QzMKKYdf0hb7SdaW58nBRt2zJcouU-GpIlTve32JsJldwrMhAyCL0mRnnKY0j60qY6PMFHXaBY_p7UP2FwhZEvfhypvPq8oprwPtplzB84C0thv9-3R_GxB0sVMnhOYdRyiEwGI-AJnK-T6Qy5k1m09n4nEcZDLcqFgteHRI6hWRDNRq9zmuVAi5tjQxeAX9y9F5GvF6wKltQCuwa3qHNNmXC9CaEVdhJqRSEzioPNkegd2oEVgzCLy6BmxHyXydVzpO5-8Zq4Im6mmLIOjd76fDFDHebHiHCDt_URrqtsONgz8QC3qtsCsSFln-565j6GOpUFurKe2pjf64jznE1sCe7c1wqJr4Jrf0fR9tYnhKl8_p__DnYASUNwjECc50XMgA6hswlgp_u9AFV9YLwJ_wBOTbaofN8yCnvRDQlOi8InMcY4v-u-MQpNCoPu5SCb-KHoHX6zIKy_wgzifG6h8m4BH1wb-vw3K70RFWj6jcqbK47pg9jnBsT7t0mp51JT9OCOg4x_IiSVROCBvjJDnimfkga4OboEq9xvp8cgTCwiCFrlD1qYSZSvcMq3kJZnhBASv51UL-NgXvSBx9yD0NcRgPKHlrHNLPnUnGID02G3TjUp_BEbOgBaTDRRfdPDneV8bTW_QvqNTa8GOHo4AKoYXfF3Ob9ITaB';  // Thay bằng token của bạn
-const dbx = new Dropbox.Dropbox({ accessToken: DROPBOX_ACCESS_TOKEN });
+    // Initialize Dropbox API with access token
+    const DROPBOX_ACCESS_TOKEN = 'sl.u.AFrIfE_Auyy9HTPD6WL_k5Nf6-ZtwEwK1UG3ZGJ34zSO-V2PQHgKgRBTTC8ayt6ZTOCemHDu13OKUgsbDFNwX7V6J5w20h9wUp1NKHL4yt6P_LdaiOBQNWIp1hKwowKpvfzfTpHK4qXznnsZzcbxlRteLWrBzDLylAlggMjPaozR-zS9m6DVzqfPaSZIT8xFvFJtojus2OZOSC442klpdTnK-zsI_n3ckuQdNT6xlMXK3Q4nQ-emQTfHM3MuE3JasX3wK0yabkwx5iX3nMWdiafW7XN6yVxZs7kZZ6CE7PfBeXRfUt4rWy4nVtuNtT9hNPVKfzIdaGsOe3Fy2SfBf3HNA_9zAQVWnj_8OM96YOsHk9h-lqJNkq4rrxB90ewv6X1VkKU8kGvmqnZw1Ih_NS5crPgf_mrKexxqs3nIZ0ydQ69q9DseObPMit0Kg6m-UGOztGWbIkjh2-Uzr84LA8cVWrw4NLkysivQLHWEB7jULSdqZ-AoXQEA3fk8sY3KM-17QpYCOy0bFGvVJEeoa9hfZAg5_2H_xwb4BLaKDWyxveXIoFPw_WHMiQoowMiE9nacCJRNASHHxYy0QoWzvQuDdcPndrmtlFcliVIUSkk9pmrI4h3QzMKKYdf0hb7SdaW58nBRt2zJcouU-GpIlTve32JsJldwrMhAyCL0mRnnKY0j60qY6PMFHXaBY_p7UP2FwhZEvfhypvPq8oprwPtplzB84C0thv9-3R_GxB0sVMnhOYdRyiEwGI-AJnK-T6Qy5k1m09n4nEcZDLcqFgteHRI6hWRDNRq9zmuVAi5tjQxeAX9y9F5GvF6wKltQCuwa3qHNNmXC9CaEVdhJqRSEzioPNkegd2oEVgzCLy6BmxHyXydVzpO5-8Zq4Im6mmLIOjd76fDFDHebHiHCDt_URrqtsONgz8QC3qtsCsSFln-565j6GOpUFurKe2pjf64jznE1sCe7c1wqJr4Jrf0fR9tYnhKl8_p__DnYASUNwjECc50XMgA6hswlgp_u9AFV9YLwJ_wBOTbaofN8yCnvRDQlOi8InMcY4v-u-MQpNCoPu5SCb-KHoHX6zIKy_wgzifG6h8m4BH1wb-vw3K70RFWj6jcqbK47pg9jnBsT7t0mp51JT9OCOg4x_IiSVROCBvjJDnimfkga4OboEq9xvp8cgTCwiCFrlD1qYSZSvcMq3kJZnhBASv51UL-NgXvSBx9yD0NcRgPKHlrHNLPnUnGID02G3TjUp_BEbOgBaTDRRfdPDneV8bTW_QvqNTa8GOHo4AKoYXfF3Ob9ITaB';
 
-// Hàm lấy dữ liệu từ tệp kho.json
-async function loadData() {
-  try {
-    const response = await dbx.filesDownload({ path: '/kho.json' }); 
-    const jsonData = await response.fileBlob.text();
-    return JSON.parse(jsonData);
-  } catch (error) {
-    console.error('Lỗi khi tải tệp kho.json:', error);
-  }
-}
+    const dbx = new Dropbox.Dropbox({ accessToken: DROPBOX_ACCESS_TOKEN });
 
-// Hàm hiển thị dữ liệu lên giao diện
-async function renderStock() {
-  const data = await loadData();
-  console.log(data); // In dữ liệu lên console
-  // Cập nhật kho và lịch sử
-}
+    // Function to load data from Dropbox
+    async function loadData() {
+        try {
+            const response = await dbx.filesDownload({ path: '/kho.json' });
+            const jsonData = await response.fileBlob.text();
+            return JSON.parse(jsonData);
+        } catch (error) {
+            console.error('Lỗi khi tải tệp kho.json:', error);
+        }
+    }
 
-
+    // Function to render stock data to the screen
     function renderStock() {
-      const list = document.getElementById("stockList");
-      const select = document.getElementById("itemSelect");
-      list.innerHTML = "";
-      select.innerHTML = "";
+        const list = document.getElementById("stockList");
+        const select = document.getElementById("itemSelect");
+        list.innerHTML = "";
+        select.innerHTML = "";
 
-      for (const item in stock) {
-        list.innerHTML += `<li>${item}: ${stock[item]}</li>`;
-        select.innerHTML += `<option value="${item}">${item}</option>`;
-      }
+        for (const item in stock) {
+            list.innerHTML += `<li>${item}: ${stock[item]}</li>`;
+            select.innerHTML += `<option value="${item}">${item}</option>`;
+        }
     }
 
+    // Function to render the history log
     function renderHistory() {
-      const log = document.getElementById("logHistory");
-      log.innerHTML = "";
-      history.slice().reverse().forEach(entry => {
-        log.innerHTML += `<div class="log-entry">📦 <strong>${entry.item}</strong> | ${entry.action === 'import' ? '➕' : '➖'} ${entry.qty} | 🕒 ${entry.time}</div>`;
-      });
+        const log = document.getElementById("logHistory");
+        log.innerHTML = "";
+        history.slice().reverse().forEach(entry => {
+            log.innerHTML += `<div class="log-entry">📦 <strong>${entry.item}</strong> | ${entry.action === 'import' ? '➕' : '➖'} ${entry.qty} | 🕒 ${entry.time}</div>`;
+        });
     }
 
+    // Function to save data back to Dropbox
     async function saveData(stock, history) {
-  const data = { stock, history };
-  const jsonData = JSON.stringify(data, null, 2);
+        const data = { stock, history };
+        const jsonData = JSON.stringify(data, null, 2);
 
-  try {
-    const response = await dbx.filesUpload({
-      path: '/kho.json',  // Đường dẫn đến tệp kho.json trên Dropbox
-      contents: jsonData,
-      mode: 'overwrite'   // Ghi đè tệp nếu đã tồn tại
-    });
-    console.log('Dữ liệu đã được cập nhật:', response);
-  } catch (error) {
-    console.error('Lỗi khi ghi dữ liệu:', error);
-  }
-}
-
-async function addItem() {
-  const name = document.getElementById("itemName").value.trim();
-  const qty = parseInt(document.getElementById("itemQty").value);
-
-  if (!name || isNaN(qty)) return alert("Vui lòng nhập tên và số lượng");
-
-  const data = await loadData();
-  const stock = data.stock || {};
-  const history = data.history || [];
-
-  // Cập nhật kho
-  stock[name] = qty;
-
-  // Cập nhật lịch sử
-  history.push({ item: name, qty, action: 'import', time: new Date().toLocaleString() });
-
-  // Lưu lại dữ liệu vào Dropbox
-  await saveData(stock, history);
-  renderStock();  // Cập nhật lại giao diện
-  renderHistory();
-}
-
-    async function updateStock() {
-      const item = document.getElementById("itemSelect").value;
-      const qty = parseInt(document.getElementById("qtyChange").value);
-      const action = document.getElementById("actionType").value;
-
-      if (!item || isNaN(qty)) return alert("Vui lòng nhập thông tin đầy đủ");
-      if (action === "export" && stock[item] < qty) return alert("Không đủ hàng");
-
-      stock[item] += (action === "import" ? qty : -qty);
-      history.push({ item, qty, action, time: new Date().toLocaleString() });
-
-      renderStock();
-      renderHistory();
-      await saveData();
-
-      document.getElementById("qtyChange").value = "";
+        try {
+            const response = await dbx.filesUpload({
+                path: '/kho.json', // Path to the kho.json file on Dropbox
+                contents: jsonData,
+                mode: 'overwrite' // Overwrite the file if it already exists
+            });
+            console.log('Dữ liệu đã được cập nhật:', response);
+        } catch (error) {
+            console.error('Lỗi khi ghi dữ liệu:', error);
+        }
     }
 
-    loadData();
-  </script>
+    // Function to add an item to the stock
+    async function addItem() {
+        const name = document.getElementById("itemName").value.trim();
+        const qty = parseInt(document.getElementById("itemQty").value);
+
+        if (!name || isNaN(qty)) return alert("Vui lòng nhập tên và số lượng");
+
+        const data = await loadData();
+        const stock = data.stock || {};
+        const history = data.history || [];
+
+        // Update stock
+        stock[name] = qty;
+
+        // Update history
+        history.push({ item: name, qty, action: 'import', time: new Date().toLocaleString() });
+
+        // Save data back to Dropbox
+        await saveData(stock, history);
+        renderStock();  // Update the UI
+        renderHistory();
+    }
+
+    // Function to update the stock
+    async function updateStock() {
+        const item = document.getElementById("itemSelect").value;
+        const qty = parseInt(document.getElementById("qtyChange").value);
+        const action = document.getElementById("actionType").value;
+
+        if (!item || isNaN(qty)) return alert("Vui lòng nhập thông tin đầy đủ");
+        if (action === "export" && stock[item] < qty) return alert("Không đủ hàng");
+
+        stock[item] += (action === "import" ? qty : -qty);
+        history.push({ item, qty, action, time: new Date().toLocaleString() });
+
+        renderStock();
+        renderHistory();
+        await saveData(stock, history);
+
+        document.getElementById("qtyChange").value = "";
+    }
+
+    // Initialize the stock data
+    loadData().then(data => {
+        stock = data.stock || {};
+        history = data.history || [];
+        renderStock();
+        renderHistory();
+    });
+
+</script>
+
 </body>
 </html>
