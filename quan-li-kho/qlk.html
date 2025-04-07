@@ -105,7 +105,7 @@ const dbx = new Dropbox.Dropbox({ accessToken: DROPBOX_ACCESS_TOKEN });
 // Hàm lấy dữ liệu từ tệp kho.json
 async function loadData() {
   try {
-    const response = await dbx.filesDownload({ path: '/kho.json' }); // Đường dẫn đến tệp kho.json trên Dropbox
+    const response = await dbx.filesDownload({ path: 'https://www.dropbox.com/scl/fi/i5mewppcia8r7ocjuomur/kho.json' }); // Đường dẫn đến tệp kho.json trên Dropbox
     const jsonData = await response.fileBlob.text();
     return JSON.parse(jsonData);
   } catch (error) {
