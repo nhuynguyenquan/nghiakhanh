@@ -146,7 +146,7 @@
     // Function to load data from Dropbox
     async function loadData() {
         try {
-            const response = await dbx.filesDownload({ path: '/kho.json' });
+            const response = await dbx.filesDownload({ path: 'kho/kho.json' });
             const jsonData = await response.fileBlob.text();
             return JSON.parse(jsonData);
         } catch (error) {
