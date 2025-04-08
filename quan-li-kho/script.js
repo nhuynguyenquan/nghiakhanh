@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycb.../exec"; // Thay bằng URL của bạn
+const API_URL = "https://script.google.com/macros/s/AKfycbwf9qaqButXpFvd7P_9DxtdfGAADtkTPwa6EyAkCE8W/dev"; 
 
 let khoData = { stock: {}, history: [] };
 
