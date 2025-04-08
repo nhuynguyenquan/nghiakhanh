@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý thu chi Nhụy Nguyên</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+    input, select, button { margin: 5px; padding: 5px; }
+    .summary { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>Quản lý thu chi Nhụy Nguyên</h2>
+
+  <label for="amount">Số tiền:</label>
+  <input type="number" id="amount" placeholder="VD: 100000">
+  <label for="type">Loại:</label>
+  <select id="type">
+    <option value="income">Thu</option>
+    <option value="expense">Chi</option>
+  </select>
+  <label for="note">Mô tả:</label>
+  <input type="text" id="note" placeholder="VD: Bán hàng">
+  <button id="submit-btn" onclick="addTransaction()">Thêm</button>
+
+  <div class="summary">
+    Tổng thu: <span id="total-income">0</span> VND | Tổng chi: <span id="total-expense">0</span> VND
+  </div>
+
+  <table id="transaction-table">
+    <thead>
+      <tr>
+        <th>Số tiền</th>
+        <th>Loại</th>
+        <th>Mô tả</th>
+        <th>Ngày</th>
+        <th>Hành động</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script src="script1.js"></script>
+</body>
+</html>
