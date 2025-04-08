@@ -1,87 +1,86 @@
-const API_URL_KHO = "https://script.google.com/macros/s/AKfycbwKX-Dle5vDmaWvA9Uocl4liQHvRdBDLl7XcL6LR2ADj9S9oeWXH17w-H6dG6GcE6kg/exec"; 
-let khoData = {
-  items: [],
-  logs: []
-};
+const API_URL = "https://script.google.com/macros/s/AKfycb.../exec"; // Thay bằng URL của bạn
 
-async function fetchKhoData() {
+let khoData = { stock: {}, history: [] };
+
+// Tải dữ liệu kho
+async function loadKho() {
   try {
-    let res = await fetch(API_URL_KHO);
-    let data = await res.json();
-    khoData = data || { items: [], logs: [] };
-    renderUI();
+    const res = await fetch(API_URL);
+    const data = await res.json();
+    khoData = data;
+    updateStockDisplay();
+    updateLogDisplay();
+    populateItemSelect();
   } catch (err) {
-    console.error("Lỗi tải dữ liệu kho:", err);
+    console.error("❌ Lỗi tải kho:", err);
   }
 }
 
-async function saveKhoData() {
+// Ghi giao dịch
+async function postTransaction(itemName, qty, action) {
   try {
-    await fetch(API_URL_KHO, {
+    await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(khoData),
+      body: JSON.stringify({ itemName, qty, action })
     });
+    await loadKho(); // Cập nhật lại
   } catch (err) {
-    console.error("Lỗi lưu dữ liệu kho:", err);
+    console.error("❌ Lỗi ghi giao dịch:", err);
   }
 }
 
+// Xử lý thêm hàng
 function addItem() {
   const name = document.getElementById("itemName").value.trim();
   const qty = parseInt(document.getElementById("itemQty").value);
-  if (!name || isNaN(qty)) return alert("Vui lòng nhập đầy đủ tên và số lượng!");
-
-  let existing = khoData.items.find(i => i.name === name);
-  if (existing) return alert("Mặt hàng đã tồn tại!");
-
-  khoData.items.push({ name, qty });
-  khoData.logs.push({ time: new Date().toISOString(), action: `➕ Thêm hàng: ${name} - SL: ${qty}` });
-  saveKhoData();
-  renderUI();
+  if (!name || isNaN(qty)) return alert("Vui lòng nhập tên và số lượng hợp lệ");
+  postTransaction(name, qty, "import");
 }
 
+// Nhập/xuất kho
 function updateStock() {
-  const name = document.getElementById("itemSelect").value;
-  const change = parseInt(document.getElementById("qtyChange").value);
-  const type = document.getElementById("actionType").value;
-  if (!name || isNaN(change)) return alert("Vui lòng chọn hàng và số lượng!");
+  const item = document.getElementById("itemSelect").value;
+  const qty = parseInt(document.getElementById("qtyChange").value);
+  const action = document.getElementById("actionType").value;
+  if (!item || isNaN(qty)) return alert("Thiếu thông tin");
+  postTransaction(item, qty, action);
+}
 
-  let item = khoData.items.find(i => i.name === name);
-  if (!item) return alert("Không tìm thấy hàng trong kho!");
-
-  if (type === "import") item.qty += change;
-  else {
-    if (item.qty < change) return alert("Không đủ hàng để xuất!");
-    item.qty -= change;
+// Hiển thị danh sách tồn kho
+function updateStockDisplay() {
+  const list = document.getElementById("stockList");
+  list.innerHTML = "";
+  for (let item in khoData.stock) {
+    let li = document.createElement("li");
+    li.textContent = `${item}: ${khoData.stock[item]}`;
+    list.appendChild(li);
   }
-
-  khoData.logs.push({
-    time: new Date().toISOString(),
-    action: `${type === "import" ? "📥 Nhập" : "📤 Xuất"} hàng: ${name} - SL: ${change}`
-  });
-
-  saveKhoData();
-  renderUI();
 }
 
-function renderUI() {
-  const itemSelect = document.getElementById("itemSelect");
-  const stockList = document.getElementById("stockList");
-  const logHistory = document.getElementById("logHistory");
-
-  itemSelect.innerHTML = "";
-  stockList.innerHTML = "";
-  logHistory.innerHTML = "";
-
-  khoData.items.forEach(item => {
-    itemSelect.innerHTML += `<option value="${item.name}">${item.name}</option>`;
-    stockList.innerHTML += `<li>${item.name}: ${item.qty}</li>`;
-  });
-
-  [...khoData.logs].reverse().forEach(log => {
-    logHistory.innerHTML += `<div class="log-entry">🕓 ${new Date(log.time).toLocaleString("vi-VN")}: ${log.action}</div>`;
+// Hiển thị lịch sử giao dịch
+function updateLogDisplay() {
+  const logDiv = document.getElementById("logHistory");
+  logDiv.innerHTML = "";
+  khoData.history.slice().reverse().forEach(entry => {
+    const div = document.createElement("div");
+    div.className = "log-entry";
+    div.textContent = `[${new Date(entry.timestamp).toLocaleString("vi-VN")}] ${entry.action === "import" ? "Nhập" : "Xuất"} ${entry.qty} ${entry.itemName}`;
+    logDiv.appendChild(div);
   });
 }
 
-window.onload = fetchKhoData;
+// Đổ dropdown danh sách hàng
+function populateItemSelect() {
+  const select = document.getElementById("itemSelect");
+  select.innerHTML = "";
+  Object.keys(khoData.stock).forEach(item => {
+    let option = document.createElement("option");
+    option.value = item;
+    option.textContent = item;
+    select.appendChild(option);
+  });
+}
+
+// Gọi khi mở trang
+window.onload = loadKho;
