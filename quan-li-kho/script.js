@@ -1,4 +1,3 @@
-<script>
 const API_URL_KHO = "https://script.google.com/macros/s/AKfycbxFKDPFB3kh9w2LnGnvoLeNrnx-UWJYAiuXW23SxUqKyJZeykhdkh37tEh9Trov6Fhbig/exec"; 
 let khoData = {
   items: [],
@@ -86,4 +85,3 @@ function renderUI() {
 }
 
 window.onload = fetchKhoData;
-</script>
