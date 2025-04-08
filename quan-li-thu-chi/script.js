@@ -4,7 +4,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzaaylyRMuHUrx4UkBS30bG
 const TELEGRAM_BOT_TOKEN = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";
 const TELEGRAM_CHAT_ID = "6249154937"; 
 let currentPage = 1;
-const itemsPerPage = 5;
+const itemsPerPage = 20;
 
 async function fetchTransactions() {
     try {
