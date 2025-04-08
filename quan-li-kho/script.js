@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbwf9qaqButXpFvd7P_9DxtdfGAADtkTPwa6EyAkCE8W/dev"; 
+const API_URL = "https://script.google.com/macros/s/AKfycby2DlWBee3OS6sQkML2ZsApmLcZU7gWpGN7HyeMVhVNiQJQY_fhouJnrsgueDYAKzzokQ/exec"; 
 
 let khoData = { stock: {}, history: [] };
 
