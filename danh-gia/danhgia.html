@@ -81,9 +81,58 @@
     h1 {
             color: #d35400;
         }
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 18px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: #fff8f0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .image {
+            width: 100%;
+            border-radius: 8px;
+        }
+        .menu-images {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .menu-images img {
+            width: 30%;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+        h2 {
+            color: #8c5a3c;
+        }
+        footer {
+            text-align: center;
+            padding: 10px;
+            background: #8c5a3c;
+            color: white;
+            margin-top: 20px;
+        }
   </style>
 </head>
 <body>
+  <header>
+    <h1><a href="../" style="text-decoration: none; color: white;">NHỤY NGUYÊN QUÁN</a></h1>
+</header>
+<nav>
+  <a href="../">Trang Chủ</a>
+  <a href="../menu">Thực Đơn</a>
+  <a href="../dat-hang">Đặt Bàn</a>
+  <a href="../thanh-toan/">Thanh Toán</a>
+  <a href="./">Đánh giá</a>
+</nav>
 <div class="container">
     
   <h2>Đánh Giá Quán Nhụy Nguyên</h2>
@@ -100,7 +149,6 @@
   <button onclick="submitReview()">Gửi đánh giá</button>
 
   <div class="message" id="message"></div>
-  <a href="../">Quay lại trang chủ</a> | 
 </div>
     
 <div>
@@ -178,5 +226,8 @@
     console.log("✅ Đã gửi tin nhắn Telegram");
   }
 </script>
+<footer>
+  &copy; 2025 Quán Bánh Bèo Nhụy Nguyên. All rights reserved.
+</footer>
 </body>
 </html>
