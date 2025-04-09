@@ -47,18 +47,6 @@ function updateStock() {
   if (!item || isNaN(qty)) return alert("Thiếu thông tin");
   postTransaction(item, qty, action);
 }
-
-// Hiển thị danh sách tồn kho
-function updateStockDisplay() {
-  const list = document.getElementById("stockList");
-  list.innerHTML = "";
-  for (let item in khoData.stock) {
-    let li = document.createElement("li");
-    li.textContent = `${item}: ${khoData.stock[item]}`;
-    list.appendChild(li);
-  }
-}
-
 // Hiển thị lịch sử giao dịch
 function updateLogDisplay() {
   const logDiv = document.getElementById("logHistory");
