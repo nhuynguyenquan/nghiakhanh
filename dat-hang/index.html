@@ -65,8 +65,61 @@
         .order-summary strong {
             color: #8c5a3c;
         }
+        nav {
+            display: flex;
+            justify-content: center;
+            background-color: #d9a382;
+            padding: 10px;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 18px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: #fff8f0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .image {
+            width: 100%;
+            border-radius: 8px;
+        }
+        .menu-images {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .menu-images img {
+            width: 30%;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+        h2 {
+            color: #8c5a3c;
+        }
+        footer {
+            text-align: center;
+            padding: 10px;
+            background: #8c5a3c;
+            color: white;
+            margin-top: 20px;
+        }
     </style>
 </head>
+<nav>
+    <a href="#gioi-thieu">Giới Thiệu</a>
+    <a href="./menu">Thực Đơn</a>
+    <a href="#dat-hang">Đặt Bàn</a>
+    <a href="#lien-he">Liên Hệ</a>
+    <a href="./thanh-toan/">Thanh Toán</a>
+    <a href="#lien-he">Đánh giá</a>
+</nav>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-WGYWXSKNTW"></script>
 <script>
@@ -177,5 +230,8 @@ gtag('config', 'G-WGYWXSKNTW');
     <script src="script/script.js" defer>
         
     </script>
+    <footer>
+        &copy; 2025 Quán Bánh Bèo Nhụy Nguyên. All rights reserved.
+    </footer>
 </body>
 </html>

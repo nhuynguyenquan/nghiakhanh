@@ -81,8 +81,55 @@
     h1 {
             color: #d35400;
         }
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 18px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: #fff8f0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .image {
+            width: 100%;
+            border-radius: 8px;
+        }
+        .menu-images {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .menu-images img {
+            width: 30%;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+        h2 {
+            color: #8c5a3c;
+        }
+        footer {
+            text-align: center;
+            padding: 10px;
+            background: #8c5a3c;
+            color: white;
+            margin-top: 20px;
+        }
   </style>
 </head>
+<nav>
+  <a href="#gioi-thieu">Giới Thiệu</a>
+  <a href="./menu">Thực Đơn</a>
+  <a href="#dat-hang">Đặt Bàn</a>
+  <a href="#lien-he">Liên Hệ</a>
+  <a href="./thanh-toan/">Thanh Toán</a>
+  <a href="#lien-he">Đánh giá</a>
+</nav>
 <body>
 <div class="container">
     
@@ -178,5 +225,8 @@
     console.log("✅ Đã gửi tin nhắn Telegram");
   }
 </script>
+<footer>
+  &copy; 2025 Quán Bánh Bèo Nhụy Nguyên. All rights reserved.
+</footer>
 </body>
 </html>
