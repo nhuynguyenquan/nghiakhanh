@@ -22,7 +22,8 @@ async function postTransaction(itemName, qty, action) {
     await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ itemName, qty, action })
+      body: JSON.stringify({ itemName, qty, action }),
+      mode: "no-cors" 
     });
     await loadKho(); // Cập nhật lại
   } catch (err) {
