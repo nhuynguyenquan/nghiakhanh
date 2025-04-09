@@ -1,6 +1,7 @@
 let transactions = [];
+//https://script.google.com/macros/s/AKfycbzaaylyRMuHUrx4UkBS30bGKfQXozCwSaNhJBlKYkDx5tHl-oBghK-kokxMSfTLyJPL/exec
 
-const API_URL = "https://script.google.com/macros/s/AKfycbzaaylyRMuHUrx4UkBS30bGKfQXozCwSaNhJBlKYkDx5tHl-oBghK-kokxMSfTLyJPL/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxATGcdSuR0iqCvrunW4tjQ2LTJrGAkwSkSUBx2dZ_-dTPdcPlMujICwA2X5-4a7R7-qg/exec";
 const TELEGRAM_BOT_TOKEN = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";
 const TELEGRAM_CHAT_ID = "6249154937"; 
 
