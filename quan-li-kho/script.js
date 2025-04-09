@@ -85,3 +85,34 @@ function populateItemSelect() {
 
 // Gọi khi mở trang
 window.onload = loadKho;
+function filterHistory() {
+  const selectedDate = document.getElementById("filterDate").value;
+  if (!selectedDate) return updateLogDisplay(); // không lọc nếu không có ngày
+
+  const logDiv = document.getElementById("logHistory");
+  logDiv.innerHTML = "";
+
+  khoData.history.slice().reverse().forEach(entry => {
+    const entryDate = new Date(entry.timestamp).toISOString().split("T")[0];
+    if (entryDate === selectedDate) {
+      const div = document.createElement("div");
+      div.className = "log-entry";
+      div.textContent = `[${new Date(entry.timestamp).toLocaleString("vi-VN")}] ${entry.action === "import" ? "Nhập" : "Xuất"} ${entry.qty} ${entry.itemName}`;
+      logDiv.appendChild(div);
+    }
+  });
+}
+function updateStockDisplay() {
+  const list = document.getElementById("stockList");
+  list.innerHTML = "";
+  for (let item in khoData.stock) {
+    let li = document.createElement("li");
+    const qty = khoData.stock[item];
+    li.textContent = `${item}: ${qty}`;
+    if (qty < 100) {
+      li.style.color = "red";
+      li.style.fontWeight = "bold";
+    }
+    list.appendChild(li);
+  }
+}
