@@ -11,26 +11,45 @@
       background: #f6f8fc;
       margin: 0;
       padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
+    }
+
+    header, nav {
+      background: #8c5a3c;
+      color: white;
+      text-align: center;
+      padding: 10px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    header a {
+      color: white;
+      text-decoration: none;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 10px;
+      font-size: 16px;
     }
 
     .container {
+      max-width: 500px;
+      margin: 30px auto;
       background: white;
-      padding: 30px;
+      padding: 25px;
       border-radius: 16px;
       box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-      margin-top: 50px;
-      width: 100%;
-      max-width: 500px;
     }
 
     h2 {
-      margin-bottom: 20px;
       text-align: center;
       color: #333;
+      margin-bottom: 20px;
     }
 
     .stars {
@@ -44,18 +63,21 @@
       font-size: 32px;
       cursor: pointer;
       color: #ccc;
+      transition: transform 0.2s ease;
     }
 
     .star.active {
       color: gold;
+      transform: scale(1.2);
     }
 
-    textarea, input {
+    input, textarea {
       width: 100%;
       padding: 10px;
       margin-bottom: 15px;
       border-radius: 8px;
       border: 1px solid #ccc;
+      font-size: 14px;
       resize: none;
     }
 
@@ -70,164 +92,144 @@
       cursor: pointer;
     }
 
-    button:hover {
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    button:hover:enabled {
       background: #e65c00;
     }
 
     .message {
       margin-top: 15px;
       text-align: center;
+      font-weight: bold;
+      color: #2c3e50;
     }
-    h1 {
-            color: #d35400;
-        }
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin: 0 15px;
-            font-size: 18px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 20px auto;
-            background: #fff8f0;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .image {
-            width: 100%;
-            border-radius: 8px;
-        }
-        .menu-images {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .menu-images img {
-            width: 30%;
-            border-radius: 8px;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-        }
-        h2 {
-            color: #8c5a3c;
-        }
-        footer {
-            text-align: center;
-            padding: 10px;
-            background: #8c5a3c;
-            color: white;
-            margin-top: 20px;
-        }
+
+    footer {
+      text-align: center;
+      padding: 12px;
+      background: #8c5a3c;
+      color: white;
+      margin-top: 30px;
+    }
   </style>
 </head>
+
 <body>
   <header>
-    <h1><a href="../" style="text-decoration: none; color: white;">NHỤY NGUYÊN QUÁN</a></h1>
-</header>
-<nav>
-  <a href="../">Trang Chủ</a>
-  <a href="../menu">Thực Đơn</a>
-  <a href="../dat-hang">Đặt Bàn</a>
-  <a href="../thanh-toan/">Thanh Toán</a>
-  <a href="./">Đánh giá</a>
-</nav>
-<div class="container">
-    
-  <h2>Đánh Giá Quán Nhụy Nguyên</h2>
-  <div class="stars" id="stars">
-    <span class="star" data-value="1">★</span>
-    <span class="star" data-value="2">★</span>
-    <span class="star" data-value="3">★</span>
-    <span class="star" data-value="4">★</span>
-    <span class="star" data-value="5">★</span>
+    <h1><a href="../">NHỤY NGUYÊN QUÁN</a></h1>
+  </header>
+
+  <nav>
+    <a href="../">Trang Chủ</a>
+    <a href="../menu">Thực Đơn</a>
+    <a href="../dat-hang">Đặt Bàn</a>
+    <a href="../thanh-toan/">Thanh Toán</a>
+    <a href="./">Đánh Giá</a>
+  </nav>
+
+  <div class="container">
+    <h2>Đánh Giá Quán Nhụy Nguyên</h2>
+
+    <div class="stars" id="stars">
+      <span class="star" data-value="1">★</span>
+      <span class="star" data-value="2">★</span>
+      <span class="star" data-value="3">★</span>
+      <span class="star" data-value="4">★</span>
+      <span class="star" data-value="5">★</span>
+    </div>
+
+    <input type="text" id="name" placeholder="Tên của bạn (không bắt buộc)">
+    <textarea id="comment" rows="4" placeholder="Viết nhận xét của bạn..."></textarea>
+    <button id="submitBtn" onclick="submitReview()">Gửi đánh giá</button>
+
+    <div class="message" id="message"></div>
   </div>
 
-  <input type="text" id="name" placeholder="Tên của bạn (không bắt buộc)">
-  <textarea id="comment" rows="4" placeholder="Viết nhận xét của bạn..."></textarea>
-  <button onclick="submitReview()">Gửi đánh giá</button>
+  <footer>
+    &copy; 2025 Quán Bánh Bèo Nhụy Nguyên. All rights reserved.
+  </footer>
 
-  <div class="message" id="message"></div>
-</div>
-    
-<div>
-   
-</div>
-<script>
+  <script>
     const TELEGRAM_TOKEN = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";
     const TELEGRAM_CHAT_ID = "6249154937";
     let selectedRating = 0;
-  const stars = document.querySelectorAll('.star');
+    const stars = document.querySelectorAll('.star');
+    const messageEl = document.getElementById("message");
+    const submitBtn = document.getElementById("submitBtn");
 
-  stars.forEach(star => {
-    star.addEventListener('click', () => {
-      selectedRating = parseInt(star.dataset.value);
-      updateStars(selectedRating);
-    });
-  });
-
-  function updateStars(rating) {
     stars.forEach(star => {
-      star.classList.toggle('active', parseInt(star.dataset.value) <= rating);
-    });
-  }
-
-  async function submitReview() {
-    const name = document.getElementById("name").value;
-    const comment = document.getElementById("comment").value;
-
-    if (!selectedRating || !comment.trim()) {
-      document.getElementById("message").textContent = "⭐ Vui lòng chọn số sao và nhập nhận xét.";
-      return;
-    }
-
-    const data = {
-      name: name || "Ẩn danh",
-      comment,
-      rating: selectedRating,
-      date: new Date().toISOString()
-    };
-
-    // Gửi dữ liệu tới Google Apps Script hoặc Webhook
-    try {
-      await sendTelegram(data); // Gửi đến Telegram
-      document.getElementById("message").textContent = "✅ Cảm ơn bạn đã đánh giá!";
-      document.getElementById("name").value = "";
-      document.getElementById("comment").value = "";
-      selectedRating = 0;
-      updateStars(0);
-    } catch (error) {
-      document.getElementById("message").textContent = "❌ Gửi không thành công.";
-      console.error(error);
-    }
-  }
-
-  async function sendTelegram(data) {
-    const message = `📢 Đánh giá mới từ khách hàng:\n\n👤 Tên: ${data.name}\n⭐ Đánh giá: ${data.rating}\n📝 Góp ý: ${data.comment}`;
-
-    const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-    const payload = {
-      chat_id: TELEGRAM_CHAT_ID,
-      text: message,
-      parse_mode: 'HTML'
-    };
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      star.addEventListener('click', () => {
+        selectedRating = parseInt(star.dataset.value);
+        updateStars(selectedRating);
+      });
     });
 
-    const result = await response.json();
-    if (!result.ok) {
-      throw new Error(result.description);
+    function updateStars(rating) {
+      stars.forEach(star => {
+        star.classList.toggle('active', parseInt(star.dataset.value) <= rating);
+      });
     }
-    console.log("✅ Đã gửi tin nhắn Telegram");
-  }
-</script>
-<footer>
-  &copy; 2025 Quán Bánh Bèo Nhụy Nguyên. All rights reserved.
-</footer>
+
+    async function submitReview() {
+      const name = document.getElementById("name").value;
+      const comment = document.getElementById("comment").value;
+
+      if (!selectedRating || !comment.trim()) {
+        messageEl.textContent = "⭐ Vui lòng chọn số sao và nhập nhận xét.";
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Đang gửi...";
+
+      const data = {
+        name: name || "Ẩn danh",
+        comment,
+        rating: selectedRating,
+        date: new Date().toISOString()
+      };
+
+      try {
+        await sendTelegram(data);
+        messageEl.textContent = "✅ Cảm ơn bạn đã đánh giá!";
+        document.getElementById("name").value = "";
+        document.getElementById("comment").value = "";
+        selectedRating = 0;
+        updateStars(0);
+      } catch (error) {
+        messageEl.textContent = "❌ Gửi không thành công. Vui lòng thử lại.";
+        console.error(error);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Gửi đánh giá";
+        messageEl.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    async function sendTelegram(data) {
+      const message = `📢 Đánh giá mới từ khách hàng:\n\n👤 Tên: ${data.name}\n⭐ Đánh giá: ${data.rating}\n📝 Góp ý: ${data.comment}`;
+      const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+      const payload = {
+        chat_id: TELEGRAM_CHAT_ID,
+        text: message,
+        parse_mode: 'HTML'
+      };
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+      if (!result.ok) {
+        throw new Error(result.description);
+      }
+    }
+  </script>
 </body>
 </html>
