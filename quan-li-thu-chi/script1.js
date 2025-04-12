@@ -104,7 +104,7 @@ async function saveAllTransactions() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ cleanTransactions }),
-            mode: "no-cors"  
+            mode: "no-cors"  //no-cors
         });
         let result = await response.text();
         console.log("Lưu toàn bộ:", result);
