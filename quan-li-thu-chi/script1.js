@@ -163,3 +163,9 @@ window.onload = async function () {
     transactions = await fetchTransactions();
     updateUI();
 };
+function resetForm() {
+    document.getElementById("amount").value = "";
+    document.getElementById("type").value = "income";
+    document.getElementById("note").value = "";
+    document.getElementById("submit-btn").onclick = addTransaction;
+}
