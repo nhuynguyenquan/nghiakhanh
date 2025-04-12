@@ -98,12 +98,12 @@ function editTransaction(index) {
 }
 //
 async function saveAllTransactions() {
-    const cleanTransactions = transactions.filter(t => t && typeof t === "object" && t.amount && t.type);
+    //const cleanTransactions = transactions.filter(t => t && typeof t === "object" && t.amount && t.type);
     try {
         let response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ cleanTransactions }),
+            body: JSON.stringify({ transactions }),
             mode: "no-cors"  //no-cors
         });
         let result = await response.text();
