@@ -89,7 +89,8 @@ function editTransaction(index) {
             amount: parseInt(document.getElementById("amount").value),
             type: document.getElementById("type").value,
             note: document.getElementById("note").value,
-            date: new Date().toISOString()
+            date: new Date().toISOString(),
+            status: "active"
         };
         await saveAllTransactions();
         updateUI();
@@ -98,7 +99,7 @@ function editTransaction(index) {
 }
 //
 async function saveAllTransactions() {
-    //const cleanTransactions = transactions.filter(t => t && t.status === "active");
+    //const cleanTransactions = transactions.filter(t => t && typeof t === "object" && t.amount && t.type);
     try {
         let response = await fetch(API_URL, {
             method: "POST",
@@ -163,9 +164,3 @@ window.onload = async function () {
     transactions = await fetchTransactions();
     updateUI();
 };
-function resetForm() {
-    document.getElementById("amount").value = "";
-    document.getElementById("type").value = "income";
-    document.getElementById("note").value = "";
-    document.getElementById("submit-btn").onclick = addTransaction;
-}
