@@ -73,7 +73,7 @@
   </div>
 
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzWzcOdCIhAjiMw5k9Wqo-uZkESUGb3U7o_g_ZEeJ2La9USbrRSOxXEsl2OllGFU9f9pA/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxoK36eGkAEfo3470Np90pleBrA62LCBWDYlKRx96Ic-zXJ88_kNy3MXj_rYMiEYHFguA/exec';
 
     let menu = [];
 
@@ -159,6 +159,18 @@
     }
 
     fetchMenu();
+
+    async function updateMenu(data) {
+  const url = 'https://script.google.com/macros/s/AKfycbxoK36eGkAEfo3470Np90pleBrA62LCBWDYlKRx96Ic-zXJ88_kNy3MXj_rYMiEYHFguA/exec';
+  const response = await fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: { 'Content-Type': 'application/json' }
+  });
+  const result = await response.json();
+  console.log(result);
+}
+
   </script>
 </body>
 </html>
