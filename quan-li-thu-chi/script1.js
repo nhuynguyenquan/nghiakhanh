@@ -27,8 +27,8 @@ async function saveTransaction(transaction) {
         let response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ transaction })
-            //mode: "no-cors" 
+            body: JSON.stringify({ transaction }),
+            mode: "no-cors" 
         });
 
         let result = await response.json();
@@ -89,7 +89,8 @@ function editTransaction(index) {
             amount: parseInt(document.getElementById("amount").value),
             type: document.getElementById("type").value,
             note: document.getElementById("note").value,
-            date: new Date().toISOString()
+            date: new Date().toISOString(),
+            status: "active"
         };
         await saveAllTransactions();
         updateUI();
@@ -98,12 +99,12 @@ function editTransaction(index) {
 }
 //
 async function saveAllTransactions() {
-    //const cleanTransactions = transactions.filter(t => t && typeof t === "object" && t.amount && t.type);
+    const cleanTransactions = transactions.filter(t => t && t.status === "active");
     try {
         let response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ transactions }),
+            body: JSON.stringify({ cleanTransactions }),
             mode: "no-cors"  //no-cors
         });
         let result = await response.text();
