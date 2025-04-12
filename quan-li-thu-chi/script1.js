@@ -98,6 +98,7 @@ function editTransaction(index) {
 }
 //
 async function saveAllTransactions() {
+    const cleanTransactions = transactions.filter(t => t && typeof t === 'object' && t.amount && t.type);
     try {
         let response = await fetch(API_URL, {
             method: "POST",
