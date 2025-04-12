@@ -12,25 +12,21 @@
       background: #f9fafb;
       color: #333;
     }
-
     h1 {
       text-align: center;
       color: #2563eb;
       font-size: 2rem;
     }
-
     .subtitle {
       text-align: center;
       color: #6b7280;
       margin-bottom: 2rem;
     }
-
     .summary-boxes {
       display: flex;
       justify-content: space-around;
       margin: 1rem 0;
     }
-
     .summary {
       padding: 1rem 2rem;
       border-radius: 12px;
@@ -38,30 +34,25 @@
       font-size: 1.2rem;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
-
     .income {
       background-color: #d1fae5;
       color: #065f46;
     }
-
     .expense {
       background-color: #fee2e2;
       color: #991b1b;
     }
-
     form {
       display: flex;
       gap: 0.5rem;
       margin-bottom: 1.5rem;
     }
-
     form input, form select {
       padding: 0.5rem;
       border: 1px solid #ddd;
       border-radius: 6px;
       flex: 1;
     }
-
     form button {
       background: #3b82f6;
       color: white;
@@ -70,30 +61,25 @@
       border-radius: 6px;
       cursor: pointer;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
       margin-bottom: 2rem;
     }
-
     th, td {
       padding: 0.75rem;
       border-bottom: 1px solid #ddd;
       text-align: left;
     }
-
     th {
       background-color: #f3f4f6;
     }
-
     td button {
       background: none;
       border: none;
       cursor: pointer;
       font-size: 1.2rem;
     }
-
     #transaction-chart {
       max-width: 100%;
       height: 300px;
@@ -117,7 +103,7 @@
       <option value="expense">Chi</option>
     </select>
     <input type="text" id="note" placeholder="Ghi chú" required />
-    <button type="button" id="submit-btn">➕ Thêm</button>
+    <button type="button" id="submit-btn" onclick="addTransaction()">➕ Thêm</button>
   </form>
 
   <table id="transaction-table">
@@ -130,18 +116,14 @@
         <th>Thao tác</th>
       </tr>
     </thead>
-    <tbody>
-      <!-- Dữ liệu sẽ được thêm ở đây -->
-    </tbody>
+    <tbody></tbody>
   </table>
 
   <canvas id="transaction-chart"></canvas>
 
-  <!-- Chart.js (nếu cần) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- Script xử lý sẽ thêm sau -->
-  <script src="script2.js"></script>
-
+  
+  
+   <script src="script2.js"></script>
+  
 </body>
 </html>
