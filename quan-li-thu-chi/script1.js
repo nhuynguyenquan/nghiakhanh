@@ -103,7 +103,8 @@ async function saveAllTransactions() {
         let response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ cleanTransactions }) 
+            body: JSON.stringify({ cleanTransactions }),
+            mode: "no-cors"  
         });
         let result = await response.text();
         console.log("Lưu toàn bộ:", result);
