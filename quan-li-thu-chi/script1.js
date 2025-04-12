@@ -89,8 +89,7 @@ function editTransaction(index) {
             amount: parseInt(document.getElementById("amount").value),
             type: document.getElementById("type").value,
             note: document.getElementById("note").value,
-            date: new Date().toISOString(),
-            status: "active"
+            date: new Date().toISOString()
         };
         await saveAllTransactions();
         updateUI();
@@ -99,12 +98,12 @@ function editTransaction(index) {
 }
 //
 async function saveAllTransactions() {
-    const cleanTransactions = transactions.filter(t => t && t.status === "active");
+    //const cleanTransactions = transactions.filter(t => t && t.status === "active");
     try {
         let response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ transactions: cleanTransactions }),
+            body: JSON.stringify({ transactions }),
             mode: "no-cors"  //no-cors
         });
         let result = await response.text();
