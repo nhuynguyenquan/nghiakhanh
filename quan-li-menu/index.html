@@ -155,8 +155,8 @@
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       action: 'update',
-      data: menuData 
-    })
+      data: menu 
+    }),mode: "no-cors"
   });
   const result = await response.json();
   console.log(result);
