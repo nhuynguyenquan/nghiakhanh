@@ -89,48 +89,37 @@
   </div>
 
   <script>
-    const khoData = sessionStorage.getItem('khoData');
+    const params = new URLSearchParams(window.location.search);
+    const key = params.get('key');
 
-    if (!khoData) {
+    if (!key || !sessionStorage.getItem(key)) {
       window.location.href = 'loader.html';
     } else {
-      const data = JSON.parse(khoData);
+      const data = JSON.parse(sessionStorage.getItem(key));
 
-      // Hiển thị stock
       const stockList = document.getElementById('stockList');
       stockList.innerHTML = '';
-      for (let key in data.stock) {
-        const item = document.createElement('div');
-        item.className = 'stock-item';
-        item.innerHTML = `<span class="key">${key}</span><span class="value">${data.stock[key]}</span>`;
-        stockList.appendChild(item);
+      for (let k in data.stock) {
+        stockList.innerHTML += `<div class="stock-item"><span class="key">${k}</span><span class="value">${data.stock[k]}</span></div>`;
       }
 
-      // Hiển thị logs
       const logList = document.getElementById('logList');
       logList.innerHTML = '';
       if (data.logs.length === 0) {
         logList.innerHTML = '<i>Chưa có lịch sử giao dịch</i>';
       } else {
         data.logs.slice(-20).reverse().forEach(log => {
-          const logItem = document.createElement('div');
-          logItem.className = 'log-item';
-          logItem.textContent = `• ${log.time || log.date || 'N/A'} - ${log.action || 'Giao dịch'}: ${log.name} (${log.quantity})`;
-          logList.appendChild(logItem);
+          logList.innerHTML += `<div class="log-item">• ${log.time || log.date || 'N/A'} - ${log.action || 'Giao dịch'}: ${log.name} (${log.quantity})</div>`;
         });
       }
 
-      // Hiển thị items
       const itemList = document.getElementById('itemList');
       itemList.innerHTML = '';
       if (data.items.length === 0) {
         itemList.innerHTML = '<i>Không có sản phẩm nào được khai báo</i>';
       } else {
-        data.items.forEach(it => {
-          const item = document.createElement('div');
-          item.className = 'item';
-          item.textContent = `• ${it}`;
-          itemList.appendChild(item);
+        data.items.forEach(name => {
+          itemList.innerHTML += `<div class="item">• ${name}</div>`;
         });
       }
     }
