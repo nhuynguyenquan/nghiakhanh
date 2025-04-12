@@ -129,11 +129,12 @@ function editTransaction(index) {
 }
 
 async function saveAllTransactions() {
+    const cleanTransactions = transactions.filter(t => t && typeof t === 'object' && t.amount && t.type);
     try {
         let response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ transactions }),
+            body: JSON.stringify({ transactions: cleanTransactions }),
             mode: "no-cors"
         });
         let result = await response.text();
@@ -142,7 +143,6 @@ async function saveAllTransactions() {
         console.error("Lỗi khi lưu toàn bộ:", err);
     }
 }
-
 async function addTransaction() {
     let amount = document.getElementById("amount").value;
     let type = document.getElementById("type").value;
