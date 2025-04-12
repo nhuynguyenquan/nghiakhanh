@@ -1,75 +1,138 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quản Lý Kho</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quản lý kho - Nhụy Nguyên</title>
   <style>
     body {
-      margin: 0; font-family: 'Quicksand', sans-serif; background: #fafafa;
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f7f7f7;
     }
-    .app-header {
-      background: #ff6600; color: white; padding: 15px; text-align: center;
-      font-size: 20px; font-weight: bold;
+
+    header {
+      background-color: #ff6600;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      font-size: 20px;
+      font-weight: bold;
     }
+
     .container {
-      padding: 20px;
+      padding: 15px;
     }
-    .item {
-      background: white; margin-bottom: 10px; padding: 10px;
-      border-radius: 8px; box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+
+    .section {
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
-    .low-stock {
-      color: red;
+
+    .section h2 {
+      margin-top: 0;
+      color: #ff6600;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .stock-item, .log-item, .item {
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .stock-item:last-child, .log-item:last-child, .item:last-child {
+      border-bottom: none;
+    }
+
+    .key {
+      font-weight: bold;
+    }
+
+    .value {
+      float: right;
+      color: #333;
+    }
+
+    .log-item {
+      font-size: 14px;
+    }
+
+    @media (max-width: 600px) {
+      .section h2 {
+        font-size: 16px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="app-header">📦 Quản Lý Kho - Nhụy Nguyên</div>
-  <div class="container" id="list">
-    Đang tải dữ liệu...
+  <header>📦 Quản lý kho - Nhụy Nguyên</header>
+  <div class="container">
+    <div class="section" id="stockSection">
+      <h2>Tồn kho hiện tại</h2>
+      <div id="stockList">Đang tải...</div>
+    </div>
+
+    <div class="section" id="logSection">
+      <h2>Lịch sử nhập/xuất</h2>
+      <div id="logList">Đang tải...</div>
+    </div>
+
+    <div class="section" id="itemSection">
+      <h2>Danh mục sản phẩm</h2>
+      <div id="itemList">Đang tải...</div>
+    </div>
   </div>
 
   <script>
-    function getParam(key) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(key);
-    }
+    const khoData = sessionStorage.getItem('khoData');
 
-    const dataKey = getParam("key");
-    if (!dataKey) {
-      window.location.href = "loader.html";
+    if (!khoData) {
+      window.location.href = 'loader.html';
     } else {
-      const raw = sessionStorage.getItem(dataKey);
-      if (!raw) {
-        window.location.href = "loader.html";
+      const data = JSON.parse(khoData);
+
+      // Hiển thị stock
+      const stockList = document.getElementById('stockList');
+      stockList.innerHTML = '';
+      for (let key in data.stock) {
+        const item = document.createElement('div');
+        item.className = 'stock-item';
+        item.innerHTML = `<span class="key">${key}</span><span class="value">${data.stock[key]}</span>`;
+        stockList.appendChild(item);
+      }
+
+      // Hiển thị logs
+      const logList = document.getElementById('logList');
+      logList.innerHTML = '';
+      if (data.logs.length === 0) {
+        logList.innerHTML = '<i>Chưa có lịch sử giao dịch</i>';
       } else {
-        const data = JSON.parse(raw);
-        renderKho(data);
-      }
-    }
-
-    function renderKho(data) {
-      const container = document.getElementById("list");
-      container.innerHTML = "";
-
-      if (!Array.isArray(data)) {
-        container.textContent = "Không có dữ liệu hợp lệ.";
-        return;
+        data.logs.slice(-20).reverse().forEach(log => {
+          const logItem = document.createElement('div');
+          logItem.className = 'log-item';
+          logItem.textContent = `• ${log.time || log.date || 'N/A'} - ${log.action || 'Giao dịch'}: ${log.name} (${log.quantity})`;
+          logList.appendChild(logItem);
+        });
       }
 
-      data.forEach(item => {
-        const div = document.createElement("div");
-        div.className = "item";
-        const isLow = item.soluong <= 5;
-
-        div.innerHTML = `
-          <strong>${item.ten || "Không tên"}</strong><br>
-          Số lượng: <span class="${isLow ? 'low-stock' : ''}">${item.soluong}</span><br>
-          Loại: ${item.loai || "Không rõ"}
-        `;
-        container.appendChild(div);
-      });
+      // Hiển thị items
+      const itemList = document.getElementById('itemList');
+      itemList.innerHTML = '';
+      if (data.items.length === 0) {
+        itemList.innerHTML = '<i>Không có sản phẩm nào được khai báo</i>';
+      } else {
+        data.items.forEach(it => {
+          const item = document.createElement('div');
+          item.className = 'item';
+          item.textContent = `• ${it}`;
+          itemList.appendChild(item);
+        });
+      }
     }
   </script>
 </body>
