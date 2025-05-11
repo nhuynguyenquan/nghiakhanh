@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý kho Nhụy Nguyên</title>
+  <style>
+    body { font-family: Arial; padding: 10px; max-width: 600px; margin: auto; }
+    input, select, button { padding: 8px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    td, th { border: 1px solid #ccc; padding: 6px; }
+    .low-stock { background: #ffd6d6; }
+  </style>
+</head>
+<body>
+  <h2>Quản lý kho Nhụy Nguyên</h2>
+  <div>
+    <input id="item" placeholder="Tên sản phẩm">
+    <input id="quantity" type="number" placeholder="Số lượng">
+    <input id="unit" placeholder="Đơn vị (vd: kg, chai)">
+    <select id="type">
+      <option value="import">Nhập kho</option>
+      <option value="export">Xuất kho</option>
+    </select>
+    <input id="note" placeholder="Ghi chú (nếu có)">
+    <button onclick="submitTransaction()">Ghi giao dịch</button>
+  </div>
+
+  <h3>Tồn kho hiện tại</h3>
+  <table id="stockTable"></table>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwA9UhdjgmKvnauaNFC1gooka7utAfBcLHS2SSE0sX1NFH9wbpMTCzWxP9rE3k2MLYjHg/exec'; // ⚠️ Thay bằng URL GAS của bạn
+
+    let data = {};
+
+    async function loadData() {
+      const res = await fetch(API_URL);
+      data = await res.json();
+      renderStock();
+    }
+
+    function renderStock() {
+      const table = document.getElementById('stockTable');
+      let html = '<tr><th>Sản phẩm</th><th>Số lượng</th><th>Đơn vị</th></tr>';
+      for (const [item, info] of Object.entries(data.stock)) {
+        const { quantity, unit } = info;
+        html += `<tr${quantity <= 5 ? ' class="low-stock"' : ''}>
+                  <td>${item}</td>
+                  <td>${quantity}</td>
+                  <td>${unit}</td>
+                 </tr>`;
+      }
+      table.innerHTML = html;
+    }
+
+    async function submitTransaction() {
+      const item = document.getElementById('item').value.trim();
+      const quantity = parseFloat(document.getElementById('quantity').value);
+      const unit = document.getElementById('unit').value.trim();
+      const type = document.getElementById('type').value;
+      const note = document.getElementById('note').value.trim();
+
+      if (!item || isNaN(quantity) || quantity <= 0) {
+        return alert('Vui lòng nhập tên sản phẩm và số lượng hợp lệ.');
+      }
+
+      // Nếu mặt hàng mới → thêm đơn vị
+      if (!data.stock[item]) {
+        if (!unit) return alert('Vui lòng nhập đơn vị cho sản phẩm mới.');
+        data.stock[item] = { quantity: 0, unit: unit };
+        if (!data.items.includes(item)) data.items.push(item);
+      }
+
+      // Kiểm tra đơn vị nhập có khớp không
+      if (unit && data.stock[item].unit !== unit) {
+        return alert(`Đơn vị không khớp. Sản phẩm "${item}" dùng đơn vị: ${data.stock[item].unit}`);
+      }
+
+      // Cập nhật tồn kho
+      const delta = type === 'import' ? quantity : -quantity;
+      data.stock[item].quantity += delta;
+      if (data.stock[item].quantity < 0) data.stock[item].quantity = 0;
+
+      // Lưu log
+      data.logs.push({
+        type,
+        item,
+        quantity,
+        unit: data.stock[item].unit,
+        note,
+        timestamp: new Date().toISOString()
+      });
+
+      // Gửi về server
+      await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      alert('Giao dịch đã được ghi lại!');
+      document.getElementById('item').value = '';
+      document.getElementById('quantity').value = '';
+      document.getElementById('unit').value = '';
+      document.getElementById('note').value = '';
+      loadData();
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
