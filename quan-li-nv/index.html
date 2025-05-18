@@ -256,6 +256,9 @@
 
     data.attendance.push({ employeeId: id, checkIn: now, checkOut: "" });
     await saveData();
+    const emp = data.employees.find(e => e.id === id);
+const name = emp ? emp.name : 'Không rõ';
+sendTelegramMessage(`✅ Nhân viên <b>${name}</b> đã vào ca lúc ${new Date().toLocaleTimeString("vi-VN")}`);
     alert("✅ Đã chấm vào ca.");
     loadData();
   }
@@ -276,6 +279,9 @@
 
     entry.checkOut = now;
     await saveData();
+    const emp = data.employees.find(e => e.id === id);
+const name = emp ? emp.name : 'Không rõ';
+sendTelegramMessage(`⛔ Nhân viên <b>${name}</b> đã ra ca lúc ${new Date().toLocaleTimeString("vi-VN")}`);
     alert("⛔ Đã chấm ra ca.");
     loadData();
   }
@@ -363,6 +369,24 @@
 
   // Load dữ liệu khi trang mở
   loadData();
+
+  const TELEGRAM_BOT_TOKEN = '7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY'; 
+const TELEGRAM_CHAT_ID = '6249154937';    
+
+function sendTelegramMessage(message) {
+  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  const payload = {
+    chat_id: TELEGRAM_CHAT_ID,
+    text: message,
+    parse_mode: 'HTML'
+  };
+
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).catch(err => console.error("Telegram Error:", err));
+}
 </script>
 </body>
 </html>
