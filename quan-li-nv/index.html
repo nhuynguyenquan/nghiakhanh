@@ -112,11 +112,17 @@
     let data = {};
 
     async function loadData() {
-      const res = await fetch(API_URL);
-      data = await res.json();
-      renderEmployees();
-      renderSelect();
-    }
+  const res = await fetch(API_URL);
+  data = await res.json();
+
+  // Đảm bảo luôn có attendance array
+  if (!Array.isArray(data.attendance)) {
+    data.attendance = [];
+  }
+
+  renderEmployees();
+  renderSelect();
+}
 
     function renderEmployees() {
       const table = document.getElementById("employeeTable");
@@ -168,12 +174,18 @@
     }
 
     async function checkIn() {
-      const id = document.getElementById("employeeSelect").value;
-      const now = new Date().toISOString();
-      data.attendance.push({ employeeId: id, checkIn: now, checkOut: "" });
-      await saveData();
-      alert("✅ Đã chấm vào ca.");
-    }
+  const id = document.getElementById("employeeSelect").value;
+  const now = new Date().toISOString();
+
+  if (!Array.isArray(data.attendance)) {
+    data.attendance = [];
+  }
+
+  data.attendance.push({ employeeId: id, checkIn: now, checkOut: "" });
+  await saveData();
+  alert("✅ Đã chấm vào ca.");
+}
+
 
     async function checkOut() {
       const id = document.getElementById("employeeSelect").value;
