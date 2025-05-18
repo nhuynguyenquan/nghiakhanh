@@ -8,8 +8,48 @@
     input, select, button { margin: 5px 0; padding: 8px; width: 100%; }
     table { width: 100%; margin-top: 20px; border-collapse: collapse; }
     th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+    button {
+      background: #27ae60;
+      color: white;
+      border: none;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: #219150;
+    }
+    .log {
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 14px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .log-entry {
+      border-bottom: 1px solid #eee;
+      padding: 8px 0;
+    }
+    nav {
+            display: flex;
+            justify-content: center;
+            background-color: #d9a382;
+            padding: 10px;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 18px;
+        }
   </style>
 </head>
+<nav>
+    <a href="../quan-li-thu-chi/">Quản Lí Thu Chi</a>
+    <a href="../quan-li-kho/">Quản Lí Kho</a>
+    <a href="../quan-li-menu/">Quan Lí Menu</a>
+    <a href="../quan-li-nv">Quản lí nhân viên</a>
+    <a href="">Quản Lí...</a>
+  </nav>
 <body>
   <h2>📋 Quản lý nhân viên</h2>
 
