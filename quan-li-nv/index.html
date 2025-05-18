@@ -58,42 +58,53 @@
       padding: 8px 0;
     }
     nav {
-            display: flex;
-            justify-content: center;
-            background-color: #d9a382;
-            padding: 10px;
-        }
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin: 0 15px;
-            font-size: 18px;
-        }
+      display: flex;
+      justify-content: center;
+      background-color: #d9a382;
+      padding: 10px;
+    }
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 15px;
+      font-size: 18px;
+    }
   </style>
 </head>
-<nav>
+<body>
+  <nav>
     <a href="../quan-li-thu-chi/">Quản Lí Thu Chi</a>
     <a href="../quan-li-kho/">Quản Lí Kho</a>
     <a href="../quan-li-menu/">Quan Lí Menu</a>
     <a href="../quan-li-nv">Quản lí nhân viên</a>
     <a href="">Quản Lí...</a>
   </nav>
-<body>
-  <h2>📋 Quản lý nhân viên</h2>
 
-  <input id="name" placeholder="Tên nhân viên">
-  <input id="role" placeholder="Chức vụ (VD: Phục vụ, Thu ngân)">
-  <input id="salary" type="number" placeholder="Lương / ngày (VND)">
-  <input id="note" placeholder="Ghi chú (nếu có)">
-  <button onclick="addEmployee()">➕ Thêm nhân viên</button>
+  <div class="container">
+    <h2>📋 Quản lý nhân viên</h2>
 
-  <h3>📑 Danh sách nhân viên</h3>
-  <table id="employeeTable"></table>
+    <input id="name" placeholder="Tên nhân viên">
+    <input id="role" placeholder="Chức vụ (VD: Phục vụ, Thu ngân)">
+    <input id="salary" type="number" placeholder="Lương / ngày (VND)">
+    <input id="note" placeholder="Ghi chú (nếu có)">
+    <button onclick="addEmployee()">➕ Thêm nhân viên</button>
 
-  <h3>🕒 Chấm công</h3>
-  <select id="employeeSelect"></select>
-  <button onclick="checkIn()">✅ Vào ca</button>
-  <button onclick="checkOut()">⛔ Ra ca</button>
+    <h3>📑 Danh sách nhân viên</h3>
+    <table id="employeeTable"></table>
+
+    <h3>🕒 Chấm công</h3>
+    <select id="employeeSelect"></select>
+    <button onclick="checkIn()">✅ Vào ca</button>
+    <button onclick="checkOut()">⛔ Ra ca</button>
+
+    <h3>📊 Tổng hợp công</h3>
+    <label>Chọn ngày hoặc tháng:</label>
+    <input type="month" id="monthPicker">
+    <input type="date" id="datePicker">
+    <button onclick="calculateAttendance()">📆 Tổng hợp</button>
+
+    <table id="summaryTable"></table>
+  </div>
 
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbxfSnimiGKE1uDDKdtnU1v5gUBEu7p0B4xQ5mfMFVZWDVa_7xiG_WzqVzOTP7ARdgLMmw/exec'; 
@@ -172,7 +183,7 @@
       const entry = data.attendance.find(a =>
         a.employeeId === id &&
         a.checkIn.startsWith(today) &&
-        !a.checkOut
+        (!a.checkOut || a.checkOut === "")
       );
 
       if (!entry) return alert("Không tìm thấy ca làm để ra ca.");
@@ -186,86 +197,74 @@
       await fetch(API_URL, {
         method: 'POST',
         body: JSON.stringify(data),
-        mode: "no-cors",
+        mode: "cors",
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    loadData();
-  </script>
-  <h3>📊 Tổng hợp công</h3>
-  <label>Chọn ngày hoặc tháng:</label>
-  <input type="month" id="monthPicker">
-  <input type="date" id="datePicker">
-  <button onclick="calculateAttendance()">📆 Tổng hợp</button>
-  
-  <table id="summaryTable"></table>
-  
-  <script>
-  function calculateAttendance() {
-    const selectedMonth = document.getElementById("monthPicker").value;
-    const selectedDate = document.getElementById("datePicker").value;
-  
-    const summary = {};
-  
-    for (const emp of data.employees) {
-      summary[emp.id] = {
-        name: emp.name,
-        totalHours: 0,
-        totalDays: 0,
-        sessions: 0
-      };
-    }
-  
-    for (const log of data.attendance) {
-      if (!log.checkIn || !log.checkOut) continue;
-  
-      const checkInDate = new Date(log.checkIn);
-      const checkOutDate = new Date(log.checkOut);
-      if (isNaN(checkInDate) || isNaN(checkOutDate)) continue;
-  
-      const logDateStr = log.checkIn.slice(0, 10);
-      const logMonthStr = log.checkIn.slice(0, 7);
-  
-      if (selectedDate && logDateStr !== selectedDate) continue;
-      if (selectedMonth && logMonthStr !== selectedMonth) continue;
-  
-      const diffMs = checkOutDate - checkInDate;
-      const hours = diffMs / 3600000;
-  
-      const emp = summary[log.employeeId];
-      if (emp) {
-        emp.totalHours += hours;
-        emp.sessions += 1;
+    function calculateAttendance() {
+      const selectedMonth = document.getElementById("monthPicker").value;
+      const selectedDate = document.getElementById("datePicker").value;
+
+      const summary = {};
+      for (const emp of data.employees) {
+        summary[emp.id] = {
+          name: emp.name,
+          totalHours: 0,
+          totalDays: 0,
+          sessions: 0
+        };
       }
-    }
-  
-    // Convert sessions to days nếu muốn tính ngày công
-    for (const emp of Object.values(summary)) {
-      emp.totalHours = emp.totalHours.toFixed(2);
-      emp.totalDays = (emp.sessions / 2).toFixed(1); // mỗi ngày 2 lần: vào + ra
-    }
-  
-    // Render bảng
-    const table = document.getElementById("summaryTable");
-    let html = `<tr>
-      <th>Nhân viên</th>
-      <th>Số ca</th>
-      <th>Số giờ</th>
-      <th>Ngày công (ước tính)</th>
-    </tr>`;
-  
-    for (const emp of Object.values(summary)) {
-      html += `<tr>
-        <td>${emp.name}</td>
-        <td>${emp.sessions}</td>
-        <td>${emp.totalHours}</td>
-        <td>${emp.totalDays}</td>
+
+      for (const log of data.attendance) {
+        if (!log.checkIn || !log.checkOut || log.checkOut === "") continue;
+
+        const checkInDate = new Date(log.checkIn);
+        const checkOutDate = new Date(log.checkOut);
+        if (isNaN(checkInDate) || isNaN(checkOutDate)) continue;
+
+        const logDateStr = log.checkIn.slice(0, 10);
+        const logMonthStr = log.checkIn.slice(0, 7);
+
+        if (selectedDate && logDateStr !== selectedDate) continue;
+        if (selectedMonth && logMonthStr !== selectedMonth) continue;
+
+        const diffMs = checkOutDate - checkInDate;
+        const hours = diffMs / 3600000;
+
+        const emp = summary[log.employeeId];
+        if (emp) {
+          emp.totalHours += hours;
+          emp.sessions += 1;
+        }
+      }
+
+      for (const emp of Object.values(summary)) {
+        emp.totalHours = emp.totalHours.toFixed(2);
+        emp.totalDays = (emp.sessions / 2).toFixed(1);
+      }
+
+      const table = document.getElementById("summaryTable");
+      let html = `<tr>
+        <th>Nhân viên</th>
+        <th>Số ca</th>
+        <th>Số giờ</th>
+        <th>Ngày công (ước tính)</th>
       </tr>`;
+
+      for (const emp of Object.values(summary)) {
+        html += `<tr>
+          <td>${emp.name}</td>
+          <td>${emp.sessions}</td>
+          <td>${emp.totalHours}</td>
+          <td>${emp.totalDays}</td>
+        </tr>`;
+      }
+
+      table.innerHTML = html;
     }
-  
-    table.innerHTML = html;
-  }
+
+    loadData();
   </script>
 </body>
 </html>
