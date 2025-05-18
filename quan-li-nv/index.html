@@ -222,6 +222,7 @@
   
       const checkInDate = new Date(log.checkIn);
       const checkOutDate = new Date(log.checkOut);
+      if (isNaN(checkInDate) || isNaN(checkOutDate)) continue;
   
       const logDateStr = log.checkIn.slice(0, 10);
       const logMonthStr = log.checkIn.slice(0, 7);
