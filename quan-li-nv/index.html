@@ -1,293 +1,343 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quản lý nhân viên - Nhụy Nguyên</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quản lý công nhân viên</title>
   <style>
     body {
-      font-family: 'Quicksand', sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f4f6f8;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      margin: 20px;
+      background: #f9f9f9;
+      color: #333;
     }
-    .container {
-      max-width: 480px;
-      margin: auto;
-      padding: 20px;
+    h1, h2 {
+      color: #2c3e50;
     }
-    h2 {
-      text-align: center;
-      color: #d35400;
-    }
-    .section {
-      background: white;
-      border-radius: 16px;
-      padding: 20px;
+    table {
+      width: 100%;
+      border-collapse: collapse;
       margin-bottom: 20px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      background: white;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #3498db;
+      color: white;
+      font-weight: 600;
     }
     input, select, button {
+      padding: 8px;
+      margin: 5px 0 15px 0;
       width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      margin-bottom: 15px;
-      border-radius: 10px;
+      box-sizing: border-box;
       border: 1px solid #ccc;
-      font-size: 16px;
+      border-radius: 4px;
+      font-size: 1rem;
     }
     button {
-      background: #27ae60;
+      background-color: #3498db;
       color: white;
       border: none;
-      transition: 0.2s;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
     }
     button:hover {
-      background: #219150;
+      background-color: #2980b9;
     }
-    .log {
-      background: #fff;
-      border-radius: 8px;
-      padding: 10px;
-      font-size: 14px;
-      max-height: 300px;
-      overflow-y: auto;
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 6px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
     }
-    .log-entry {
-      border-bottom: 1px solid #eee;
-      padding: 8px 0;
+    .form-group {
+      margin-bottom: 15px;
     }
-    nav {
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .row {
       display: flex;
-      justify-content: center;
-      background-color: #d9a382;
-      padding: 10px;
+      gap: 10px;
+      flex-wrap: wrap;
     }
-    nav a {
-      color: white;
-      text-decoration: none;
-      margin: 0 15px;
-      font-size: 18px;
+    .row > div {
+      flex: 1;
+      min-width: 150px;
+    }
+    @media (max-width: 600px) {
+      .row {
+        flex-direction: column;
+      }
+    }
+    /* For summary table scroll horizontally on small screens */
+    .table-wrapper {
+      overflow-x: auto;
     }
   </style>
 </head>
 <body>
-  <nav>
-    <a href="../quan-li-thu-chi/">Quản Lí Thu Chi</a>
-    <a href="../quan-li-kho/">Quản Lí Kho</a>
-    <a href="../quan-li-menu/">Quan Lí Menu</a>
-    <a href="../quan-li-nv">Quản lí nhân viên</a>
-    <a href="">Quản Lí...</a>
-  </nav>
-
   <div class="container">
-    <h2>📋 Quản lý nhân viên</h2>
+    <h1>Quản lý công nhân viên</h1>
 
-    <input id="name" placeholder="Tên nhân viên">
-    <input id="role" placeholder="Chức vụ (VD: Phục vụ, Thu ngân)">
-    <input id="salary" type="number" placeholder="Lương / ngày (VND)">
-    <input id="note" placeholder="Ghi chú (nếu có)">
-    <button onclick="addEmployee()">➕ Thêm nhân viên</button>
+    <section>
+      <h2>Danh sách nhân viên</h2>
+      <table id="employeeTable">
+        <!-- bảng nhân viên sẽ được tạo động -->
+      </table>
+    </section>
 
-    <h3>📑 Danh sách nhân viên</h3>
-    <table id="employeeTable"></table>
+    <section>
+      <h2>Thêm nhân viên mới</h2>
+      <div class="row">
+        <div class="form-group">
+          <label for="name">Tên nhân viên</label>
+          <input type="text" id="name" placeholder="Nhập tên nhân viên" />
+        </div>
+        <div class="form-group">
+          <label for="role">Chức vụ</label>
+          <input type="text" id="role" placeholder="VD: NV, Quản lý" />
+        </div>
+        <div class="form-group">
+          <label for="salary">Lương/ngày (VNĐ)</label>
+          <input type="number" id="salary" placeholder="Nhập lương/ngày" />
+        </div>
+        <div class="form-group">
+          <label for="note">Ghi chú</label>
+          <input type="text" id="note" placeholder="VD: 10000/h" />
+        </div>
+      </div>
+      <button onclick="addEmployee()">Thêm nhân viên</button>
+    </section>
 
-    <h3>🕒 Chấm công</h3>
-    <select id="employeeSelect"></select>
-    <button onclick="checkIn()">✅ Vào ca</button>
-    <button onclick="checkOut()">⛔ Ra ca</button>
+    <section>
+      <h2>Chấm công</h2>
+      <div class="form-group">
+        <label for="employeeSelect">Chọn nhân viên</label>
+        <select id="employeeSelect"></select>
+      </div>
+      <div class="row">
+        <div><button onclick="checkIn()">Chấm vào ca</button></div>
+        <div><button onclick="checkOut()">Chấm ra ca</button></div>
+      </div>
+    </section>
 
-    <h3>📊 Tổng hợp công</h3>
-    <label>Chọn ngày hoặc tháng:</label>
-    <input type="month" id="monthPicker">
-    <input type="date" id="datePicker">
-    <button onclick="calculateAttendance()">📆 Tổng hợp</button>
+    <section>
+      <h2>📊 Tổng hợp công</h2>
+      <div class="row">
+        <div class="form-group">
+          <label for="monthPicker">Chọn tháng (YYYY-MM)</label>
+          <input type="month" id="monthPicker" onchange="calculateAttendance()" />
+        </div>
+        <div class="form-group">
+          <label for="datePicker">Chọn ngày (YYYY-MM-DD)</label>
+          <input type="date" id="datePicker" onchange="calculateAttendance()" />
+        </div>
+      </div>
 
-    <table id="summaryTable"></table>
+      <div class="table-wrapper">
+        <table id="summaryTable">
+          <!-- bảng tổng hợp sẽ tạo động -->
+        </table>
+      </div>
+    </section>
   </div>
 
-  <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxfSnimiGKE1uDDKdtnU1v5gUBEu7p0B4xQ5mfMFVZWDVa_7xiG_WzqVzOTP7ARdgLMmw/exec'; 
+<script>
+  const API_URL = 'https://script.google.com/macros/s/AKfycbxfSnimiGKE1uDDKdtnU1v5gUBEu7p0B4xQ5mfMFVZWDVa_7xiG_WzqVzOTP7ARdgLMmw/exec'; 
 
-    let data = {};
+  let data = {};
 
-    async function loadData() {
-  const res = await fetch(API_URL);
-  data = await res.json();
+  async function loadData() {
+    try {
+      const res = await fetch(API_URL);
+      data = await res.json();
 
-  // Đảm bảo luôn có attendance array
-  if (!Array.isArray(data.attendance)) {
-    data.attendance = [];
-  }
+      if (!Array.isArray(data.employees)) data.employees = [];
+      if (!Array.isArray(data.attendance)) data.attendance = [];
 
-  renderEmployees();
-  renderSelect();
-}
-
-    function renderEmployees() {
-      const table = document.getElementById("employeeTable");
-      let html = `<tr><th>Tên</th><th>Chức vụ</th><th>Lương/ngày</th><th>Ghi chú</th></tr>`;
-      for (const emp of data.employees) {
-        html += `<tr>
-          <td>${emp.name}</td>
-          <td>${emp.role}</td>
-          <td>${emp.salaryPerDay}</td>
-          <td>${emp.note}</td>
-        </tr>`;
-      }
-      table.innerHTML = html;
-    }
-
-    function renderSelect() {
-      const sel = document.getElementById("employeeSelect");
-      sel.innerHTML = data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join("");
-    }
-
-    function genId() {
-      return 'nv' + Date.now();
-    }
-
-    async function addEmployee() {
-      const name = document.getElementById("name").value.trim();
-      const role = document.getElementById("role").value.trim();
-      const salary = parseInt(document.getElementById("salary").value);
-      const note = document.getElementById("note").value.trim();
-
-      if (!name || isNaN(salary)) return alert("Vui lòng nhập đầy đủ tên và lương.");
-
-      const newEmp = {
-        id: genId(),
-        name,
-        role,
-        salaryPerDay: salary,
-        note
-      };
-
-      data.employees.push(newEmp);
-      await saveData();
-      alert("Đã thêm nhân viên.");
-      document.getElementById("name").value = "";
-      document.getElementById("role").value = "";
-      document.getElementById("salary").value = "";
-      document.getElementById("note").value = "";
-      loadData();
-    }
-
-    async function checkIn() {
-  const id = document.getElementById("employeeSelect").value;
-  const now = new Date().toISOString();
-
-  if (!Array.isArray(data.attendance)) {
-    data.attendance = [];
-  }
-
-  data.attendance.push({ employeeId: id, checkIn: now, checkOut: "" });
-  await saveData();
-  alert("✅ Đã chấm vào ca.");
-}
-
-
-    async function checkOut() {
-      const id = document.getElementById("employeeSelect").value;
-      const now = new Date().toISOString();
-      const today = new Date().toISOString().slice(0, 10);
-
-      const entry = data.attendance.find(a =>
-        a.employeeId === id &&
-        a.checkIn.startsWith(today) &&
-        (!a.checkOut || a.checkOut === "")
-      );
-
-      if (!entry) return alert("Không tìm thấy ca làm để ra ca.");
-
-      entry.checkOut = now;
-      await saveData();
-      alert("⛔ Đã chấm ra ca.");
-    }
-
-    async function saveData() {
-      await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify(data),
-        mode: "no-cors",
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    function calculateAttendance() {
-  const selectedMonth = document.getElementById("monthPicker").value;
-  const selectedDate = document.getElementById("datePicker").value;
-
-  const summary = {};
-  for (const emp of data.employees) {
-    summary[emp.id] = {
-      name: emp.name,
-      totalHours: 0,
-      sessions: 0
-    };
-  }
-
-  for (const log of data.attendance) {
-    if (!log.checkIn || !log.checkOut || log.checkOut.trim() === "") continue;
-
-    let checkInDate = new Date(log.checkIn);
-    let checkOutDate = new Date(log.checkOut);
-
-    if (isNaN(checkInDate) || isNaN(checkOutDate)) continue;
-
-    // Chuyển sang giờ Việt Nam (UTC+7)
-    checkInDate = new Date(checkInDate.getTime() + 7 * 60 * 60 * 1000);
-    checkOutDate = new Date(checkOutDate.getTime() + 7 * 60 * 60 * 1000);
-
-    const logDateStr = checkInDate.toISOString().slice(0, 10);
-    const logMonthStr = checkInDate.toISOString().slice(0, 7);
-
-    if (selectedDate && logDateStr !== selectedDate) continue;
-    if (selectedMonth && logMonthStr !== selectedMonth) continue;
-
-    const diffMs = checkOutDate - checkInDate;
-    if (diffMs <= 0) continue;
-
-    const hours = diffMs / 3600000;
-
-    const emp = summary[log.employeeId];
-    if (emp) {
-      emp.totalHours += hours;
-      emp.sessions += 1;
+      renderEmployees();
+      renderSelect();
+      calculateAttendance();
+    } catch(e) {
+      alert("Lỗi tải dữ liệu. Vui lòng thử lại.");
+      console.error(e);
     }
   }
 
-  for (const emp of Object.values(summary)) {
-    emp.totalHours = isNaN(emp.totalHours) ? 0 : emp.totalHours;
-    emp.totalHours = emp.totalHours.toFixed(2);
-    const days = emp.totalHours / 10;
-    emp.totalDays = isNaN(days) ? "0.0" : days.toFixed(1);
-  }
-
-  const table = document.getElementById("summaryTable");
-  let html = `<tr>
-    <th>Nhân viên</th>
-    <th>Số ca</th>
-    <th>Số giờ</th>
-    <th>Ngày công (ước tính)</th>
-  </tr>`;
-
-  for (const emp of Object.values(summary)) {
-    if (emp.sessions > 0) {
+  function renderEmployees() {
+    const table = document.getElementById("employeeTable");
+    let html = `<tr><th>Tên</th><th>Chức vụ</th><th>Lương/ngày</th><th>Ghi chú</th></tr>`;
+    for (const emp of data.employees) {
       html += `<tr>
         <td>${emp.name}</td>
-        <td>${emp.sessions}</td>
-        <td>${emp.totalHours}</td>
-        <td>${emp.totalDays}</td>
+        <td>${emp.role}</td>
+        <td>${emp.salaryPerDay.toLocaleString('vi-VN')} đ</td>
+        <td>${emp.note}</td>
       </tr>`;
     }
+    table.innerHTML = html;
   }
 
-  table.innerHTML = html;
-}
+  function renderSelect() {
+    const sel = document.getElementById("employeeSelect");
+    sel.innerHTML = data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join("");
+  }
 
+  function genId() {
+    return 'nv' + Date.now();
+  }
+
+  async function addEmployee() {
+    const name = document.getElementById("name").value.trim();
+    const role = document.getElementById("role").value.trim();
+    const salary = parseInt(document.getElementById("salary").value);
+    const note = document.getElementById("note").value.trim();
+
+    if (!name || isNaN(salary)) {
+      return alert("Vui lòng nhập đầy đủ tên và lương.");
+    }
+
+    const newEmp = {
+      id: genId(),
+      name,
+      role,
+      salaryPerDay: salary,
+      note
+    };
+
+    data.employees.push(newEmp);
+    await saveData();
+    alert("Đã thêm nhân viên.");
+
+    document.getElementById("name").value = "";
+    document.getElementById("role").value = "";
+    document.getElementById("salary").value = "";
+    document.getElementById("note").value = "";
 
     loadData();
-  </script>
+  }
+
+  async function checkIn() {
+    const id = document.getElementById("employeeSelect").value;
+    const now = new Date().toISOString();
+
+    if (!Array.isArray(data.attendance)) data.attendance = [];
+
+    data.attendance.push({ employeeId: id, checkIn: now, checkOut: "" });
+    await saveData();
+    alert("✅ Đã chấm vào ca.");
+    loadData();
+  }
+
+  async function checkOut() {
+    const id = document.getElementById("employeeSelect").value;
+    const now = new Date().toISOString();
+    const today = new Date().toISOString().slice(0, 10);
+
+    // Tìm ca checkIn chưa checkOut trong ngày hiện tại (UTC)
+    const entry = data.attendance.find(a =>
+      a.employeeId === id &&
+      a.checkIn.startsWith(today) &&
+      (!a.checkOut || a.checkOut === "")
+    );
+
+    if (!entry) return alert("Không tìm thấy ca làm để ra ca.");
+
+    entry.checkOut = now;
+    await saveData();
+    alert("⛔ Đã chấm ra ca.");
+    loadData();
+  }
+
+  async function saveData() {
+    await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      mode: "no-cors",
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
+  function calculateAttendance() {
+    const selectedMonth = document.getElementById("monthPicker").value;
+    const selectedDate = document.getElementById("datePicker").value;
+
+    const summary = {};
+    for (const emp of data.employees) {
+      summary[emp.id] = {
+        name: emp.name,
+        totalHours: 0,
+        sessions: 0
+      };
+    }
+
+    for (const log of data.attendance) {
+      if (!log.checkIn || !log.checkOut || log.checkOut === "") continue;
+
+      // Chuyển sang giờ Việt Nam (UTC+7)
+      const checkInDate = new Date(log.checkIn);
+      checkInDate.setHours(checkInDate.getHours() + 7);
+      const checkOutDate = new Date(log.checkOut);
+      checkOutDate.setHours(checkOutDate.getHours() + 7);
+
+      const logDateStr = checkInDate.toISOString().slice(0, 10);
+      const logMonthStr = checkInDate.toISOString().slice(0, 7);
+
+      if (selectedDate && logDateStr !== selectedDate) continue;
+      if (selectedMonth && logMonthStr !== selectedMonth) continue;
+
+      const diffMs = checkOutDate - checkInDate;
+      const hours = diffMs / 3600000;
+
+      const emp = summary[log.employeeId];
+      if (emp) {
+        emp.totalHours += hours;
+        emp.sessions += 1;
+      }
+    }
+
+    // Tính ngày công: 1 ngày = 10 giờ làm
+    for (const emp of Object.values(summary)) {
+      emp.totalHours = emp.totalHours.toFixed(2);
+      emp.totalDays = (emp.totalHours / 10).toFixed(1);
+    }
+
+    const table = document.getElementById("summaryTable");
+    let html = `<tr>
+      <th>Nhân viên</th>
+      <th>Số ca</th>
+      <th>Số giờ</th>
+      <th>Ngày công (ước tính)</th>
+    </tr>`;
+
+    for (const emp of Object.values(summary)) {
+      if (emp.sessions > 0) {
+        html += `<tr>
+          <td>${emp.name}</td>
+          <td>${emp.sessions}</td>
+          <td>${emp.totalHours}</td>
+          <td>${emp.totalDays}</td>
+        </tr>`;
+      }
+    }
+
+    table.innerHTML = html;
+  }
+
+  // Load dữ liệu khi trang mở
+  loadData();
+</script>
 </body>
 </html>
