@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý nhân viên - Nhụy Nguyên</title>
+  <style>
+    body { font-family: Arial; padding: 20px; max-width: 700px; margin: auto; }
+    input, select, button { margin: 5px 0; padding: 8px; width: 100%; }
+    table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+  </style>
+</head>
+<body>
+  <h2>📋 Quản lý nhân viên</h2>
+
+  <input id="name" placeholder="Tên nhân viên">
+  <input id="role" placeholder="Chức vụ (VD: Phục vụ, Thu ngân)">
+  <input id="salary" type="number" placeholder="Lương / ngày (VND)">
+  <input id="note" placeholder="Ghi chú (nếu có)">
+  <button onclick="addEmployee()">➕ Thêm nhân viên</button>
+
+  <h3>📑 Danh sách nhân viên</h3>
+  <table id="employeeTable"></table>
+
+  <h3>🕒 Chấm công</h3>
+  <select id="employeeSelect"></select>
+  <button onclick="checkIn()">✅ Vào ca</button>
+  <button onclick="checkOut()">⛔ Ra ca</button>
+
+  <script>
+    const API_URL = 'LINK_GAS'; // ⚠️ thay bằng URL của Google Apps Script
+
+    let data = {};
+
+    async function loadData() {
+      const res = await fetch(API_URL);
+      data = await res.json();
+      renderEmployees();
+      renderSelect();
+    }
+
+    function renderEmployees() {
+      const table = document.getElementById("employeeTable");
+      let html = `<tr><th>Tên</th><th>Chức vụ</th><th>Lương/ngày</th><th>Ghi chú</th></tr>`;
+      for (const emp of data.employees) {
+        html += `<tr>
+          <td>${emp.name}</td>
+          <td>${emp.role}</td>
+          <td>${emp.salaryPerDay}</td>
+          <td>${emp.note}</td>
+        </tr>`;
+      }
+      table.innerHTML = html;
+    }
+
+    function renderSelect() {
+      const sel = document.getElementById("employeeSelect");
+      sel.innerHTML = data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join("");
+    }
+
+    function genId() {
+      return 'nv' + Date.now();
+    }
+
+    async function addEmployee() {
+      const name = document.getElementById("name").value.trim();
+      const role = document.getElementById("role").value.trim();
+      const salary = parseInt(document.getElementById("salary").value);
+      const note = document.getElementById("note").value.trim();
+
+      if (!name || isNaN(salary)) return alert("Vui lòng nhập đầy đủ tên và lương.");
+
+      const newEmp = {
+        id: genId(),
+        name,
+        role,
+        salaryPerDay: salary,
+        note
+      };
+
+      data.employees.push(newEmp);
+      await saveData();
+      alert("Đã thêm nhân viên.");
+      document.getElementById("name").value = "";
+      document.getElementById("role").value = "";
+      document.getElementById("salary").value = "";
+      document.getElementById("note").value = "";
+      loadData();
+    }
+
+    async function checkIn() {
+      const id = document.getElementById("employeeSelect").value;
+      const now = new Date().toISOString();
+      data.attendance.push({ employeeId: id, checkIn: now, checkOut: "" });
+      await saveData();
+      alert("✅ Đã chấm vào ca.");
+    }
+
+    async function checkOut() {
+      const id = document.getElementById("employeeSelect").value;
+      const now = new Date().toISOString();
+      const today = new Date().toISOString().slice(0, 10);
+
+      const entry = data.attendance.find(a =>
+        a.employeeId === id &&
+        a.checkIn.startsWith(today) &&
+        !a.checkOut
+      );
+
+      if (!entry) return alert("Không tìm thấy ca làm để ra ca.");
+
+      entry.checkOut = now;
+      await saveData();
+      alert("⛔ Đã chấm ra ca.");
+    }
+
+    async function saveData() {
+      await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    loadData();
+  </script>
+  <h3>📊 Tổng hợp công</h3>
+  <label>Chọn ngày hoặc tháng:</label>
+  <input type="month" id="monthPicker">
+  <input type="date" id="datePicker">
+  <button onclick="calculateAttendance()">📆 Tổng hợp</button>
+  
+  <table id="summaryTable"></table>
+  
+  <script>
+  function calculateAttendance() {
+    const selectedMonth = document.getElementById("monthPicker").value;
+    const selectedDate = document.getElementById("datePicker").value;
+  
+    const summary = {};
+  
+    for (const emp of data.employees) {
+      summary[emp.id] = {
+        name: emp.name,
+        totalHours: 0,
+        totalDays: 0,
+        sessions: 0
+      };
+    }
+  
+    for (const log of data.attendance) {
+      if (!log.checkIn || !log.checkOut) continue;
+  
+      const checkInDate = new Date(log.checkIn);
+      const checkOutDate = new Date(log.checkOut);
+  
+      const logDateStr = log.checkIn.slice(0, 10);
+      const logMonthStr = log.checkIn.slice(0, 7);
+  
+      if (selectedDate && logDateStr !== selectedDate) continue;
+      if (selectedMonth && logMonthStr !== selectedMonth) continue;
+  
+      const diffMs = checkOutDate - checkInDate;
+      const hours = diffMs / 3600000;
+  
+      const emp = summary[log.employeeId];
+      if (emp) {
+        emp.totalHours += hours;
+        emp.sessions += 1;
+      }
+    }
+  
+    // Convert sessions to days nếu muốn tính ngày công
+    for (const emp of Object.values(summary)) {
+      emp.totalHours = emp.totalHours.toFixed(2);
+      emp.totalDays = (emp.sessions / 2).toFixed(1); // mỗi ngày 2 lần: vào + ra
+    }
+  
+    // Render bảng
+    const table = document.getElementById("summaryTable");
+    let html = `<tr>
+      <th>Nhân viên</th>
+      <th>Số ca</th>
+      <th>Số giờ</th>
+      <th>Ngày công (ước tính)</th>
+    </tr>`;
+  
+    for (const emp of Object.values(summary)) {
+      html += `<tr>
+        <td>${emp.name}</td>
+        <td>${emp.sessions}</td>
+        <td>${emp.totalHours}</td>
+        <td>${emp.totalDays}</td>
+      </tr>`;
+    }
+  
+    table.innerHTML = html;
+  }
+  </script>
+</body>
+</html>
