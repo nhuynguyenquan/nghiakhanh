@@ -215,70 +215,66 @@
     }
 
     function calculateAttendance() {
-  const selectedMonth = document.getElementById("monthPicker").value;
-  const selectedDate = document.getElementById("datePicker").value;
+      const selectedMonth = document.getElementById("monthPicker").value;
+      const selectedDate = document.getElementById("datePicker").value;
 
-  const summary = {};
-  for (const emp of data.employees) {
-    summary[emp.id] = {
-      name: emp.name,
-      totalHours: 0,
-      sessions: 0
-    };
-  }
+      const summary = {};
+      for (const emp of data.employees) {
+        summary[emp.id] = {
+          name: emp.name,
+          totalHours: 0,
+          totalDays: 0,
+          sessions: 0
+        };
+      }
 
-  for (const log of data.attendance) {
-    if (!log.checkIn || !log.checkOut || log.checkOut === "") continue;
+      for (const log of data.attendance) {
+        if (!log.checkIn || !log.checkOut || log.checkOut === "") continue;
 
-    // Chuyển sang giờ Việt Nam (UTC+7)
-    const checkInDate = new Date(log.checkIn);
-    checkInDate.setHours(checkInDate.getHours() + 7);
-    const checkOutDate = new Date(log.checkOut);
-    checkOutDate.setHours(checkOutDate.getHours() + 7);
+        const checkInDate = new Date(log.checkIn);
+        const checkOutDate = new Date(log.checkOut);
+        if (isNaN(checkInDate) || isNaN(checkOutDate)) continue;
 
-    const logDateStr = checkInDate.toISOString().slice(0, 10);
-    const logMonthStr = checkInDate.toISOString().slice(0, 7);
+        const logDateStr = log.checkIn.slice(0, 10);
+        const logMonthStr = log.checkIn.slice(0, 7);
 
-    if (selectedDate && logDateStr !== selectedDate) continue;
-    if (selectedMonth && logMonthStr !== selectedMonth) continue;
+        if (selectedDate && logDateStr !== selectedDate) continue;
+        if (selectedMonth && logMonthStr !== selectedMonth) continue;
 
-    const diffMs = checkOutDate - checkInDate;
-    const hours = diffMs / 3600000;
+        const diffMs = checkOutDate - checkInDate;
+        const hours = diffMs / 3600000;
 
-    const emp = summary[log.employeeId];
-    if (emp) {
-      emp.totalHours += hours;
-      emp.sessions += 1;
-    }
-  }
+        const emp = summary[log.employeeId];
+        if (emp) {
+          emp.totalHours += hours;
+          emp.sessions += 1;
+        }
+      }
 
-  // Tính ngày công dựa trên giờ làm: 1 ngày = 10 tiếng
-  for (const emp of Object.values(summary)) {
-    emp.totalHours = emp.totalHours.toFixed(2);
-    emp.totalDays = (emp.totalHours / 10).toFixed(1);
-  }
+      for (const emp of Object.values(summary)) {
+        emp.totalHours = emp.totalHours.toFixed(2);
+        emp.totalDays = (emp.sessions / 2).toFixed(1);
+      }
 
-  const table = document.getElementById("summaryTable");
-  let html = `<tr>
-    <th>Nhân viên</th>
-    <th>Số ca</th>
-    <th>Số giờ</th>
-    <th>Ngày công (ước tính)</th>
-  </tr>`;
-
-  for (const emp of Object.values(summary)) {
-    if (emp.sessions > 0) {
-      html += `<tr>
-        <td>${emp.name}</td>
-        <td>${emp.sessions}</td>
-        <td>${emp.totalHours}</td>
-        <td>${emp.totalDays}</td>
+      const table = document.getElementById("summaryTable");
+      let html = `<tr>
+        <th>Nhân viên</th>
+        <th>Số ca</th>
+        <th>Số giờ</th>
+        <th>Ngày công (ước tính)</th>
       </tr>`;
-    }
-  }
 
-  table.innerHTML = html;
-}
+      for (const emp of Object.values(summary)) {
+        html += `<tr>
+          <td>${emp.name}</td>
+          <td>${emp.sessions}</td>
+          <td>${emp.totalHours}</td>
+          <td>${emp.totalDays}</td>
+        </tr>`;
+      }
+
+      table.innerHTML = html;
+    }
 
     loadData();
   </script>
