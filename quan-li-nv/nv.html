@@ -43,7 +43,7 @@
 
     async function checkIn() {
       const id = document.getElementById("employeeSelect").value;
-      const now = roundDown15(new Date()).toISOString();
+      const now = roundUp15(new Date()).toISOString();
 
       data.attendance.push({ employeeId: id, checkIn: now, checkOut: "" });
       await saveData();
@@ -53,7 +53,7 @@
 
     async function checkOut() {
       const id = document.getElementById("employeeSelect").value;
-      const now = roundUp15(new Date()).toISOString();
+      const now = roundDown15(new Date()).toISOString();
       const today = now.slice(0,10);
 
       const entry = data.attendance.find(a => a.employeeId === id && a.checkIn.startsWith(today) && !a.checkOut);
