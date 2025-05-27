@@ -341,7 +341,7 @@ sendTelegramMessage(`⛔ Nhân viên <b>${name}</b> đã ra ca lúc ${new Date()
   for (const emp of Object.values(summary)) {
     emp.totalHours = isNaN(emp.totalHours) ? 0 : emp.totalHours;
     emp.totalHours = emp.totalHours.toFixed(2);
-    const days = emp.totalHours / 10;
+    const days = emp.totalHours / 8;
     emp.totalDays = isNaN(days) ? "0.0" : days.toFixed(1);
   }
 
