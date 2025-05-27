@@ -7,7 +7,7 @@
   <style>
     body { font-family: sans-serif; text-align: center; padding: 1rem; }
     select, button { font-size: 1.2rem; margin: 10px; padding: 10px; width: 80%; }
-    #status { margin-top: 1rem; font-weight: bold; color: green; }
+    #status { font-size: 1.1rem; margin-top: 1rem; color: #333; }
   </style>
 </head>
 <body>
@@ -15,7 +15,7 @@
   <select id="employeeSelect" onchange="updateButtons()"></select><br>
   <button id="checkInBtn" onclick="checkIn()">✅ Vào ca</button>
   <button id="checkOutBtn" onclick="checkOut()">⛔ Ra ca</button>
-  <div id="status"></div>
+  <div id="status">🔄 Đang tải...</div>
 
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbxfSnimiGKE1uDDKdtnU1v5gUBEu7p0B4xQ5mfMFVZWDVa_7xiG_WzqVzOTP7ARdgLMmw/exec'; 
@@ -44,41 +44,19 @@
       return new Date(Math.ceil(d.getTime() / ms) * ms);
     }
 
-    function updateButtons() {
-      const id = document.getElementById("employeeSelect").value;
-      const today = new Date().toISOString().slice(0, 10);
-
-      const logs = data.attendance.filter(a => a.employeeId === id && a.checkIn.startsWith(today));
-      const entry = logs[logs.length - 1]; // lấy bản ghi mới nhất
-
-      const checkInBtn = document.getElementById("checkInBtn");
-      const checkOutBtn = document.getElementById("checkOutBtn");
-      const status = document.getElementById("status");
-
-      if (!entry) {
-        checkInBtn.disabled = false;
-        checkOutBtn.disabled = true;
-        status.textContent = "🟡 Chưa vào ca";
-      } else if (entry && !entry.checkOut) {
-        checkInBtn.disabled = true;
-        checkOutBtn.disabled = false;
-        status.textContent = "🟢 Đã vào ca lúc " + formatTime(entry.checkIn);
-      } else {
-        checkInBtn.disabled = true;
-        checkOutBtn.disabled = true;
-        status.textContent = "🔴 Đã ra ca lúc " + formatTime(entry.checkOut);
-      }
-    }
-
     async function checkIn() {
       const id = document.getElementById("employeeSelect").value;
       const now = roundUp15(new Date()).toISOString();
-
-      // kiểm tra nếu đã có checkin hôm nay
       const today = now.slice(0, 10);
-      const alreadyCheckedIn = data.attendance.some(a => a.employeeId === id && a.checkIn.startsWith(today) && !a.checkOut);
-      if (alreadyCheckedIn) {
-        alert("⛔ Đã vào ca hôm nay.");
+
+      const hasOpenEntry = data.attendance.some(a =>
+        a.employeeId === id &&
+        a.checkIn.startsWith(today) &&
+        !a.checkOut
+      );
+
+      if (hasOpenEntry) {
+        alert("⛔ Bạn chưa ra ca trước.");
         return;
       }
 
@@ -94,15 +72,17 @@
       const now = roundDown15(new Date()).toISOString();
       const today = now.slice(0, 10);
 
-      const entry = data.attendance.find(a =>
-        a.employeeId === id &&
-        a.checkIn.startsWith(today) &&
-        !a.checkOut
-      );
+      const logs = data.attendance
+        .filter(a => a.employeeId === id && a.checkIn.startsWith(today))
+        .sort((a, b) => new Date(b.checkIn) - new Date(a.checkIn));
 
-      if (!entry) return alert("Không tìm thấy ca làm hôm nay.");
+      const openEntry = logs.reverse().find(a => !a.checkOut);
+      if (!openEntry) {
+        alert("Không tìm thấy ca đang làm hôm nay.");
+        return;
+      }
 
-      entry.checkOut = now;
+      openEntry.checkOut = now;
       await saveData();
       alert("⛔ Đã ra ca");
       sendTelegram(`🔴 ${getName(id)} đã ra ca lúc ${formatTime(now)}`);
@@ -131,6 +111,35 @@
     function formatTime(iso) {
       const d = new Date(iso);
       return d.toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function updateButtons() {
+      const id = document.getElementById("employeeSelect").value;
+      const today = new Date().toISOString().slice(0, 10);
+
+      const logs = data.attendance
+        .filter(a => a.employeeId === id && a.checkIn.startsWith(today))
+        .sort((a, b) => new Date(b.checkIn) - new Date(a.checkIn));
+
+      const latest = logs[logs.length - 1];
+
+      const checkInBtn = document.getElementById("checkInBtn");
+      const checkOutBtn = document.getElementById("checkOutBtn");
+      const status = document.getElementById("status");
+
+      if (!latest) {
+        checkInBtn.disabled = false;
+        checkOutBtn.disabled = true;
+        status.textContent = "🟡 Chưa vào ca";
+      } else if (!latest.checkOut) {
+        checkInBtn.disabled = true;
+        checkOutBtn.disabled = false;
+        status.textContent = "🟢 Đã vào ca lúc " + formatTime(latest.checkIn);
+      } else {
+        checkInBtn.disabled = false;
+        checkOutBtn.disabled = true;
+        status.textContent = "🔴 Đã ra ca lúc " + formatTime(latest.checkOut);
+      }
     }
 
     loadData();
