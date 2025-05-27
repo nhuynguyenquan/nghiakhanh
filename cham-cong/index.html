@@ -7,13 +7,15 @@
   <style>
     body { font-family: sans-serif; text-align: center; padding: 1rem; }
     select, button { font-size: 1.2rem; margin: 10px; padding: 10px; width: 80%; }
+    #status { margin-top: 1rem; font-weight: bold; color: green; }
   </style>
 </head>
 <body>
   <h2>🕒 Chấm công</h2>
-  <select id="employeeSelect"></select><br>
-  <button onclick="checkIn()">✅ Vào ca</button>
-  <button onclick="checkOut()">⛔ Ra ca</button>
+  <select id="employeeSelect" onchange="updateButtons()"></select><br>
+  <button id="checkInBtn" onclick="checkIn()">✅ Vào ca</button>
+  <button id="checkOutBtn" onclick="checkOut()">⛔ Ra ca</button>
+  <div id="status"></div>
 
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbxfSnimiGKE1uDDKdtnU1v5gUBEu7p0B4xQ5mfMFVZWDVa_7xiG_WzqVzOTP7ARdgLMmw/exec'; 
@@ -29,6 +31,7 @@
 
       const sel = document.getElementById("employeeSelect");
       sel.innerHTML = data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join("");
+      updateButtons();
     }
 
     function roundDown15(d) {
@@ -41,28 +44,69 @@
       return new Date(Math.ceil(d.getTime() / ms) * ms);
     }
 
+    function updateButtons() {
+      const id = document.getElementById("employeeSelect").value;
+      const today = new Date().toISOString().slice(0, 10);
+
+      const logs = data.attendance.filter(a => a.employeeId === id && a.checkIn.startsWith(today));
+      const entry = logs[logs.length - 1]; // lấy bản ghi mới nhất
+
+      const checkInBtn = document.getElementById("checkInBtn");
+      const checkOutBtn = document.getElementById("checkOutBtn");
+      const status = document.getElementById("status");
+
+      if (!entry) {
+        checkInBtn.disabled = false;
+        checkOutBtn.disabled = true;
+        status.textContent = "🟡 Chưa vào ca";
+      } else if (entry && !entry.checkOut) {
+        checkInBtn.disabled = true;
+        checkOutBtn.disabled = false;
+        status.textContent = "🟢 Đã vào ca lúc " + formatTime(entry.checkIn);
+      } else {
+        checkInBtn.disabled = true;
+        checkOutBtn.disabled = true;
+        status.textContent = "🔴 Đã ra ca lúc " + formatTime(entry.checkOut);
+      }
+    }
+
     async function checkIn() {
       const id = document.getElementById("employeeSelect").value;
       const now = roundUp15(new Date()).toISOString();
+
+      // kiểm tra nếu đã có checkin hôm nay
+      const today = now.slice(0, 10);
+      const alreadyCheckedIn = data.attendance.some(a => a.employeeId === id && a.checkIn.startsWith(today) && !a.checkOut);
+      if (alreadyCheckedIn) {
+        alert("⛔ Đã vào ca hôm nay.");
+        return;
+      }
 
       data.attendance.push({ employeeId: id, checkIn: now, checkOut: "" });
       await saveData();
       alert("✅ Đã vào ca");
       sendTelegram(`🟢 ${getName(id)} đã vào ca lúc ${formatTime(now)}`);
+      updateButtons();
     }
 
     async function checkOut() {
       const id = document.getElementById("employeeSelect").value;
       const now = roundDown15(new Date()).toISOString();
-      const today = now.slice(0,10);
+      const today = now.slice(0, 10);
 
-      const entry = data.attendance.find(a => a.employeeId === id && a.checkIn.startsWith(today) && !a.checkOut);
+      const entry = data.attendance.find(a =>
+        a.employeeId === id &&
+        a.checkIn.startsWith(today) &&
+        !a.checkOut
+      );
+
       if (!entry) return alert("Không tìm thấy ca làm hôm nay.");
 
       entry.checkOut = now;
       await saveData();
       alert("⛔ Đã ra ca");
       sendTelegram(`🔴 ${getName(id)} đã ra ca lúc ${formatTime(now)}`);
+      updateButtons();
     }
 
     async function saveData() {
