@@ -19,220 +19,218 @@
 
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbxfSnimiGKE1uDDKdtnU1v5gUBEu7p0B4xQ5mfMFVZWDVa_7xiG_WzqVzOTP7ARdgLMmw/exec'; 
-    
     let data = {};
-    
-    async function loadData() {
-      try {
-        const res = await fetch(API_URL);
-        data = await res.json();
-    
-        if (!Array.isArray(data.employees)) data.employees = [];
-        if (!Array.isArray(data.attendance)) data.attendance = [];
-    
-        renderEmployees();
-        renderSelect();
-        calculateAttendance();
-      } catch(e) {
-        alert("Lỗi tải dữ liệu. Vui lòng thử lại.");
-        console.error(e);
-      }
+async function loadData() {
+  try {
+    const res = await fetch(API_URL);
+    data = await res.json();
+
+    if (!Array.isArray(data.employees)) data.employees = [];
+    if (!Array.isArray(data.attendance)) data.attendance = [];
+
+    renderEmployees();
+    renderSelect();
+    calculateAttendance();
+  } catch(e) {
+    alert("Lỗi tải dữ liệu. Vui lòng thử lại.");
+    console.error(e);
+  }
+}
+
+function renderEmployees() {
+  const table = document.getElementById("employeeTable");
+  let html = `<tr><th>Tên</th><th>Chức vụ</th><th>Lương/ngày</th><th>Ghi chú</th></tr>`;
+  for (const emp of data.employees) {
+    html += `<tr>
+      <td>${emp.name}</td>
+      <td>${emp.role}</td>
+      <td>${emp.salaryPerDay.toLocaleString('vi-VN')} đ</td>
+      <td>${emp.note}</td>
+    </tr>`;
+  }
+  table.innerHTML = html;
+}
+
+function renderSelect() {
+  const sel = document.getElementById("employeeSelect");
+  sel.innerHTML = data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join("");
+}
+
+function genId() {
+  return 'nv' + Date.now();
+}
+
+async function addEmployee() {
+  const name = document.getElementById("name").value.trim();
+  const role = document.getElementById("role").value.trim();
+  const salary = parseInt(document.getElementById("salary").value);
+  const note = document.getElementById("note").value.trim();
+
+  if (!name || isNaN(salary)) {
+    return alert("Vui lòng nhập đầy đủ tên và lương.");
+  }
+
+  const newEmp = {
+    id: genId(),
+    name,
+    role,
+    salaryPerDay: salary,
+    note
+  };
+
+  data.employees.push(newEmp);
+  await saveData();
+  alert("Đã thêm nhân viên.");
+
+  document.getElementById("name").value = "";
+  document.getElementById("role").value = "";
+  document.getElementById("salary").value = "";
+  document.getElementById("note").value = "";
+
+  loadData();
+}
+
+async function checkIn() {
+  const id = document.getElementById("employeeSelect").value;
+  const now = new Date().toISOString();
+
+  if (!Array.isArray(data.attendance)) data.attendance = [];
+
+  data.attendance.push({ employeeId: id, checkIn: now, checkOut: "" });
+  await saveData();
+  const emp = data.employees.find(e => e.id === id);
+  const name = emp ? emp.name : 'Không rõ';
+  sendTelegramMessage(`✅ Nhân viên <b>${name}</b> đã vào ca lúc ${new Date().toLocaleTimeString("vi-VN")}`);
+  alert("✅ Đã chấm vào ca.");
+  loadData();
+}
+
+async function checkOut() {
+  const id = document.getElementById("employeeSelect").value;
+  const now = new Date().toISOString();
+
+  const vnNow = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
+  const todayVN = vnNow.toISOString().slice(0, 10);
+
+  const entry = data.attendance.find(a => {
+    if (a.employeeId !== id || a.checkOut) return false;
+    const checkInDate = new Date(a.checkIn);
+    const checkInVN = new Date(checkInDate.getTime() + 7 * 60 * 60 * 1000);
+    const checkInDateStr = checkInVN.toISOString().slice(0, 10);
+    return checkInDateStr === todayVN;
+  });
+
+  if (!entry) return alert("Không tìm thấy ca làm để ra ca.");
+
+  entry.checkOut = now;
+  await saveData();
+  const emp = data.employees.find(e => e.id === id);
+  const name = emp ? emp.name : 'Không rõ';
+  sendTelegramMessage(`⛔ Nhân viên <b>${name}</b> đã ra ca lúc ${new Date().toLocaleTimeString("vi-VN")}`);
+  alert("⛔ Đã chấm ra ca.");
+  loadData();
+}
+
+async function saveData() {
+  await fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify(data),
+    mode: "no-cors",
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+function calculateAttendance() {
+  const selectedMonth = document.getElementById("monthPicker").value;
+  const selectedDate = document.getElementById("datePicker").value;
+
+  const summary = {};
+  for (const emp of data.employees) {
+    summary[emp.id] = {
+      name: emp.name,
+      totalHours: 0,
+      sessions: 0
+    };
+  }
+
+  for (const log of data.attendance) {
+    if (!log.checkIn || !log.checkOut || log.checkOut.trim() === "") continue;
+
+    let checkInDate = new Date(log.checkIn);
+    let checkOutDate = new Date(log.checkOut);
+
+    if (isNaN(checkInDate) || isNaN(checkOutDate)) continue;
+
+    checkInDate = new Date(checkInDate.getTime() + 7 * 60 * 60 * 1000);
+    checkOutDate = new Date(checkOutDate.getTime() + 7 * 60 * 60 * 1000);
+
+    const logDateStr = checkInDate.toISOString().slice(0, 10);
+    const logMonthStr = checkInDate.toISOString().slice(0, 7);
+
+    if (selectedDate && logDateStr !== selectedDate) continue;
+    if (selectedMonth && logMonthStr !== selectedMonth) continue;
+
+    const diffMs = checkOutDate - checkInDate;
+    if (diffMs <= 0) continue;
+
+    const hours = diffMs / 3600000;
+
+    const emp = summary[log.employeeId];
+    if (emp) {
+      emp.totalHours += hours;
+      emp.sessions += 1;
     }
-    
-    function renderEmployees() {
-      const table = document.getElementById("employeeTable");
-      let html = `<tr><th>Tên</th><th>Chức vụ</th><th>Lương/ngày</th><th>Ghi chú</th></tr>`;
-      for (const emp of data.employees) {
-        html += `<tr>
-          <td>${emp.name}</td>
-          <td>${emp.role}</td>
-          <td>${emp.salaryPerDay.toLocaleString('vi-VN')} đ</td>
-          <td>${emp.note}</td>
-        </tr>`;
-      }
-      table.innerHTML = html;
-    }
-    
-    function renderSelect() {
-      const sel = document.getElementById("employeeSelect");
-      sel.innerHTML = data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join("");
-    }
-    
-    function genId() {
-      return 'nv' + Date.now();
-    }
-    
-    async function addEmployee() {
-      const name = document.getElementById("name").value.trim();
-      const role = document.getElementById("role").value.trim();
-      const salary = parseInt(document.getElementById("salary").value);
-      const note = document.getElementById("note").value.trim();
-    
-      if (!name || isNaN(salary)) {
-        return alert("Vui lòng nhập đầy đủ tên và lương.");
-      }
-    
-      const newEmp = {
-        id: genId(),
-        name,
-        role,
-        salaryPerDay: salary,
-        note
-      };
-    
-      data.employees.push(newEmp);
-      await saveData();
-      alert("Đã thêm nhân viên.");
-    
-      document.getElementById("name").value = "";
-      document.getElementById("role").value = "";
-      document.getElementById("salary").value = "";
-      document.getElementById("note").value = "";
-    
-      loadData();
-    }
-    
-    async function checkIn() {
-      const id = document.getElementById("employeeSelect").value;
-      const now = new Date().toISOString();
-    
-      if (!Array.isArray(data.attendance)) data.attendance = [];
-    
-      data.attendance.push({ employeeId: id, checkIn: now, checkOut: "" });
-      await saveData();
-      const emp = data.employees.find(e => e.id === id);
-      const name = emp ? emp.name : 'Không rõ';
-      sendTelegramMessage(`✅ Nhân viên <b>${name}</b> đã vào ca lúc ${new Date().toLocaleTimeString("vi-VN")}`);
-      alert("✅ Đã chấm vào ca.");
-      loadData();
-    }
-    
-    async function checkOut() {
-      const id = document.getElementById("employeeSelect").value;
-      const now = new Date().toISOString();
-    
-      const vnNow = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
-      const todayVN = vnNow.toISOString().slice(0, 10);
-    
-      const entry = data.attendance.find(a => {
-        if (a.employeeId !== id || a.checkOut) return false;
-        const checkInDate = new Date(a.checkIn);
-        const checkInVN = new Date(checkInDate.getTime() + 7 * 60 * 60 * 1000);
-        const checkInDateStr = checkInVN.toISOString().slice(0, 10);
-        return checkInDateStr === todayVN;
-      });
-    
-      if (!entry) return alert("Không tìm thấy ca làm để ra ca.");
-    
-      entry.checkOut = now;
-      await saveData();
-      const emp = data.employees.find(e => e.id === id);
-      const name = emp ? emp.name : 'Không rõ';
-      sendTelegramMessage(`⛔ Nhân viên <b>${name}</b> đã ra ca lúc ${new Date().toLocaleTimeString("vi-VN")}`);
-      alert("⛔ Đã chấm ra ca.");
-      loadData();
-    }
-    
-    async function saveData() {
-      await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify(data),
-        mode: "no-cors",
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-    
-    function calculateAttendance() {
-      const selectedMonth = document.getElementById("monthPicker").value;
-      const selectedDate = document.getElementById("datePicker").value;
-    
-      const summary = {};
-      for (const emp of data.employees) {
-        summary[emp.id] = {
-          name: emp.name,
-          totalHours: 0,
-          sessions: 0
-        };
-      }
-    
-      for (const log of data.attendance) {
-        if (!log.checkIn || !log.checkOut || log.checkOut.trim() === "") continue;
-    
-        let checkInDate = new Date(log.checkIn);
-        let checkOutDate = new Date(log.checkOut);
-    
-        if (isNaN(checkInDate) || isNaN(checkOutDate)) continue;
-    
-        checkInDate = new Date(checkInDate.getTime() + 7 * 60 * 60 * 1000);
-        checkOutDate = new Date(checkOutDate.getTime() + 7 * 60 * 60 * 1000);
-    
-        const logDateStr = checkInDate.toISOString().slice(0, 10);
-        const logMonthStr = checkInDate.toISOString().slice(0, 7);
-    
-        if (selectedDate && logDateStr !== selectedDate) continue;
-        if (selectedMonth && logMonthStr !== selectedMonth) continue;
-    
-        const diffMs = checkOutDate - checkInDate;
-        if (diffMs <= 0) continue;
-    
-        const hours = diffMs / 3600000;
-    
-        const emp = summary[log.employeeId];
-        if (emp) {
-          emp.totalHours += hours;
-          emp.sessions += 1;
-        }
-      }
-    
-      for (const emp of Object.values(summary)) {
-        emp.totalHours = isNaN(emp.totalHours) ? 0 : emp.totalHours;
-        emp.totalHours = emp.totalHours.toFixed(2);
-        const days = emp.totalHours / 8; // 8 giờ = 1 công
-        emp.totalDays = isNaN(days) ? "0.0" : days.toFixed(1);
-      }
-    
-      const table = document.getElementById("summaryTable");
-      let html = `<tr>
-        <th>Nhân viên</th>
-        <th>Số ca</th>
-        <th>Số giờ</th>
-        <th>Ngày công (ước tính)</th>
+  }
+
+  for (const emp of Object.values(summary)) {
+    emp.totalHours = isNaN(emp.totalHours) ? 0 : emp.totalHours;
+    emp.totalHours = emp.totalHours.toFixed(2);
+    const days = emp.totalHours / 8; // 8 giờ = 1 công
+    emp.totalDays = isNaN(days) ? "0.0" : days.toFixed(1);
+  }
+
+  const table = document.getElementById("summaryTable");
+  let html = `<tr>
+    <th>Nhân viên</th>
+    <th>Số ca</th>
+    <th>Số giờ</th>
+    <th>Ngày công (ước tính)</th>
+  </tr>`;
+
+  for (const emp of Object.values(summary)) {
+    if (emp.sessions > 0) {
+      html += `<tr>
+        <td>${emp.name}</td>
+        <td>${emp.sessions}</td>
+        <td>${emp.totalHours}</td>
+        <td>${emp.totalDays}</td>
       </tr>`;
-    
-      for (const emp of Object.values(summary)) {
-        if (emp.sessions > 0) {
-          html += `<tr>
-            <td>${emp.name}</td>
-            <td>${emp.sessions}</td>
-            <td>${emp.totalHours}</td>
-            <td>${emp.totalDays}</td>
-          </tr>`;
-        }
-      }
-    
-      table.innerHTML = html;
     }
-    
-    // Load dữ liệu khi trang mở
-    loadData();
-    
-    const TELEGRAM_BOT_TOKEN = '7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY'; 
-    const TELEGRAM_CHAT_ID = '6249154937';    
-    
-    function sendTelegramMessage(message) {
-      const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-      const payload = {
-        chat_id: TELEGRAM_CHAT_ID,
-        text: message,
-        parse_mode: 'HTML'
-      };
-    
-      fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).catch(err => console.error("Telegram Error:", err));
-    }
-    </script>    
+  }
+
+  table.innerHTML = html;
+}
+
+// Load dữ liệu khi trang mở
+loadData();
+
+const TELEGRAM_BOT_TOKEN = '7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY'; 
+const TELEGRAM_CHAT_ID = '6249154937';    
+
+function sendTelegramMessage(message) {
+  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  const payload = {
+    chat_id: TELEGRAM_CHAT_ID,
+    text: message,
+    parse_mode: 'HTML'
+  };
+
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).catch(err => console.error("Telegram Error:", err));
+}
+</script>
 </body>
 </html>
