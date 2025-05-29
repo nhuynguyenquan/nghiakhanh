@@ -34,15 +34,17 @@
       updateButtons();
     }
 
-    function roundDown15(d) {
-      const ms = 15 * 60 * 1000;
-      return new Date(Math.floor(d.getTime() / ms) * ms);
-    }
+    function roundDown15(date) {
+  const ms = 15 * 60 * 1000;
+  const remainder = date.getTime() % ms;
+  return remainder === 0 ? date : new Date(date.getTime() - remainder);
+}
 
-    function roundUp15(d) {
-      const ms = 15 * 60 * 1000;
-      return new Date(Math.ceil(d.getTime() / ms) * ms);
-    }
+    function roundUp15(date) {
+  const ms = 15 * 60 * 1000;
+  const remainder = date.getTime() % ms;
+  return remainder === 0 ? date : new Date(date.getTime() + (ms - remainder));
+}
 
     function updateButtons() {
       const id = document.getElementById("employeeSelect").value;
