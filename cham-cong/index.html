@@ -5,190 +5,135 @@
   <title>Chấm công nhân viên</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f0f0f0;
-      padding: 1.5rem;
-      text-align: center;
-    }
-    h2 {
-      margin-bottom: 1rem;
-    }
-    select, button {
-      font-size: 1.2rem;
-      padding: 0.75rem;
-      margin: 0.5rem auto;
-      width: 90%;
-      max-width: 400px;
-      display: block;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-    }
-    button:disabled {
-      background-color: #aaa;
-      cursor: not-allowed;
-    }
-    #checkOutBtn {
-      background-color: #f44336;
-    }
-    #status {
-      margin-top: 1.5rem;
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: #333;
-    }
+    body { font-family: sans-serif; text-align: center; padding: 1rem; }
+    select, button { font-size: 1.2rem; margin: 10px; padding: 10px; width: 80%; }
+    #status { margin-top: 1rem; font-weight: bold; color: green; }
   </style>
 </head>
 <body>
-  <h2>🕒 Chấm công nhân viên</h2>
-  <select id="employeeSelect" onchange="updateButtons()"></select>
+  <h2>🕒 Chấm công</h2>
+  <select id="employeeSelect" onchange="updateButtons()"></select><br>
   <button id="checkInBtn" onclick="checkIn()">✅ Vào ca</button>
   <button id="checkOutBtn" onclick="checkOut()">⛔ Ra ca</button>
-  <div id="status">Đang tải dữ liệu...</div>
+  <div id="status"></div>
 
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxfSnimiGKE1uDDKdtnU1v5gUBEu7p0B4xQ5mfMFVZWDVa_7xiG_WzqVzOTP7ARdgLMmw/exec';
-const TELEGRAM_TOKEN = '7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY';
-const CHAT_ID = '6249154937';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxfSnimiGKE1uDDKdtnU1v5gUBEu7p0B4xQ5mfMFVZWDVa_7xiG_WzqVzOTP7ARdgLMmw/exec'; 
+    const TELEGRAM_TOKEN = '7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY';
+    const CHAT_ID = '6249154937';
 
-let data = { employees: [], attendance: [] };
+    let data = {};
 
-async function loadData() {
-  try {
-    const res = await fetch(API_URL);
-    data = await res.json();
-    if (!Array.isArray(data.attendance)) data.attendance = [];
-    if (!Array.isArray(data.employees)) data.employees = [];
+    async function loadData() {
+      const res = await fetch(API_URL);
+      data = await res.json();
+      if (!Array.isArray(data.attendance)) data.attendance = [];
 
-    const select = document.getElementById("employeeSelect");
-    select.innerHTML = data.employees.map(e =>
-      `<option value="${e.id}">${e.name}</option>`
-    ).join("");
-
-    updateButtons();
-  } catch (error) {
-    document.getElementById("status").textContent = "Lỗi tải dữ liệu.";
-  }
-}
-
-function roundUp15(date) {
-  const ms = 15 * 60 * 1000;
-  const remainder = date.getTime() % ms;
-  return remainder === 0 ? date : new Date(date.getTime() + (ms - remainder));
-}
-
-function roundDown15(date) {
-  const ms = 15 * 60 * 1000;
-  const remainder = date.getTime() % ms;
-  return remainder === 0 ? date : new Date(date.getTime() - remainder);
-}
-
-function getShiftTimeRange() {
-  const now = new Date();
-  const vnOffset = 7 * 60 * 60 * 1000;
-  const vnNow = new Date(now.getTime() + vnOffset);
-
-  const today17hUTC = new Date(Date.UTC(vnNow.getUTCFullYear(), vnNow.getUTCMonth(), vnNow.getUTCDate(), 10)); // 17h VN = 10h UTC
-  const yesterday17hUTC = new Date(today17hUTC.getTime() - 24 * 60 * 60 * 1000);
-
-  return {
-    start: yesterday17hUTC.toISOString(),
-    end: today17hUTC.toISOString()
-  };
-}
-
-function updateButtons() {
-  const id = document.getElementById("employeeSelect").value;
-  const { start, end } = getShiftTimeRange();
-
-  const logs = data.attendance
-    .filter(a => a.employeeId === id && a.checkIn >= start && a.checkIn < end)
-    .sort((a, b) => new Date(b.checkIn) - new Date(a.checkIn)); // Mới nhất trước
-
-  const entry = logs.find(a => !a.checkOut); // ca đang làm (nếu có)
-
-  const checkInBtn = document.getElementById("checkInBtn");
-  const checkOutBtn = document.getElementById("checkOutBtn");
-  const status = document.getElementById("status");
-
-  if (!entry) {
-    // Không có ca nào đang làm
-    checkInBtn.disabled = false;
-    checkOutBtn.disabled = true;
-    status.textContent = "🟡 Sẵn sàng vào ca mới";
-  } else {
-    // Đang có ca chưa ra
-    checkInBtn.disabled = true;
-    checkOutBtn.disabled = false;
-    status.textContent = "🟢 Đang làm ca bắt đầu lúc " + formatTime(entry.checkIn);
-  }
-}
-
-async function checkIn() {
-  const id = document.getElementById("employeeSelect").value;
-  const now = roundUp15(new Date()).toISOString();
-
-  // Tạo bản ghi mới cho ca mới
-  data.attendance.push({ employeeId: id, checkIn: now, checkOut: "" });
-  await saveData();
-  alert("✅ Vào ca thành công.");
-  sendTelegram(`🟢 ${getName(id)} đã vào ca lúc ${formatTime(now)}`);
-  updateButtons();
-}
-
-async function checkOut() {
-  const id = document.getElementById("employeeSelect").value;
-  const now = roundDown15(new Date()).toISOString();
-  const { start, end } = getShiftTimeRange();
-
-  const entry = data.attendance
-    .filter(a => a.employeeId === id && a.checkIn >= start && a.checkIn < end && !a.checkOut)
-    .sort((a, b) => new Date(b.checkIn) - new Date(a.checkIn))[0];
-
-  if (!entry) {
-    alert("Không tìm thấy ca đang làm.");
-    return;
-  }
-
-  entry.checkOut = now;
-  await saveData();
-  alert("⛔ Ra ca thành công.");
-  sendTelegram(`🔴 ${getName(id)} đã ra ca lúc ${formatTime(now)}`);
-  updateButtons();
-}
-
-async function saveData() {
-  await fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "application/json"
+      const sel = document.getElementById("employeeSelect");
+      sel.innerHTML = data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join("");
+      updateButtons();
     }
-  });
-}
 
-function sendTelegram(message) {
-  const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(message)}`;
-  fetch(url);
-}
+    function roundDown15(d) {
+      const ms = 15 * 60 * 1000;
+      return new Date(Math.floor(d.getTime() / ms) * ms);
+    }
 
-function getName(id) {
-  const emp = data.employees.find(e => e.id === id);
-  return emp ? emp.name : "Không rõ";
-}
+    function roundUp15(d) {
+      const ms = 15 * 60 * 1000;
+      return new Date(Math.ceil(d.getTime() / ms) * ms);
+    }
 
-function formatTime(iso) {
-  const d = new Date(iso);
-  return d.toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' });
-}
+    function updateButtons() {
+      const id = document.getElementById("employeeSelect").value;
+      const today = new Date().toISOString().slice(0, 10);
 
-loadData();
+      const logs = data.attendance.filter(a => a.employeeId === id && a.checkIn.startsWith(today));
+      const entry = logs[logs.length - 1]; // lấy bản ghi mới nhất
 
+      const checkInBtn = document.getElementById("checkInBtn");
+      const checkOutBtn = document.getElementById("checkOutBtn");
+      const status = document.getElementById("status");
+
+      if (!entry) {
+        checkInBtn.disabled = false;
+        checkOutBtn.disabled = true;
+        status.textContent = "🟡 Chưa vào ca";
+      } else if (entry && !entry.checkOut) {
+        checkInBtn.disabled = true;
+        checkOutBtn.disabled = false;
+        status.textContent = "🟢 Đã vào ca lúc " + formatTime(entry.checkIn);
+      } else {
+        checkInBtn.disabled = true;
+        checkOutBtn.disabled = true;
+        status.textContent = "🔴 Đã ra ca lúc " + formatTime(entry.checkOut);
+      }
+    }
+
+    async function checkIn() {
+      const id = document.getElementById("employeeSelect").value;
+      const now = roundUp15(new Date()).toISOString();
+
+      // kiểm tra nếu đã có checkin hôm nay
+      const today = now.slice(0, 10);
+      const alreadyCheckedIn = data.attendance.some(a => a.employeeId === id && a.checkIn.startsWith(today) && !a.checkOut);
+      if (alreadyCheckedIn) {
+        alert("⛔ Đã vào ca hôm nay.");
+        return;
+      }
+
+      data.attendance.push({ employeeId: id, checkIn: now, checkOut: "" });
+      await saveData();
+      alert("✅ Đã vào ca");
+      sendTelegram(`🟢 ${getName(id)} đã vào ca lúc ${formatTime(now)}`);
+      updateButtons();
+    }
+
+    async function checkOut() {
+      const id = document.getElementById("employeeSelect").value;
+      const now = roundDown15(new Date()).toISOString();
+      const today = now.slice(0, 10);
+
+      const entry = data.attendance.find(a =>
+        a.employeeId === id &&
+        a.checkIn.startsWith(today) &&
+        !a.checkOut
+      );
+
+      if (!entry) return alert("Không tìm thấy ca làm hôm nay.");
+
+      entry.checkOut = now;
+      await saveData();
+      alert("⛔ Đã ra ca");
+      sendTelegram(`🔴 ${getName(id)} đã ra ca lúc ${formatTime(now)}`);
+      updateButtons();
+    }
+
+    async function saveData() {
+      await fetch(API_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    function sendTelegram(msg) {
+      const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}`;
+      fetch(url);
+    }
+
+    function getName(id) {
+      const emp = data.employees.find(e => e.id === id);
+      return emp ? emp.name : "Không rõ";
+    }
+
+    function formatTime(iso) {
+      const d = new Date(iso);
+      return d.toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' });
+    }
+
+    loadData();
   </script>
 </body>
 </html>
