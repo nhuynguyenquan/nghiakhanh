@@ -126,60 +126,38 @@
   }
 }
 
-    async function checkIn() {
-      const id = document.getElementById("employeeSelect").value;
-      const now = roundUp15(new Date()).toISOString();
-      const { start, end } = getShiftTimeRange();
+async function checkIn() {
+  const id = document.getElementById("employeeSelect").value;
+  const now = roundUp15(new Date()).toISOString();
 
-      const alreadyIn = data.attendance.some(a =>
-        a.employeeId === id && a.checkIn >= start && a.checkIn < end && !a.checkOut
-      );
+  // Tạo bản ghi mới cho ca mới
+  data.attendance.push({ employeeId: id, checkIn: now, checkOut: "" });
+  await saveData();
+  alert("✅ Vào ca thành công.");
+  sendTelegram(`🟢 ${getName(id)} đã vào ca lúc ${formatTime(now)}`);
+  updateButtons();
+}
 
-      if (alreadyIn) {
-        alert("⛔ Bạn đã vào ca trong ca hiện tại.");
-        return;
-      }
+async function checkOut() {
+  const id = document.getElementById("employeeSelect").value;
+  const now = roundDown15(new Date()).toISOString();
+  const today = now.slice(0, 10);
 
-      data.attendance.push({ employeeId: id, checkIn: now, checkOut: "" });
-      await saveData();
-      alert("✅ Vào ca thành công.");
-      sendTelegram(`🟢 ${getName(id)} đã vào ca lúc ${formatTime(now)}`);
-      updateButtons();
-    }
+  const entry = data.attendance
+    .filter(a => a.employeeId === id && a.checkIn.startsWith(today) && !a.checkOut)
+    .sort((a, b) => new Date(b.checkIn) - new Date(a.checkIn))[0];
 
-    async function checkOut() {
-      const id = document.getElementById("employeeSelect").value;
-      const now = roundDown15(new Date()).toISOString();
-      const { start, end } = getShiftTimeRange();
+  if (!entry) {
+    alert("Không tìm thấy ca đang làm.");
+    return;
+  }
 
-      const entry = data.attendance.find(a =>
-        a.employeeId === id && a.checkIn >= start && a.checkIn < end && !a.checkOut
-      );
-
-      if (!entry) {
-        alert("Không tìm thấy ca làm trong ca hiện tại.");
-        return;
-      }
-
-      entry.checkOut = now;
-      await saveData();
-      alert("⛔ Ra ca thành công.");
-      sendTelegram(`🔴 ${getName(id)} đã ra ca lúc ${formatTime(now)}`);
-      updateButtons();
-    }
-
-    async function saveData() {
-      try {
-        await fetch(API_URL, {
-          method: "POST",
-          mode: "no-cors",
-          body: JSON.stringify(data),
-          headers: { "Content-Type": "application/json" }
-        });
-      } catch (error) {
-        console.error("Lỗi khi lưu dữ liệu:", error);
-      }
-    }
+  entry.checkOut = now;
+  await saveData();
+  alert("⛔ Ra ca thành công.");
+  sendTelegram(`🔴 ${getName(id)} đã ra ca lúc ${formatTime(now)}`);
+  updateButtons();
+}
 
     function sendTelegram(message) {
       const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(message)}`;
