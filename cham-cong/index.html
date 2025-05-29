@@ -78,12 +78,14 @@ async function loadData() {
 
 function roundUp15(date) {
   const ms = 15 * 60 * 1000;
-  return new Date(Math.ceil(date.getTime() / ms) * ms);
+  const remainder = date.getTime() % ms;
+  return remainder === 0 ? date : new Date(date.getTime() + (ms - remainder));
 }
 
 function roundDown15(date) {
   const ms = 15 * 60 * 1000;
-  return new Date(Math.floor(date.getTime() / ms) * ms);
+  const remainder = date.getTime() % ms;
+  return remainder === 0 ? date : new Date(date.getTime() - remainder);
 }
 
 function getShiftTimeRange() {
