@@ -46,31 +46,32 @@
   return remainder === 0 ? date : new Date(date.getTime() + (ms - remainder));
 }
 
-    function updateButtons() {
-      const id = document.getElementById("employeeSelect").value;
-      const today = new Date().toISOString().slice(0, 10);
+function updateButtons() {
+  const id = document.getElementById("employeeSelect").value;
+  const { start, end } = getShiftTimeRange();
 
-      const logs = data.attendance.filter(a => a.employeeId === id && a.checkIn.startsWith(today));
-      const entry = logs[logs.length - 1]; // lấy bản ghi mới nhất
+  const logs = data.attendance
+    .filter(a => a.employeeId === id && a.checkIn >= start && a.checkIn < end)
+    .sort((a, b) => new Date(b.checkIn) - new Date(a.checkIn)); // Mới nhất trước
 
-      const checkInBtn = document.getElementById("checkInBtn");
-      const checkOutBtn = document.getElementById("checkOutBtn");
-      const status = document.getElementById("status");
+  const entry = logs.find(a => !a.checkOut); // ca đang làm (nếu có)
 
-      if (!entry) {
-        checkInBtn.disabled = false;
-        checkOutBtn.disabled = true;
-        status.textContent = "🟡 Chưa vào ca";
-      } else if (entry && !entry.checkOut) {
-        checkInBtn.disabled = true;
-        checkOutBtn.disabled = false;
-        status.textContent = "🟢 Đã vào ca lúc " + formatTime(entry.checkIn);
-      } else {
-        checkInBtn.disabled = true;
-        checkOutBtn.disabled = true;
-        status.textContent = "🔴 Đã ra ca lúc " + formatTime(entry.checkOut);
-      }
-    }
+  const checkInBtn = document.getElementById("checkInBtn");
+  const checkOutBtn = document.getElementById("checkOutBtn");
+  const status = document.getElementById("status");
+
+  if (!entry) {
+    // Không có ca nào đang làm
+    checkInBtn.disabled = false;
+    checkOutBtn.disabled = true;
+    status.textContent = "🟡 Sẵn sàng vào ca mới";
+  } else {
+    // Đang có ca chưa ra
+    checkInBtn.disabled = true;
+    checkOutBtn.disabled = false;
+    status.textContent = "🟢 Đang làm ca bắt đầu lúc " + formatTime(entry.checkIn);
+  }
+}
 
     async function checkIn() {
       const id = document.getElementById("employeeSelect").value;
