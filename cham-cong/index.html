@@ -101,32 +101,30 @@
     }
 
     function updateButtons() {
-      const id = document.getElementById("employeeSelect").value;
-      const { start, end } = getShiftTimeRange();
+  const id = document.getElementById("employeeSelect").value;
+  const today = new Date().toISOString().slice(0, 10);
+  const logs = data.attendance
+    .filter(a => a.employeeId === id && a.checkIn.startsWith(today))
+    .sort((a, b) => new Date(b.checkIn) - new Date(a.checkIn)); // Mới nhất trước
 
-      const logs = data.attendance.filter(a =>
-        a.employeeId === id && a.checkIn >= start && a.checkIn < end
-      );
+  const entry = logs[0]; // bản ghi gần nhất
 
-      const entry = logs[logs.length - 1];
-      const checkInBtn = document.getElementById("checkInBtn");
-      const checkOutBtn = document.getElementById("checkOutBtn");
-      const status = document.getElementById("status");
+  const checkInBtn = document.getElementById("checkInBtn");
+  const checkOutBtn = document.getElementById("checkOutBtn");
+  const status = document.getElementById("status");
 
-      if (!entry) {
-        checkInBtn.disabled = false;
-        checkOutBtn.disabled = true;
-        status.textContent = "🟡 Chưa vào ca";
-      } else if (!entry.checkOut) {
-        checkInBtn.disabled = true;
-        checkOutBtn.disabled = false;
-        status.textContent = "🟢 Đã vào ca lúc " + formatTime(entry.checkIn);
-      } else {
-        checkInBtn.disabled = true;
-        checkOutBtn.disabled = true;
-        status.textContent = "🔴 Đã ra ca lúc " + formatTime(entry.checkOut);
-      }
-    }
+  if (!entry || entry.checkOut) {
+    // Không có ca nào hoặc ca gần nhất đã kết thúc
+    checkInBtn.disabled = false;
+    checkOutBtn.disabled = true;
+    status.textContent = "🟡 Sẵn sàng vào ca mới";
+  } else {
+    // Ca gần nhất chưa kết thúc
+    checkInBtn.disabled = true;
+    checkOutBtn.disabled = false;
+    status.textContent = "🟢 Đang làm ca bắt đầu lúc " + formatTime(entry.checkIn);
+  }
+}
 
     async function checkIn() {
       const id = document.getElementById("employeeSelect").value;
