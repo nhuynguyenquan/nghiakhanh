@@ -19,9 +19,6 @@
 
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbxfSnimiGKE1uDDKdtnU1v5gUBEu7p0B4xQ5mfMFVZWDVa_7xiG_WzqVzOTP7ARdgLMmw/exec'; 
-    const TELEGRAM_TOKEN = '7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY';
-    const CHAT_ID = '6249154937';
-
     let data = {};
 
     async function loadData() {
@@ -108,7 +105,7 @@
       data.attendance.push({ employeeId: id, checkIn: isoNow, checkOut: "" });
       await saveData();
       alert("✅ Đã vào ca lúc " + formatTime(isoNow));
-      sendTelegram(`🟢 ${getName(id)} đã vào ca lúc ${formatTime(isoNow)}`);
+      //sendTelegram(`🟢 ${getName(id)} đã vào ca lúc ${formatTime(isoNow)}`);
       updateButtons();
     }
 
@@ -130,7 +127,7 @@
       entry.checkOut = isoNow;
       await saveData();
       alert("⛔ Đã ra ca lúc " + formatTime(isoNow));
-      sendTelegram(`🔴 ${getName(id)} đã ra ca lúc ${formatTime(isoNow)}`);
+      //sendTelegram(`🔴 ${getName(id)} đã ra ca lúc ${formatTime(isoNow)}`);
       updateButtons();
     }
 
@@ -142,22 +139,6 @@
         headers: { 'Content-Type': 'application/json' }
       });
     }
-
-    function sendTelegram(msg) {
-      const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}`;
-      fetch(url);
-    }
-
-    function getName(id) {
-      const emp = data.employees.find(e => e.id === id);
-      return emp ? emp.name : "Không rõ";
-    }
-
-    function formatTime(iso) {
-      const d = new Date(iso);
-      return d.toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' });
-    }
-
     loadData();
   </script>
 </body>
