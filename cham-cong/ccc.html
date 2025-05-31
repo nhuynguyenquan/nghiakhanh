@@ -14,9 +14,9 @@
   <div id="status"></div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycby-yJ9fwGoZmsvN3rTwXXg9YLdRjoQf3tyH6wnRy99b520knTNngWyBVX3_aR_59MM/exec"; // Dán link API web app GAS vào đây
+    const API_URL = "https://script.google.com/macros/s/AKfycby-yJ9fwGoZmsvN3rTwXXg9YLdRjoQf3tyH6wnRy99b520knTNngWyBVX3_aR_59MM/exec"; 
     window.onload = () => {
-  fetch(API_URL + "?type=list")
+  fetch(API_URL + "?get=employees")
     .then(res => res.json())
     .then(data => {
       const select = document.getElementById("nameSelect");
