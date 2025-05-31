@@ -36,7 +36,7 @@
       const [id, name] = select.split("|");
       fetch(API_URL, {
         method: "POST",
-        //mode: "no-cors",
+        mode: "no-cors",
         body: JSON.stringify({ id, name, action }),
         headers: { "Content-Type": "application/json" }
       })
