@@ -6,11 +6,7 @@
 </head>
 <body>
   <h2>Chấm công</h2>
-  <select id="name">
-    <option value="1|Nguyễn A">Nguyễn A</option>
-    <option value="2|Trần B">Trần B</option>
-    <option value="3|Lê C">Lê C</option>
-  </select><br><br>
+  <select id="nameSelect"></select><br><br>
 
   <button onclick="checkIn()">✅ Vào ca</button>
   <button onclick="checkOut()">⛔ Ra ca</button>
@@ -18,8 +14,15 @@
   <div id="status"></div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxq-_Whmm-DncV9DmYYIl9M_oF4__q4AKl7ffCFz_I2WHgwgDprTwUp2dO3fR5jo6Vk/exec"; // Dán link API web app GAS vào đây
-
+    const API_URL = "https://script.google.com/macros/s/AKfycby-yJ9fwGoZmsvN3rTwXXg9YLdRjoQf3tyH6wnRy99b520knTNngWyBVX3_aR_59MM/exec"; // Dán link API web app GAS vào đây
+    window.onload = () => {
+  fetch(API_URL + "?type=list")
+    .then(res => res.json())
+    .then(data => {
+      const select = document.getElementById("nameSelect");
+      select.innerHTML = data.map(e => `<option value="${e.id}|${e.name}">${e.name}</option>`).join("");
+    });
+};
     function checkIn() {
       sendRequest("in");
     }
@@ -29,7 +32,7 @@
     }
 
     function sendRequest(action) {
-      const select = document.getElementById("name").value;
+        const select = document.getElementById("nameSelect").value;
       const [id, name] = select.split("|");
       fetch(API_URL, {
         method: "POST",
