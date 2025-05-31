@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Chấm công Google Sheet</title>
+</head>
+<body>
+  <h2>Chấm công</h2>
+  <select id="name">
+    <option value="1|Nguyễn A">Nguyễn A</option>
+    <option value="2|Trần B">Trần B</option>
+    <option value="3|Lê C">Lê C</option>
+  </select><br><br>
+
+  <button onclick="checkIn()">✅ Vào ca</button>
+  <button onclick="checkOut()">⛔ Ra ca</button>
+
+  <div id="status"></div>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbyfMmTQjc0H-YxoHjr2s2ag92DSZiMMBbzS7yqESMAQF8w_96jBWbWapyQu-enYq0_s/exec"; 
+
+    function checkIn() {
+      sendRequest("in");
+    }
+
+    function checkOut() {
+      sendRequest("out");
+    }
+
+    function sendRequest(action) {
+      const select = document.getElementById("name").value;
+      const [id, name] = select.split("|");
+      fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ id, name, action }),
+        headers: { "Content-Type": "application/json" }
+      })
+      .then(res => res.text())
+      .then(text => document.getElementById("status").textContent = text)
+      .catch(err => alert("Lỗi: " + err));
+    }
+  </script>
+</body>
+</html>
