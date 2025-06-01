@@ -23,14 +23,15 @@
       <h2 class="text-xl font-semibold mb-2">Chi tiết giờ làm</h2>
       <table class="w-full table-auto border">
         <thead>
-          <tr class="bg-gray-200">
-            <th class="border px-2 py-1">Ngày</th>
-            <th class="border px-2 py-1">Giờ vào</th>
-            <th class="border px-2 py-1">Giờ ra</th>
-            <th class="border px-2 py-1">Số giờ</th>
-            <th class="border px-2 py-1">Lương</th>
-          </tr>
-        </thead>
+            <tr class="bg-gray-200">
+              <th class="border px-2 py-1">Ngày</th>
+              <th class="border px-2 py-1">Ca làm</th> <!-- thêm cột này -->
+              <th class="border px-2 py-1">Giờ vào</th>
+              <th class="border px-2 py-1">Giờ ra</th>
+              <th class="border px-2 py-1">Số giờ</th>
+              <th class="border px-2 py-1">Lương</th>
+            </tr>
+          </thead>
         <tbody id="reportTable"></tbody>
         <tfoot>
           <tr class="bg-gray-100 font-bold">
@@ -73,48 +74,72 @@
     }
 
     async function renderReport() {
-      const empId = document.getElementById('employeeSelect').value;
-      const monthStr = document.getElementById('monthInput').value;
-      if (!empId || !monthStr) return alert('Vui lòng chọn nhân viên và tháng.');
+  const empId = document.getElementById('employeeSelect').value;
+  const monthStr = document.getElementById('monthInput').value;
+  if (!empId || !monthStr) return alert('Vui lòng chọn nhân viên và tháng.');
 
-      const data = await fetchData();
-      const emp = data.employees.find(e => e.id === empId);
-      const salaryRate = emp.salaryPerDay || 0; // Giả sử đây là lương tính theo giờ
+  const data = await fetchData();
+  const emp = data.employees.find(e => e.id === empId);
+  const salaryRate = emp.salaryPerDay || 0;
 
-      const [year, month] = monthStr.split('-');
-      const reportTable = document.getElementById('reportTable');
-      reportTable.innerHTML = '';
+  const [year, month] = monthStr.split('-');
+  const reportTable = document.getElementById('reportTable');
+  reportTable.innerHTML = '';
 
-      let totalHours = 0;
-      let totalSalary = 0;
+  let totalHours = 0;
+  let totalSalary = 0;
 
-      data.attendance.filter(att => att.employeeId === empId).forEach(att => {
-        const checkIn = new Date(att.checkIn);
-        const checkOut = new Date(att.checkOut);
-        if (
-          checkIn.getFullYear() === parseInt(year) &&
-          (checkIn.getMonth() + 1) === parseInt(month)
-        ) {
-          const hours = (checkOut - checkIn) / 1000 / 3600;
-          const salary = hours * salaryRate; // Tính lương theo giờ * số giờ làm
-          totalHours += hours;
-          totalSalary += salary;
+  // Lọc dữ liệu attendance của nhân viên theo tháng
+  const records = data.attendance.filter(att => {
+    const checkIn = new Date(att.checkIn);
+    return att.employeeId === empId &&
+      checkIn.getFullYear() === parseInt(year) &&
+      (checkIn.getMonth() + 1) === parseInt(month);
+  });
 
-          reportTable.innerHTML += `
-            <tr>
-              <td class="border px-2 py-1">${formatDate(checkIn)}</td>
-              <td class="border px-2 py-1 text-center">${formatTime(att.checkIn)}</td>
-              <td class="border px-2 py-1 text-center">${formatTime(att.checkOut)}</td>
-              <td class="border px-2 py-1 text-center">${hours.toFixed(2)}</td>
-              <td class="border px-2 py-1 text-center">${salary.toLocaleString()}</td>
-            </tr>
-          `;
-        }
-      });
+  // Nhóm theo ngày (theo ngày checkIn)
+  const groupedByDate = {};
+  records.forEach(att => {
+    const dateStr = new Date(att.checkIn).toLocaleDateString('vi-VN');
+    if (!groupedByDate[dateStr]) groupedByDate[dateStr] = [];
+    groupedByDate[dateStr].push(att);
+  });
 
-      document.getElementById('totalHours').textContent = totalHours.toFixed(2);
-      document.getElementById('totalSalary').textContent = totalSalary.toLocaleString();
-    }
+  // Duyệt từng ngày
+  for (const date in groupedByDate) {
+    const dayRecords = groupedByDate[date];
+
+    // Nếu có 2 ca thì sắp xếp theo giờ checkIn
+    dayRecords.sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn));
+
+    // Duyệt từng ca trong ngày
+    dayRecords.forEach(att => {
+      const checkIn = new Date(att.checkIn);
+      const checkOut = new Date(att.checkOut);
+      const hours = (checkOut - checkIn) / 1000 / 3600;
+      const salary = hours * salaryRate;
+      totalHours += hours;
+      totalSalary += salary;
+
+      // Xác định ca sáng hay chiều
+      const caLam = checkIn.getHours() < 12 ? 'Sáng' : 'Chiều';
+
+      reportTable.innerHTML += `
+        <tr>
+          <td class="border px-2 py-1">${date}</td>
+          <td class="border px-2 py-1 text-center">${caLam}</td>
+          <td class="border px-2 py-1 text-center">${formatTime(att.checkIn)}</td>
+          <td class="border px-2 py-1 text-center">${formatTime(att.checkOut)}</td>
+          <td class="border px-2 py-1 text-center">${hours.toFixed(2)}</td>
+          <td class="border px-2 py-1 text-center">${salary.toLocaleString()}</td>
+        </tr>
+      `;
+    });
+  }
+
+  document.getElementById('totalHours').textContent = totalHours.toFixed(2);
+  document.getElementById('totalSalary').textContent = totalSalary.toLocaleString();
+}
 
     loadEmployees();
   </script>
