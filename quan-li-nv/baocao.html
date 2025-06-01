@@ -79,7 +79,7 @@
 
       const data = await fetchData();
       const emp = data.employees.find(e => e.id === empId);
-      const salaryRate = emp.salaryPerDay || 0;
+      const salaryRate = emp.salaryPerDay || 0; // Giả sử đây là lương tính theo giờ
 
       const [year, month] = monthStr.split('-');
       const reportTable = document.getElementById('reportTable');
@@ -96,7 +96,7 @@
           (checkIn.getMonth() + 1) === parseInt(month)
         ) {
           const hours = (checkOut - checkIn) / 1000 / 3600;
-          const salary = hours * (salaryRate / 24);
+          const salary = hours * salaryRate; // Tính lương theo giờ * số giờ làm
           totalHours += hours;
           totalSalary += salary;
 
