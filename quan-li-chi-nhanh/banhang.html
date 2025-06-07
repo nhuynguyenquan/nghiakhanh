@@ -5,170 +5,146 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Bán hàng - Nhụy Nguyên</title>
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-      margin: 0;
-      background: #f9f9f9;
-    }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+    .container { max-width: 480px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    h2 { text-align: center; margin-bottom: 20px; }
+    .menu-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .menu-item span { font-weight: bold; }
+    .menu-item input { width: 60px; padding: 5px; }
+    button { width: 100%; padding: 12px; background: #007BFF; color: white; border: none; border-radius: 6px; font-size: 16px; margin-top: 15px; }
+    button:hover { background: #0056b3; }
     .hidden { display: none; }
-    .pin-container, .sales-container {
-      max-width: 400px;
-      margin: auto;
-      padding: 20px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    input, button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      font-size: 16px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-    h2 { text-align: center; }
-    .item-row {
-      display: flex;
-      justify-content: space-between;
-      margin: 8px 0;
-    }
-    .item-row input {
-      width: 60px;
-      margin-left: 10px;
-    }
-    button {
-      background: #28a745;
-      color: white;
-      border: none;
-    }
-    button:hover {
-      background: #218838;
-    }
+    #loginSection { text-align: center; }
+    #loginSection input { padding: 10px; width: 80%; margin-bottom: 10px; }
   </style>
 </head>
 <body>
+  <div class="container">
+    <!-- Đăng nhập PIN -->
+    <div id="loginSection">
+      <h2>🔐 Nhập mã PIN</h2>
+      <input type="password" id="pinInput" placeholder="Mã PIN" />
+      <button onclick="handleLogin()">Đăng nhập</button>
+      <p id="loginError" style="color: red;"></p>
+    </div>
 
-  <!-- Đăng nhập bằng PIN -->
-  <div class="pin-container" id="loginSection">
-    <h2>Đăng nhập</h2>
-    <input type="password" id="pinInput" placeholder="Nhập mã PIN"/>
-    <button onclick="checkPin()">Vào hệ thống</button>
-    <p id="pinError" style="color:red; text-align:center;"></p>
-  </div>
-
-  <!-- Giao diện bán hàng -->
-  <div class="sales-container hidden" id="salesSection">
-    <h2 id="branchTitle">Bán hàng</h2>
-    <div id="menuList"></div>
-    <button onclick="submitSales()">Gửi đơn hàng</button>
-    <p id="message" style="text-align:center;"></p>
+    <!-- Giao diện bán hàng -->
+    <div id="salesSection" class="hidden">
+      <h2 id="branchTitle"></h2>
+      <div id="menuList"></div>
+      <button onclick="sendOrder()">🧾 Gửi đơn hàng</button>
+    </div>
   </div>
 
   <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwpSFxP2s_6JsPr79BLvdY02blxPBbswjNpJQgxPQJQax1bH9yo5RECsY1_qcuPcotqFQ/exec';
-    let fullData = {};
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfd_pHMmc9qGXJ4iT2LYXg78-WSxXVTHr5O0EeGcs5pa4RlZMB2Gs1xETul4XI-hPFTw/exec';
+    let salesData = {};
     let branchName = "";
-    let sales = [];
+    let branchData = null;
 
-    // Kiểm tra PIN
-    function checkPin() {
+    async function handleLogin() {
       const pin = document.getElementById("pinInput").value.trim();
-      if (!pin) return;
+      document.getElementById("loginError").textContent = "";
 
-      fetch(SCRIPT_URL)
-        .then(res => res.json())
-        .then(data => {
-          fullData = data;
-          const matchedBranch = data.pins?.[pin];
-          if (matchedBranch) {
-            branchName = matchedBranch;
-            localStorage.setItem("pin", pin);
-            showSalesUI();
-          } else {
-            document.getElementById("pinError").innerText = "Mã PIN không đúng.";
-          }
-        })
-        .catch(err => {
-          document.getElementById("pinError").innerText = "Không thể tải dữ liệu.";
-        });
-    }
+      try {
+        const res = await fetch(SCRIPT_URL);
+        salesData = await res.json();
 
-    // Hiển thị UI bán hàng
-    function showSalesUI() {
-      document.getElementById("loginSection").classList.add("hidden");
-      document.getElementById("salesSection").classList.remove("hidden");
-      document.getElementById("branchTitle").innerText = "Chi nhánh: " + branchName;
+        // Kiểm tra PIN phía client
+        const pinMap = salesData.pins || {};
+        branchName = pinMap[pin];
 
-      const branch = fullData.branches.find(b => b.name === branchName);
-      if (!branch) return;
-
-      const list = document.getElementById("menuList");
-      list.innerHTML = "";
-      branch.menu.forEach(item => {
-        const row = document.createElement("div");
-        row.className = "item-row";
-        row.innerHTML = `
-          <span>${item.name} (${item.stock})</span>
-          <input type="number" min="0" value="0" data-name="${item.name}" />
-        `;
-        list.appendChild(row);
-      });
-    }
-
-    // Gửi đơn hàng
-    function submitSales() {
-      const inputs = document.querySelectorAll("#menuList input");
-      const orders = [];
-      inputs.forEach(input => {
-        const qty = parseInt(input.value);
-        if (qty > 0) {
-          orders.push({
-            name: input.dataset.name,
-            quantity: qty
-          });
+        if (!branchName) {
+          document.getElementById("loginError").textContent = "❌ Mã PIN không hợp lệ.";
+          return;
         }
+
+        // Tìm chi nhánh
+        branchData = salesData.branches.find(b => b.name === branchName);
+        if (!branchData) {
+          document.getElementById("loginError").textContent = "❌ Không tìm thấy chi nhánh.";
+          return;
+        }
+
+        document.getElementById("branchTitle").textContent = "🍽 " + branchName;
+        renderMenu();
+        document.getElementById("loginSection").classList.add("hidden");
+        document.getElementById("salesSection").classList.remove("hidden");
+
+      } catch (err) {
+        document.getElementById("loginError").textContent = "⚠️ Lỗi khi tải dữ liệu.";
+        console.error(err);
+      }
+    }
+
+    function renderMenu() {
+      const menuList = document.getElementById("menuList");
+      menuList.innerHTML = "";
+
+      branchData.menu.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "menu-item";
+        div.dataset.name = item.name;
+
+        div.innerHTML = `
+          <span>${item.name} (${item.stock})</span>
+          <input type="number" min="0" value="0"/>
+        `;
+        menuList.appendChild(div);
+      });
+    }
+
+    function sendOrder() {
+      const items = [];
+      const rows = document.querySelectorAll(".menu-item");
+
+      rows.forEach(row => {
+        const name = row.dataset.name;
+        const qty = parseInt(row.querySelector("input").value);
+        if (qty > 0) items.push({ name, quantity: qty });
       });
 
-      if (orders.length === 0) {
-        document.getElementById("message").innerText = "Vui lòng nhập số lượng.";
+      if (items.length === 0) {
+        alert("⚠️ Vui lòng chọn ít nhất 1 món.");
         return;
       }
 
-      const log = {
+      // ➕ Thêm log mới
+      salesData.logs.push({
         date: new Date().toISOString(),
         branch: branchName,
-        items: orders
-      };
+        items
+      });
 
-      // Gửi dữ liệu
+      // ➖ Trừ số lượng
+      items.forEach(order => {
+        const menuItem = branchData.menu.find(m => m.name === order.name);
+        if (menuItem) {
+          menuItem.stock -= order.quantity;
+          if (menuItem.stock < 0) menuItem.stock = 0;
+        }
+      });
+
+      // 🔄 Gửi toàn bộ dữ liệu
       fetch(SCRIPT_URL, {
         method: "POST",
-        body: JSON.stringify(log),
-        mode:'no-cors',
-        headers: {
-          "Content-Type": "application/json"
-        }
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(salesData)
       })
       .then(res => res.json())
       .then(res => {
-        document.getElementById("message").innerText = "✅ Gửi thành công!";
-        document.querySelectorAll("#menuList input").forEach(i => i.value = "0");
+        if (res.status === "ok") {
+          alert("✅ Gửi đơn thành công!");
+          renderMenu(); // reset form
+        } else {
+          alert("❌ Gửi thất bại.");
+        }
       })
       .catch(err => {
-        document.getElementById("message").innerText = "❌ Gửi thất bại.";
+        console.error(err);
+        alert("⚠️ Không thể kết nối server.");
       });
     }
-
-    // Tự động đăng nhập nếu đã lưu PIN
-    window.onload = () => {
-      const savedPin = localStorage.getItem("pin");
-      if (savedPin) {
-        document.getElementById("pinInput").value = savedPin;
-        checkPin();
-      }
-    };
   </script>
 </body>
 </html>
