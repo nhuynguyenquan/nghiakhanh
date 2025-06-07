@@ -2,128 +2,126 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quản Lý Chi Nhánh</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100 p-4">
-  <div class="max-w-5xl mx-auto">
+  <div class="max-w-6xl mx-auto">
     <h1 class="text-2xl font-bold mb-4">Quản Lý Chi Nhánh</h1>
 
-    <!-- Chọn chi nhánh -->
     <div class="mb-4 flex flex-wrap gap-2">
       <select id="branchSelect" class="p-2 border rounded">
         <option value="">Chọn chi nhánh</option>
       </select>
-      <button onclick="loadBranch()" class="bg-blue-500 text-white px-4 py-2 rounded">Xem sản phẩm</button>
+      <input type="date" id="dateInput" class="p-2 border rounded">
+      <button onclick="loadBranchData()" class="bg-blue-500 text-white px-4 py-2 rounded">Xem</button>
     </div>
 
-    <!-- Tạo sản phẩm mới -->
-    <div class="bg-white p-4 rounded shadow mb-4">
-      <h2 class="text-lg font-semibold mb-2">Thêm sản phẩm mới</h2>
-      <form id="addProductForm" class="flex flex-wrap gap-2">
-        <input type="text" id="productName" placeholder="Tên món" class="p-2 border rounded" required>
-        <input type="number" id="productStock" placeholder="Tồn kho" class="p-2 border rounded w-24" required>
-        <input type="number" id="productPrice" placeholder="Đơn giá" class="p-2 border rounded w-32" required>
-        <button class="bg-green-500 text-white px-4 py-2 rounded">Thêm</button>
-      </form>
-    </div>
-
-    <!-- Danh sách sản phẩm -->
-    <div class="bg-white p-4 rounded shadow mb-4">
-      <h2 class="text-lg font-semibold mb-2">Danh sách sản phẩm</h2>
-      <table class="w-full table-auto border text-center">
+    <div id="stockSection" class="bg-white shadow rounded p-4 mb-4 hidden">
+      <h2 class="text-lg font-semibold mb-2">Tồn kho hiện tại</h2>
+      <table class="w-full border">
         <thead class="bg-gray-200">
           <tr>
-            <th class="border px-2 py-1">Tên món</th>
+            <th class="border px-2 py-1">Sản phẩm</th>
             <th class="border px-2 py-1">Tồn kho</th>
             <th class="border px-2 py-1">Đơn giá</th>
           </tr>
         </thead>
-        <tbody id="productTable"></tbody>
+        <tbody id="stockTable"></tbody>
       </table>
     </div>
 
-    <!-- Tổng kết doanh thu -->
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-lg font-semibold mb-2">Tổng kết doanh thu</h2>
-      <p id="revenueDisplay">Chọn chi nhánh để xem.</p>
+    <div id="salesSection" class="bg-white shadow rounded p-4 hidden">
+      <h2 class="text-lg font-semibold mb-2">Doanh thu ngày <span id="salesDate"></span></h2>
+      <table class="w-full border">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="border px-2 py-1">Sản phẩm</th>
+            <th class="border px-2 py-1">Đã bán</th>
+            <th class="border px-2 py-1">Tổng</th>
+          </tr>
+        </thead>
+        <tbody id="salesTable"></tbody>
+        <tfoot>
+          <tr class="font-bold bg-gray-100">
+            <td colspan="2" class="text-right border px-2 py-1">Tổng cộng</td>
+            <td class="border px-2 py-1 text-center" id="totalRevenue"></td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
   </div>
 
   <script>
-    const DATA_URL = 'https://script.google.com/macros/s/AKfycbyluD3vnzwJd0Onb5ixqHlLZlCRIaCBUrxTaFNn0_tFaZqNCaM4qzpQ6nR6KXVQm7s4/exec';    let data = {};
+    const fileUrl = 'https://script.google.com/macros/s/AKfycbzYtwJVS62FPuAnIEikE-sgvt_bh_aV5qkepv5aU4jYFs2hOlSQKzJwu-orNkLqNMwZxA/exec'; 
 
     async function fetchData() {
-      const res = await fetch(DATA_URL);
+      const res = await fetch(fileUrl);
       return await res.json();
     }
 
-    async function saveData(updatedData) {
-      await fetch(DATA_URL, {
-        method: 'POST',
-        body: JSON.stringify(updatedData),
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    async function loadBranches() {
-      data = await fetchData();
+    async function loadBranchOptions() {
+      const data = await fetchData();
       const select = document.getElementById('branchSelect');
-      select.innerHTML = '<option value="">Chọn chi nhánh</option>';
-      Object.keys(data.branches).forEach(branch => {
+      for (const branch in data.branches) {
         const opt = document.createElement('option');
         opt.value = branch;
         opt.textContent = branch;
         select.appendChild(opt);
-      });
+      }
     }
 
-    function loadBranch() {
-      const branch = document.getElementById('branchSelect').value;
-      if (!branch) return;
+    async function loadBranchData() {
+      const data = await fetchData();
+      const branchName = document.getElementById('branchSelect').value;
+      const date = document.getElementById('dateInput').value;
+      if (!branchName || !date) return alert('Vui lòng chọn chi nhánh và ngày.');
 
-      const table = document.getElementById('productTable');
-      table.innerHTML = '';
-      const products = data.branches[branch].stock;
+      const branch = data.branches[branchName];
 
-      products.forEach(item => {
-        table.innerHTML += `
+      // Hiển thị tồn kho
+      document.getElementById('stockSection').classList.remove('hidden');
+      const stockTable = document.getElementById('stockTable');
+      stockTable.innerHTML = '';
+      branch.stock.forEach(item => {
+        stockTable.innerHTML += `
           <tr>
             <td class="border px-2 py-1">${item.name}</td>
-            <td class="border px-2 py-1">${item.stock}</td>
-            <td class="border px-2 py-1">${item.dongia}</td>
-          </tr>
-        `;
+            <td class="border px-2 py-1 text-center">${item.stock}</td>
+            <td class="border px-2 py-1 text-right">${Number(item.price).toLocaleString()}</td>
+          </tr>`;
       });
 
-      // Tính doanh thu từ logs
-      const revenue = data.logs
-        .filter(log => log.branch === branch)
-        .reduce((sum, log) => sum + (log.qty * log.price), 0);
-      document.getElementById('revenueDisplay').textContent =
-        `Tổng doanh thu: ${revenue.toLocaleString()} VNĐ`;
+      // Hiển thị doanh thu
+      const log = branch.logs.find(log => log.date === date);
+      const salesTable = document.getElementById('salesTable');
+      const salesDate = document.getElementById('salesDate');
+      const totalRevenue = document.getElementById('totalRevenue');
+      salesDate.textContent = date;
+      salesTable.innerHTML = '';
+      let total = 0;
+
+      if (log) {
+        document.getElementById('salesSection').classList.remove('hidden');
+        log.sales.forEach(sale => {
+          total += sale.total;
+          salesTable.innerHTML += `
+            <tr>
+              <td class="border px-2 py-1">${sale.name}</td>
+              <td class="border px-2 py-1 text-center">${sale.quantity}</td>
+              <td class="border px-2 py-1 text-right">${Number(sale.total).toLocaleString()}</td>
+            </tr>`;
+        });
+      } else {
+        document.getElementById('salesSection').classList.remove('hidden');
+        salesTable.innerHTML = '<tr><td colspan="3" class="text-center py-2">Không có dữ liệu bán hàng.</td></tr>';
+      }
+
+      totalRevenue.textContent = total.toLocaleString();
     }
 
-    document.getElementById('addProductForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
-      const branch = document.getElementById('branchSelect').value;
-      if (!branch) return alert("Chọn chi nhánh trước!");
-
-      const name = document.getElementById('productName').value.trim();
-      const stock = parseInt(document.getElementById('productStock').value);
-      const price = parseInt(document.getElementById('productPrice').value);
-
-      if (!name || stock < 0 || price < 0) return alert("Thông tin không hợp lệ!");
-
-      data.branches[branch].stock.push({ name, stock, dongia: price.toString() });
-      await saveData(data);
-      alert("Đã thêm sản phẩm.");
-      loadBranch();
-      e.target.reset();
-    });
-
-    loadBranches();
+    loadBranchOptions();
   </script>
 </body>
 </html>
