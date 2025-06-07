@@ -37,7 +37,7 @@
   </div>
 
   <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZHxGk8BcSLsf4hn8S1A_Y5s9swVG--Kiuz8-TdMNDLBtbQT-i4aG84QkKk1UTEJOuMA/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfd_pHMmc9qGXJ4iT2LYXg78-WSxXVTHr5O0EeGcs5pa4RlZMB2Gs1xETul4XI-hPFTw/exec';
     let salesData = {};
     let branchName = "";
     let branchData = null;
@@ -131,7 +131,7 @@
       try {
         const res = await fetch(SCRIPT_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },//mode:'no-cors',
+          headers: { "Content-Type": "application/json" },mode:'no-cors',
           body: JSON.stringify(salesData)
         });
 
@@ -144,7 +144,7 @@
         }
       } catch (err) {
         console.error(err);
-        alert("⚠️ Không thể kết nối server.");
+        alert("⚠️ Tải lại trang để tiếp tục.");
       }
 
       btn.disabled = false;
