@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bán hàng - Nhân viên</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f9f9f9;
+    padding: 1rem;
+    margin: 0;
+  }
+  h1 {
+    color: #2c3e50;
+    text-align: center;
+  }
+  select, button, input[type=number] {
+    padding: 0.5rem;
+    font-size: 1rem;
+    margin: 0.3rem 0;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+  }
+  select {
+    width: 100%;
+    max-width: 400px;
+  }
+  .container {
+    max-width: 480px;
+    margin: auto;
+    background: white;
+    padding: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 3px 8px rgb(0 0 0 / 0.1);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+  }
+  th {
+    background: #f0f0f0;
+  }
+  input[type=number] {
+    width: 80px;
+  }
+  button {
+    background: #2c3e50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  button:hover {
+    background: #1a2838;
+  }
+  .message {
+    margin-top: 1rem;
+    font-weight: 600;
+    text-align: center;
+  }
+  @media (max-width: 480px) {
+    body {
+      padding: 0.5rem;
+    }
+    .container {
+      padding: 0.8rem;
+    }
+    input[type=number] {
+      width: 60px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Bán hàng - Nhân viên</h1>
+  
+  <label for="branchSelect">Chọn chi nhánh:</label>
+  <select id="branchSelect" onchange="renderMenu()">
+    <option value="">-- Chọn chi nhánh --</option>
+  </select>
+  
+  <div id="menuContainer"></div>
+  
+  <div class="message" id="message"></div>
+</div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfd_pHMmc9qGXJ4iT2LYXg78-WSxXVTHr5O0EeGcs5pa4RlZMB2Gs1xETul4XI-hPFTw/exec';
+const TELEGRAM_TOKEN = '7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY';
+const CHAT_ID = '6249154937';
+
+let salesData = { branches: [], logs: [] };
+
+async function fetchSalesData() {
+  try {
+    const res = await fetch(SCRIPT_URL);
+    salesData = await res.json();
+    populateBranches();
+  } catch (error) {
+    showMessage('Lỗi tải dữ liệu: ' + error.message, true);
+  }
+}
+
+function populateBranches() {
+  const select = document.getElementById('branchSelect');
+  select.innerHTML = '<option value="">-- Chọn chi nhánh --</option>';
+  salesData.branches.forEach((branch, index) => {
+    const option = document.createElement('option');
+    option.value = index;
+    option.textContent = branch.name;
+    select.appendChild(option);
+  });
+  document.getElementById('menuContainer').innerHTML = '';
+}
+
+function renderMenu() {
+  const select = document.getElementById('branchSelect');
+  const idx = select.value;
+  const container = document.getElementById('menuContainer');
+  container.innerHTML = '';
+  if (idx === '') return;
+
+  const branch = salesData.branches[idx];
+  if (!branch || !branch.menu.length) {
+    container.innerHTML = '<p>Chi nhánh chưa có món ăn.</p>';
+    return;
+  }
+
+  let html = '<table><thead><tr><th>Món</th><th>Tồn kho</th><th>Giá (₫)</th><th>Số lượng bán</th></tr></thead><tbody>';
+  branch.menu.forEach((item, i) => {
+    html += `<tr>
+      <td>${item.name}</td>
+      <td>${item.stock}</td>
+      <td>${item.price.toLocaleString()}</td>
+      <td><input type="number" id="qty-${i}" min="0" max="${item.stock}" value="0"></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  html += `<button onclick="sellItems(${idx})" style="margin-top: 1rem; width: 100%;">Xác nhận bán</button>`;
+
+  container.innerHTML = html;
+}
+
+async function sellItems(branchIndex) {
+  const branch = salesData.branches[branchIndex];
+  let soldAny = false;
+  for (let i = 0; i < branch.menu.length; i++) {
+    const qtyInput = document.getElementById(`qty-${i}`);
+    const qty = parseInt(qtyInput.value);
+    if (!qty || qty <= 0) continue;
+    if (qty > branch.menu[i].stock) {
+      showMessage(`Số lượng bán món "${branch.menu[i].name}" không hợp lệ (tồn kho: ${branch.menu[i].stock}).`, true);
+      return;
+    }
+    // Cập nhật tồn kho
+    branch.menu[i].stock -= qty;
+    // Ghi log bán hàng
+    salesData.logs.push({
+      branch: branch.name,
+      item: branch.menu[i].name,
+      quantity: qty,
+      time: new Date().toISOString()
+    });
+    soldAny = true;
+
+    // Gửi Telegram thông báo bán món
+    await sendTelegram(`Bán ${qty} ${branch.menu[i].name} tại ${branch.name}`);
+  }
+  if (!soldAny) {
+    showMessage('Vui lòng nhập số lượng bán lớn hơn 0.', true);
+    return;
+  }
+  await saveData();
+  showMessage('Bán hàng thành công!');
+  renderMenu();
+}
+
+async function sendTelegram(msg) {
+  try {
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: CHAT_ID, text: msg })
+    });
+  } catch (error) {
+    console.warn('Lỗi gửi Telegram:', error);
+  }
+}
+
+async function saveData() {
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },mode:'no-cors',
+      body: JSON.stringify(salesData)
+    });
+    await fetchSalesData(); // Tải lại dữ liệu mới nhất
+  } catch (error) {
+    showMessage('Lỗi lưu dữ liệu: ' + error.message, true);
+  }
+}
+
+function showMessage(msg, isError = false) {
+  const el = document.getElementById('message');
+  el.textContent = msg;
+  el.style.color = isError ? 'red' : 'green';
+}
+
+fetchSalesData();
+</script>
+
+</body>
+</html>
