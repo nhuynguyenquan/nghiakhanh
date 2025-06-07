@@ -57,11 +57,11 @@
     const fileUrl = 'https://script.google.com/macros/s/AKfycbzYtwJVS62FPuAnIEikE-sgvt_bh_aV5qkepv5aU4jYFs2hOlSQKzJwu-orNkLqNMwZxA/exec'; 
 
     async function fetchData() {
-  const res = await fetch(API_URL);
+  const res = await fetch(fileUrl);
   return await res.json();
 }
 async function saveData() {
-    await fetch(API_URL, {
+    await fetch(fileUrl, {
       method: 'POST',
       body: JSON.stringify(data),
       mode: "no-cors",
