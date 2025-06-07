@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bán hàng - Chi nhánh</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f8f9fa;
+      margin: 0;
+      padding: 0 16px;
+    }
+    h2 {
+      text-align: center;
+      color: #007BFF;
+      margin: 20px 0;
+    }
+    .product {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .product h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+    .product p {
+      margin: 4px 0;
+    }
+    input[type="number"] {
+      width: 60px;
+      padding: 6px;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #218838;
+    }
+    .message {
+      margin-top: 12px;
+      text-align: center;
+    }
+    .success {
+      color: green;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h2>Bán hàng - <span id="branchName">Chi nhánh</span></h2>
+
+  <div id="menuList"></div>
+  <button onclick="submitOrder()">Gửi đơn bán hàng</button>
+
+  <div class="message" id="messageBox"></div>
+
+  <script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbd5QQ5B8KThT2Zbl3h_2vHRbLk2T45_Wc2Kbr6AtbRedfxKxravAC6bPfPAilg8WbFQ/exec';
+    let branch = '';
+    let salesData = {};
+    let selectedQuantities = {};
+
+    window.onload = async function () {
+      const params = new URLSearchParams(window.location.search);
+      branch = decodeURIComponent(params.get('branch') || '');
+
+      if (!branch) {
+        alert("Không tìm thấy chi nhánh.");
+        return;
+      }
+
+      document.getElementById('branchName').innerText = branch;
+
+      try {
+        const res = await fetch(SCRIPT_URL);
+        const data = await res.json();
+        salesData = data;
+
+        const branchData = data.branches.find(b => b.name === branch);
+        if (!branchData) {
+          document.getElementById('menuList').innerHTML = "Không tìm thấy chi nhánh.";
+          return;
+        }
+
+        renderMenu(branchData.menu);
+      } catch (err) {
+        document.getElementById('menuList').innerHTML = "⚠ Lỗi tải dữ liệu.";
+      }
+    };
+
+    function renderMenu(menu) {
+      const list = document.getElementById('menuList');
+      list.innerHTML = '';
+      menu.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'product';
+        div.innerHTML = `
+          <h3>${item.name}</h3>
+          <p>💰 Giá: ${item.price.toLocaleString()} đ</p>
+          <p>📦 Tồn: ${item.stock}</p>
+          <label>Số lượng: <input type="number" min="0" max="${item.stock}" value="0" onchange="updateQuantity('${item.name}', this.value)"></label>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function updateQuantity(product, qty) {
+      const quantity = parseInt(qty, 10);
+      if (!isNaN(quantity) && quantity >= 0) {
+        selectedQuantities[product] = quantity;
+      }
+    }
+
+    async function submitOrder() {
+      const orderItems = Object.entries(selectedQuantities)
+        .filter(([name, qty]) => qty > 0)
+        .map(([name, qty]) => ({ name, quantity: qty }));
+
+      if (orderItems.length === 0) {
+        alert("Vui lòng chọn ít nhất 1 món để bán.");
+        return;
+      }
+
+      const now = new Date();
+      const date = now.toISOString().split("T")[0];
+      const logEntry = {
+        branch,
+        date,
+        time: now.toLocaleTimeString("vi-VN"),
+        items: orderItems
+      };
+
+      // Gửi dữ liệu bán hàng
+      try {
+        salesData.logs.push(logEntry);
+
+        // Cập nhật tồn kho
+        const branchData = salesData.branches.find(b => b.name === branch);
+        for (const item of orderItems) {
+          const menuItem = branchData.menu.find(m => m.name === item.name);
+          if (menuItem) {
+            menuItem.stock -= item.quantity;
+          }
+        }
+
+        const response = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(salesData)
+        });
+
+        const result = await response.json();
+        if (result.status === "ok") {
+          document.getElementById("messageBox").innerHTML = "✅ Đã gửi đơn thành công.";
+          document.getElementById("messageBox").className = "message success";
+          selectedQuantities = {};
+          renderMenu(branchData.menu);
+        } else {
+          throw new Error("Lỗi khi gửi đơn.");
+        }
+      } catch (err) {
+        document.getElementById("messageBox").innerHTML = "⚠ Lỗi gửi đơn.";
+        document.getElementById("messageBox").className = "message error";
+      }
+    }
+  </script>
+</body>
+</html>

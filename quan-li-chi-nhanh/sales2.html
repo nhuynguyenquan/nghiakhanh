@@ -2,122 +2,110 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Đăng nhập PIN - Chi nhánh</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Đăng nhập bằng PIN và xem chi nhánh</title>
   <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f4f8;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-
-    .login-container {
-      background: #fff;
-      padding: 30px 20px;
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      width: 90%;
-      max-width: 400px;
-      text-align: center;
-    }
-
-    h2 {
-      margin-bottom: 20px;
-      color: #333;
-    }
-
-    input[type="password"] {
-      padding: 12px;
-      width: 100%;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      margin-bottom: 16px;
-      font-size: 16px;
-    }
-
-    button {
-      padding: 12px;
-      width: 100%;
-      background: #007BFF;
-      color: white;
-      border: none;
-      font-size: 16px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #0056b3;
-    }
-
-    .message {
-      margin-top: 16px;
-      font-size: 15px;
-    }
-
-    .success {
-      color: green;
-    }
-
-    .error {
-      color: red;
-    }
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: auto; }
+    input, button { width: 100%; padding: 12px; margin: 8px 0; font-size: 16px; }
+    button { background-color: #007bff; color: white; border: none; cursor: pointer; }
+    button:hover { background-color: #0056b3; }
+    .error { color: red; margin-top: 10px; }
+    .branch-data { margin-top: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
   </style>
 </head>
 <body>
-  <div class="login-container">
-    <h2>🔐 Đăng nhập bằng mã PIN</h2>
-    <input type="password" id="pinInput" placeholder="Nhập mã PIN" />
-    <button onclick="login()">Đăng nhập</button>
-    <div class="message" id="messageBox"></div>
+  <h2>Đăng nhập bằng mã PIN</h2>
+  <input type="password" id="pinInput" placeholder="Nhập mã PIN" />
+  <button onclick="login()">Đăng nhập</button>
+  <div id="message" class="error"></div>
+  
+  <div id="branchInfo" class="branch-data" style="display:none;">
+    <h3>Thông tin chi nhánh: <span id="branchName"></span></h3>
+    <table>
+      <thead>
+        <tr><th>Tên món</th><th>Tồn kho</th><th>Giá</th></tr>
+      </thead>
+      <tbody id="menuList"></tbody>
+    </table>
   </div>
 
   <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbd5QQ5B8KThT2Zbl3h_2vHRbLk2T45_Wc2Kbr6AtbRedfxKxravAC6bPfPAilg8WbFQ/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfd_pHMmc9qGXJ4iT2LYXg78-WSxXVTHr5O0EeGcs5pa4RlZMB2Gs1xETul4XI-hPFTw/exec';
 
+    let salesData = null;
+
+    // 1. Load dữ liệu sales.json từ GAS
+    async function loadSalesData() {
+      try {
+        const res = await fetch(SCRIPT_URL);
+        if (!res.ok) throw new Error("Lỗi tải dữ liệu");
+        const data = await res.json();
+        return data;
+      } catch (error) {
+        document.getElementById('message').innerText = "Không tải được dữ liệu từ server.";
+        console.error(error);
+        return null;
+      }
+    }
+
+    // 2. Hàm đăng nhập, kiểm tra PIN với dữ liệu đã tải
     async function login() {
-      const pin = document.getElementById("pinInput").value.trim();
-      const messageBox = document.getElementById("messageBox");
-
-      messageBox.textContent = "Đang kiểm tra...";
-      messageBox.className = "message";
+      document.getElementById('message').innerText = '';
+      const pin = document.getElementById('pinInput').value.trim();
 
       if (!pin) {
-        messageBox.textContent = "Vui lòng nhập mã PIN.";
-        messageBox.classList.add("error");
+        document.getElementById('message').innerText = "Vui lòng nhập mã PIN";
         return;
       }
 
-      try {
-        const response = await fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          mode:'no-cors',
-          body: JSON.stringify({ action: "checkPin", pin })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-          messageBox.textContent = "✔ Đăng nhập thành công - Chi nhánh: " + result.branch;
-          messageBox.classList.add("success");
-
-          // 👉 Ở đây bạn có thể chuyển sang giao diện bán hàng chi nhánh
-          // Ví dụ:
-          // window.location.href = `banhang.html?branch=${encodeURIComponent(result.branch)}`;
-        } else {
-          messageBox.textContent = result.message || "Mã PIN không đúng.";
-          messageBox.classList.add("error");
-        }
-      } catch (err) {
-        messageBox.textContent = "⚠ Lỗi kết nối đến server.";
-        messageBox.classList.add("error");
+      if (!salesData) {
+        salesData = await loadSalesData();
+        if (!salesData) return; // Lỗi tải dữ liệu
       }
+
+      if (!salesData.pins) {
+        document.getElementById('message').innerText = "Dữ liệu mã PIN không tồn tại.";
+        return;
+      }
+
+      const branchName = salesData.pins[pin];
+      if (!branchName) {
+        document.getElementById('message').innerText = "Mã PIN không hợp lệ.";
+        return;
+      }
+
+      // Hiển thị dữ liệu chi nhánh tương ứng
+      showBranchData(branchName);
+    }
+
+    // 3. Hiển thị menu của chi nhánh tương ứng
+    function showBranchData(branchName) {
+      const branchInfoDiv = document.getElementById('branchInfo');
+      const branchNameSpan = document.getElementById('branchName');
+      const menuList = document.getElementById('menuList');
+
+      branchNameSpan.innerText = branchName;
+
+      // Tìm chi nhánh trong data.branches
+      const branch = salesData.branches.find(b => b.name === branchName);
+      if (!branch) {
+        document.getElementById('message').innerText = "Không tìm thấy chi nhánh trong dữ liệu.";
+        branchInfoDiv.style.display = 'none';
+        return;
+      }
+
+      // Xóa bảng cũ nếu có
+      menuList.innerHTML = '';
+
+      branch.menu.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${item.name}</td><td>${item.stock}</td><td>${item.price.toLocaleString('vi-VN')} đ</td>`;
+        menuList.appendChild(tr);
+      });
+
+      branchInfoDiv.style.display = 'block';
     }
   </script>
 </body>
