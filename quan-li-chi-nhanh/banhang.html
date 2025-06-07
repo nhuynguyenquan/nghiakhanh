@@ -37,7 +37,7 @@
   </div>
 
   <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhI7zyIP90908M4JkyTjV_wG5RyY4hmC3VgLUjW3fgAXp0JYMAh1WznFrBD6FDpeVElA/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZHxGk8BcSLsf4hn8S1A_Y5s9swVG--Kiuz8-TdMNDLBtbQT-i4aG84QkKk1UTEJOuMA/exec';
     let salesData = {};
     let branchName = "";
     let branchData = null;
@@ -131,7 +131,7 @@
       try {
         const res = await fetch(SCRIPT_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },mode:'no-cors',
+          headers: { "Content-Type": "application/json" },//mode:'no-cors',
           body: JSON.stringify(salesData)
         });
 
