@@ -72,10 +72,13 @@ function renderBranches() {
 
     let html = `
   <h2>${branch.name}</h2>
+  <div>
   <label>Mã PIN: 
-    <input type="password" value="${branch.pin || ''}" 
+    <input type="password" id="pin-${bIndex}" value="${branch.pin || ''}" 
            onchange="editPin(${bIndex}, this.value)">
   </label>
+  <button onclick="togglePin(${bIndex})">👁️</button>
+</div>
 `;
 
     html += `<table><tr><th>Món</th><th>Tồn kho</th><th>Giá</th><th>Bán</th><th></th></tr>`;
@@ -184,6 +187,10 @@ async function sendTelegram(msg) {
 function editPin(bIndex, newPin) {
   salesData.branches[bIndex].pin = newPin;
   saveData(false);
+}
+function togglePin(bIndex) {
+  const input = document.getElementById(`pin-${bIndex}`);
+  input.type = input.type === 'password' ? 'text' : 'password';
 }
 async function saveData(refresh = true) {
   await fetch(SCRIPT_URL, {
