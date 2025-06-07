@@ -1,222 +1,199 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Bán hàng - Nhân viên</title>
-<style>
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f9f9f9;
-    padding: 1rem;
-    margin: 0;
-  }
-  h1 {
-    color: #2c3e50;
-    text-align: center;
-  }
-  select, button, input[type=number] {
-    padding: 0.5rem;
-    font-size: 1rem;
-    margin: 0.3rem 0;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-  }
-  select {
-    width: 100%;
-    max-width: 400px;
-  }
-  .container {
-    max-width: 480px;
-    margin: auto;
-    background: white;
-    padding: 1rem;
-    border-radius: 10px;
-    box-shadow: 0 3px 8px rgb(0 0 0 / 0.1);
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-  }
-  th, td {
-    text-align: left;
-    padding: 8px;
-    border-bottom: 1px solid #ddd;
-  }
-  th {
-    background: #f0f0f0;
-  }
-  input[type=number] {
-    width: 80px;
-  }
-  button {
-    background: #2c3e50;
-    color: white;
-    border: none;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-  button:hover {
-    background: #1a2838;
-  }
-  .message {
-    margin-top: 1rem;
-    font-weight: 600;
-    text-align: center;
-  }
-  @media (max-width: 480px) {
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bán hàng Nhụy Nguyên</title>
+  <style>
     body {
-      padding: 0.5rem;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f8f9fa;
+      color: #333;
+    }
+    header {
+      background: #00a86b;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.2rem;
     }
     .container {
-      padding: 0.8rem;
+      padding: 1rem;
     }
-    input[type=number] {
-      width: 60px;
+    .hidden {
+      display: none;
     }
-  }
-</style>
+    input, select, button {
+      width: 100%;
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #00a86b;
+      color: white;
+      font-weight: bold;
+      border: none;
+    }
+    button:hover {
+      background-color: #007f50;
+    }
+    .menu-item {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background: white;
+    }
+    .menu-item h3 {
+      margin: 0 0 0.5rem 0;
+    }
+    .menu-item input {
+      width: 80px;
+      display: inline-block;
+      margin-left: 1rem;
+    }
+    .status {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
+  <header>Hệ thống bán hàng - Nhụy Nguyên</header>
 
-<div class="container">
-  <h1>Bán hàng - Nhân viên</h1>
-  
-  <label for="branchSelect">Chọn chi nhánh:</label>
-  <select id="branchSelect" onchange="renderMenu()">
-    <option value="">-- Chọn chi nhánh --</option>
-  </select>
-  
-  <div id="menuContainer"></div>
-  
-  <div class="message" id="message"></div>
-</div>
+  <div id="pinScreen" class="container">
+    <h2>🔒 Nhập mã PIN chi nhánh</h2>
+    <input type="password" id="pinInput" placeholder="Nhập mã PIN" />
+    <button onclick="checkPin()">Tiếp tục</button>
+    <div id="pinMessage" class="status"></div>
+  </div>
 
-<script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfd_pHMmc9qGXJ4iT2LYXg78-WSxXVTHr5O0EeGcs5pa4RlZMB2Gs1xETul4XI-hPFTw/exec';
-const TELEGRAM_TOKEN = '7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY';
-const CHAT_ID = '6249154937';
+  <div id="salesScreen" class="container hidden">
+    <h2 id="branchName"></h2>
+    <div id="menuList"></div>
+    <button onclick="submitSales()">Gửi đơn bán hàng</button>
+    <div id="submitMessage" class="status"></div>
+  </div>
 
-let salesData = { branches: [], logs: [] };
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzsQyrKnDEB9udWZ5yLmMjLyGqOzegpwjZ9ckl-Z74riIxXzm4rFKnAfyW27F1TO_yeTw/exec"; // Thay bằng URL thật của bạn
+    let salesData = {};
+    let currentBranchIndex = -1;
 
-async function fetchSalesData() {
-  try {
-    const res = await fetch(SCRIPT_URL);
-    salesData = await res.json();
-    populateBranches();
-  } catch (error) {
-    showMessage('Lỗi tải dữ liệu: ' + error.message, true);
-  }
-}
+    async function checkPin() {
+      const pin = document.getElementById('pinInput').value.trim();
+      const msg = document.getElementById('pinMessage');
+      msg.textContent = '';
 
-function populateBranches() {
-  const select = document.getElementById('branchSelect');
-  select.innerHTML = '<option value="">-- Chọn chi nhánh --</option>';
-  salesData.branches.forEach((branch, index) => {
-    const option = document.createElement('option');
-    option.value = index;
-    option.textContent = branch.name;
-    select.appendChild(option);
-  });
-  document.getElementById('menuContainer').innerHTML = '';
-}
+      if (!pin) {
+        msg.textContent = 'Vui lòng nhập mã PIN.';
+        msg.style.color = 'red';
+        return;
+      }
 
-function renderMenu() {
-  const select = document.getElementById('branchSelect');
-  const idx = select.value;
-  const container = document.getElementById('menuContainer');
-  container.innerHTML = '';
-  if (idx === '') return;
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          mode:'no-cors',
+          body: JSON.stringify({ action: 'checkPin', pin })
+        });
+        const result = await res.json();
 
-  const branch = salesData.branches[idx];
-  if (!branch || !branch.menu.length) {
-    container.innerHTML = '<p>Chi nhánh chưa có món ăn.</p>';
-    return;
-  }
+        if (!result.success) {
+          msg.textContent = result.message || 'Mã PIN không đúng.';
+          msg.style.color = 'red';
+          return;
+        }
 
-  let html = '<table><thead><tr><th>Món</th><th>Tồn kho</th><th>Giá (₫)</th><th>Số lượng bán</th></tr></thead><tbody>';
-  branch.menu.forEach((item, i) => {
-    html += `<tr>
-      <td>${item.name}</td>
-      <td>${item.stock}</td>
-      <td>${item.price.toLocaleString()}</td>
-      <td><input type="number" id="qty-${i}" min="0" max="${item.stock}" value="0"></td>
-    </tr>`;
-  });
-  html += '</tbody></table>';
-  html += `<button onclick="sellItems(${idx})" style="margin-top: 1rem; width: 100%;">Xác nhận bán</button>`;
+        await fetchSalesData();
+        currentBranchIndex = salesData.branches.findIndex(b => b.name === result.branch);
+        if (currentBranchIndex === -1) {
+          msg.textContent = 'Chi nhánh không tồn tại.';
+          msg.style.color = 'red';
+          return;
+        }
 
-  container.innerHTML = html;
-}
+        document.getElementById('pinScreen').classList.add('hidden');
+        document.getElementById('salesScreen').classList.remove('hidden');
+        document.getElementById('branchName').textContent = result.branch;
+        renderMenu();
 
-async function sellItems(branchIndex) {
-  const branch = salesData.branches[branchIndex];
-  let soldAny = false;
-  for (let i = 0; i < branch.menu.length; i++) {
-    const qtyInput = document.getElementById(`qty-${i}`);
-    const qty = parseInt(qtyInput.value);
-    if (!qty || qty <= 0) continue;
-    if (qty > branch.menu[i].stock) {
-      showMessage(`Số lượng bán món "${branch.menu[i].name}" không hợp lệ (tồn kho: ${branch.menu[i].stock}).`, true);
-      return;
+      } catch (err) {
+        msg.textContent = 'Lỗi kết nối đến server.';
+        msg.style.color = 'red';
+      }
     }
-    // Cập nhật tồn kho
-    branch.menu[i].stock -= qty;
-    // Ghi log bán hàng
-    salesData.logs.push({
-      branch: branch.name,
-      item: branch.menu[i].name,
-      quantity: qty,
-      time: new Date().toISOString()
-    });
-    soldAny = true;
 
-    // Gửi Telegram thông báo bán món
-    await sendTelegram(`Bán ${qty} ${branch.menu[i].name} tại ${branch.name}`);
-  }
-  if (!soldAny) {
-    showMessage('Vui lòng nhập số lượng bán lớn hơn 0.', true);
-    return;
-  }
-  await saveData();
-  showMessage('Bán hàng thành công!');
-  renderMenu();
-}
+    async function fetchSalesData() {
+      const res = await fetch(SCRIPT_URL);
+      salesData = await res.json();
+    }
 
-async function sendTelegram(msg) {
-  try {
-    await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: CHAT_ID, text: msg })
-    });
-  } catch (error) {
-    console.warn('Lỗi gửi Telegram:', error);
-  }
-}
+    function renderMenu() {
+      const menuList = document.getElementById('menuList');
+      menuList.innerHTML = '';
+      const menu = salesData.branches[currentBranchIndex].menu;
+      menu.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'menu-item';
+        div.innerHTML = `
+          <h3>${item.name} - ${item.price.toLocaleString()}đ</h3>
+          <label>Số lượng:</label>
+          <input type="number" min="0" value="0" id="qty-${index}" />
+        `;
+        menuList.appendChild(div);
+      });
+    }
 
-async function saveData() {
-  try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },mode:'no-cors',
-      body: JSON.stringify(salesData)
-    });
-    await fetchSalesData(); // Tải lại dữ liệu mới nhất
-  } catch (error) {
-    showMessage('Lỗi lưu dữ liệu: ' + error.message, true);
-  }
-}
+    async function submitSales() {
+      const now = new Date();
+      const branch = salesData.branches[currentBranchIndex];
+      const soldItems = [];
 
-function showMessage(msg, isError = false) {
-  const el = document.getElementById('message');
-  el.textContent = msg;
-  el.style.color = isError ? 'red' : 'green';
-}
+      branch.menu.forEach((item, index) => {
+        const qty = parseInt(document.getElementById(`qty-${index}`).value);
+        if (qty > 0) {
+          soldItems.push({ name: item.name, qty, price: item.price });
+          item.stock -= qty; // Cập nhật tồn kho
+        }
+      });
 
-fetchSalesData();
-</script>
+      if (soldItems.length === 0) {
+        document.getElementById('submitMessage').textContent = 'Vui lòng chọn ít nhất 1 món.';
+        document.getElementById('submitMessage').style.color = 'red';
+        return;
+      }
 
+      salesData.logs.push({
+        branch: branch.name,
+        date: now.toISOString(),
+        items: soldItems
+      });
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(salesData)
+        });
+        if (res.ok) {
+          document.getElementById('submitMessage').textContent = '✅ Đã ghi nhận đơn hàng!';
+          document.getElementById('submitMessage').style.color = 'green';
+          renderMenu(); // Làm mới số lượng
+        } else {
+          throw new Error();
+        }
+      } catch (err) {
+        document.getElementById('submitMessage').textContent = '❌ Lỗi khi gửi dữ liệu.';
+        document.getElementById('submitMessage').style.color = 'red';
+      }
+    }
+  </script>
 </body>
 </html>
