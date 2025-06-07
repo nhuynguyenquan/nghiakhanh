@@ -32,12 +32,12 @@
     <div id="salesSection" class="hidden">
       <h2 id="branchTitle"></h2>
       <div id="menuList"></div>
-      <button onclick="sendOrder()">🧾 Gửi đơn hàng</button>
+      <button id="submitOrderBtn" onclick="sendOrder()">🧾 Gửi đơn hàng</button>
     </div>
   </div>
 
   <script>
-   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhI7zyIP90908M4JkyTjV_wG5RyY4hmC3VgLUjW3fgAXp0JYMAh1WznFrBD6FDpeVElA/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhI7zyIP90908M4JkyTjV_wG5RyY4hmC3VgLUjW3fgAXp0JYMAh1WznFrBD6FDpeVElA/exec';
     let salesData = {};
     let branchName = "";
     let branchData = null;
@@ -50,7 +50,6 @@
         const res = await fetch(SCRIPT_URL);
         salesData = await res.json();
 
-        // Kiểm tra PIN phía client
         const pinMap = salesData.pins || {};
         branchName = pinMap[pin];
 
@@ -59,7 +58,6 @@
           return;
         }
 
-        // Tìm chi nhánh
         branchData = salesData.branches.find(b => b.name === branchName);
         if (!branchData) {
           document.getElementById("loginError").textContent = "❌ Không tìm thấy chi nhánh.";
@@ -94,7 +92,11 @@
       });
     }
 
-    function sendOrder() {
+    async function sendOrder() {
+      const btn = document.getElementById("submitOrderBtn");
+      btn.disabled = true;
+      btn.innerText = "Đang gửi...";
+
       const items = [];
       const rows = document.querySelectorAll(".menu-item");
 
@@ -106,17 +108,18 @@
 
       if (items.length === 0) {
         alert("⚠️ Vui lòng chọn ít nhất 1 món.");
+        btn.disabled = false;
+        btn.innerText = "🧾 Gửi đơn hàng";
         return;
       }
 
-      // ➕ Thêm log mới
+      // Cập nhật logs và trừ kho
       salesData.logs.push({
         date: new Date().toISOString(),
         branch: branchName,
         items
       });
 
-      // ➖ Trừ số lượng
       items.forEach(order => {
         const menuItem = branchData.menu.find(m => m.name === order.name);
         if (menuItem) {
@@ -125,25 +128,27 @@
         }
       });
 
-      // 🔄 Gửi toàn bộ dữ liệu
-      fetch(SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        mode:'no-cors',
-        body: JSON.stringify(salesData)
-      })
-      .then(res => res.json())
-      .then(res => {
-        if (res.status === "ok") {
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(salesData)
+        });
+
+        const result = await res.json();
+        if (result.status === "ok") {
           alert("✅ Gửi đơn thành công!");
-          renderMenu(); // reset form
+          renderMenu();
         } else {
           alert("❌ Gửi thất bại.");
         }
-      })
-      .catch(err => {
-        
-      });
+      } catch (err) {
+        console.error(err);
+        alert("⚠️ Không thể kết nối server.");
+      }
+
+      btn.disabled = false;
+      btn.innerText = "🧾 Gửi đơn hàng";
     }
   </script>
 </body>
