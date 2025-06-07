@@ -2,120 +2,172 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Bán hàng - Nhụy Nguyên</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 16px; background: #f4f4f4; max-width: 500px; margin: auto; }
-    h2 { color: #333; }
-    select, input, button { width: 100%; padding: 10px; margin-top: 10px; font-size: 16px; }
-    button { background-color: #28a745; color: white; border: none; cursor: pointer; }
-    button:hover { background-color: #218838; }
-    .success { color: green; margin-top: 10px; }
-    .error { color: red; margin-top: 10px; }
-    ul { list-style: none; padding: 0; }
-    li { background: white; margin: 5px 0; padding: 10px; border-radius: 5px; }
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      margin: 0;
+      background: #f9f9f9;
+    }
+    .hidden { display: none; }
+    .pin-container, .sales-container {
+      max-width: 400px;
+      margin: auto;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    h2 { text-align: center; }
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 8px 0;
+    }
+    .item-row input {
+      width: 60px;
+      margin-left: 10px;
+    }
+    button {
+      background: #28a745;
+      color: white;
+      border: none;
+    }
+    button:hover {
+      background: #218838;
+    }
   </style>
 </head>
 <body>
-  <h2>Bán hàng - Chi nhánh <span id="branchLabel"></span></h2>
 
-  <select id="productSelect"></select>
-  <input type="number" id="quantityInput" placeholder="Số lượng bán" min="1" />
-  <button onclick="submitSale()">Ghi nhận bán hàng</button>
+  <!-- Đăng nhập bằng PIN -->
+  <div class="pin-container" id="loginSection">
+    <h2>Đăng nhập</h2>
+    <input type="password" id="pinInput" placeholder="Nhập mã PIN"/>
+    <button onclick="checkPin()">Vào hệ thống</button>
+    <p id="pinError" style="color:red; text-align:center;"></p>
+  </div>
 
-  <div id="message"></div>
-  <h3>Lịch sử bán hôm nay:</h3>
-  <ul id="saleLog"></ul>
+  <!-- Giao diện bán hàng -->
+  <div class="sales-container hidden" id="salesSection">
+    <h2 id="branchTitle">Bán hàng</h2>
+    <div id="menuList"></div>
+    <button onclick="submitSales()">Gửi đơn hàng</button>
+    <p id="message" style="text-align:center;"></p>
+  </div>
 
   <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfd_pHMmc9qGXJ4iT2LYXg78-WSxXVTHr5O0EeGcs5pa4RlZMB2Gs1xETul4XI-hPFTw/exec';
-    const PIN = localStorage.getItem('pin');
-    let salesData = null;
-    let currentBranch = null;
+    let fullData = {};
+    let branchName = "";
+    let sales = [];
 
-    async function loadData() {
-      const res = await fetch(SCRIPT_URL);
-      salesData = await res.json();
+    // Kiểm tra PIN
+    function checkPin() {
+      const pin = document.getElementById("pinInput").value.trim();
+      if (!pin) return;
 
-      const branchName = salesData.pins?.[PIN];
-      if (!branchName) return showMessage("Mã PIN không hợp lệ.", true);
-
-      currentBranch = salesData.branches.find(b => b.name === branchName);
-      if (!currentBranch) return showMessage("Không tìm thấy chi nhánh.", true);
-
-      document.getElementById('branchLabel').innerText = branchName;
-      loadMenu(currentBranch.menu);
-      loadLogs(branchName);
+      fetch(SCRIPT_URL)
+        .then(res => res.json())
+        .then(data => {
+          fullData = data;
+          const matchedBranch = data.pins?.[pin];
+          if (matchedBranch) {
+            branchName = matchedBranch;
+            localStorage.setItem("pin", pin);
+            showSalesUI();
+          } else {
+            document.getElementById("pinError").innerText = "Mã PIN không đúng.";
+          }
+        })
+        .catch(err => {
+          document.getElementById("pinError").innerText = "Không thể tải dữ liệu.";
+        });
     }
 
-    function loadMenu(menu) {
-      const select = document.getElementById('productSelect');
-      select.innerHTML = '';
-      menu.forEach(item => {
-        const option = document.createElement('option');
-        option.value = item.name;
-        option.text = `${item.name} (Còn: ${item.stock})`;
-        select.appendChild(option);
+    // Hiển thị UI bán hàng
+    function showSalesUI() {
+      document.getElementById("loginSection").classList.add("hidden");
+      document.getElementById("salesSection").classList.remove("hidden");
+      document.getElementById("branchTitle").innerText = "Chi nhánh: " + branchName;
+
+      const branch = fullData.branches.find(b => b.name === branchName);
+      if (!branch) return;
+
+      const list = document.getElementById("menuList");
+      list.innerHTML = "";
+      branch.menu.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "item-row";
+        row.innerHTML = `
+          <span>${item.name} (${item.stock})</span>
+          <input type="number" min="0" value="0" data-name="${item.name}" />
+        `;
+        list.appendChild(row);
       });
     }
 
-    function loadLogs(branchName) {
-      const today = new Date().toISOString().split('T')[0];
-      const logs = salesData.logs?.filter(log => log.branch === branchName && log.date === today) || [];
-      const list = document.getElementById('saleLog');
-      list.innerHTML = '';
-      logs.forEach(log => {
-        const li = document.createElement('li');
-        li.innerText = `${log.time}: ${log.item} x${log.quantity}`;
-        list.appendChild(li);
+    // Gửi đơn hàng
+    function submitSales() {
+      const inputs = document.querySelectorAll("#menuList input");
+      const orders = [];
+      inputs.forEach(input => {
+        const qty = parseInt(input.value);
+        if (qty > 0) {
+          orders.push({
+            name: input.dataset.name,
+            quantity: qty
+          });
+        }
       });
-    }
 
-    async function submitSale() {
-      const item = document.getElementById('productSelect').value;
-      const quantity = parseInt(document.getElementById('quantityInput').value);
-      if (!item || !quantity || quantity <= 0) return showMessage("Vui lòng nhập thông tin hợp lệ", true);
+      if (orders.length === 0) {
+        document.getElementById("message").innerText = "Vui lòng nhập số lượng.";
+        return;
+      }
 
-      // Giảm tồn kho + ghi log
-      const now = new Date();
       const log = {
-        date: now.toISOString().split('T')[0],
-        time: now.toLocaleTimeString('vi-VN'),
-        item,
-        quantity,
-        branch: currentBranch.name
+        date: new Date().toISOString(),
+        branch: branchName,
+        items: orders
       };
 
-      const product = currentBranch.menu.find(p => p.name === item);
-      if (product.stock < quantity) return showMessage("Không đủ tồn kho", true);
-      product.stock -= quantity;
-      salesData.logs = salesData.logs || [];
-      salesData.logs.push(log);
-
-      const res = await fetch(SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify(salesData),
-        mode:'no-cors',
-        headers: { 'Content-Type': 'application/json' }
+      // Gửi dữ liệu
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify(log),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      .then(res => res.json())
+      .then(res => {
+        document.getElementById("message").innerText = "✅ Gửi thành công!";
+        document.querySelectorAll("#menuList input").forEach(i => i.value = "0");
+      })
+      .catch(err => {
+        document.getElementById("message").innerText = "❌ Gửi thất bại.";
       });
+    }
 
-      if (res.ok) {
-        showMessage("Đã ghi nhận bán hàng!");
-        loadMenu(currentBranch.menu);
-        loadLogs(currentBranch.name);
-        document.getElementById('quantityInput').value = '';
-      } else {
-        showMessage("Lỗi khi ghi dữ liệu.", true);
+    // Tự động đăng nhập nếu đã lưu PIN
+    window.onload = () => {
+      const savedPin = localStorage.getItem("pin");
+      if (savedPin) {
+        document.getElementById("pinInput").value = savedPin;
+        checkPin();
       }
-    }
-
-    function showMessage(msg, isError = false) {
-      const div = document.getElementById('message');
-      div.innerText = msg;
-      div.className = isError ? 'error' : 'success';
-    }
-
-    loadData();
+    };
   </script>
 </body>
 </html>
