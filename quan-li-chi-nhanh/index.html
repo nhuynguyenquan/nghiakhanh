@@ -43,6 +43,7 @@
     await fetch(SCRIPT_URL, {
       method: "POST",
       body: JSON.stringify(salesData),
+      mode:'no-cors',
       headers: { "Content-Type": "application/json" }
     });
   }
