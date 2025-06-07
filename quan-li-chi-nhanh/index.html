@@ -1,126 +1,39 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quản lý bán hàng - Chi nhánh</title>
-  <style>
-    body { font-family: sans-serif; padding: 10px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-    th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
-    select, input[type=date] { padding: 5px; margin: 5px 0; }
-    .totals { margin-top: 10px; font-weight: bold; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản Lý Bán Hàng</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h2>Quản lý chi nhánh</h2>
-  <label>Chi nhánh:
-    <select id="branchSelect"></select>
-  </label>
-  <label>Chọn ngày:
-    <input type="date" id="dateInput">
-  </label>
+<body class="bg-gray-100 p-4">
+  <div class="max-w-3xl mx-auto">
+    <h1 class="text-2xl font-bold mb-4">Quản Lý Bán Hàng</h1>
 
-  <table id="salesTable">
-    <thead>
-      <tr><th>Món ăn</th><th>Tồn kho</th><th>Đơn giá</th><th>Bán</th><th>Tổng</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <div class="bg-white p-4 rounded shadow mb-4">
+      <label class="block mb-2 font-medium">Chọn chi nhánh:</label>
+      <select id="branchSelect" class="w-full p-2 border rounded"></select>
+    </div>
 
-  <div class="totals">Tổng doanh thu: <span id="totalRevenue">0</span> VND</div>
-  <button onclick="submitSales()">Ghi nhận bán hàng</button>
+    <div class="bg-white p-4 rounded shadow mb-4">
+      <label class="block mb-2 font-medium">Chọn ngày:</label>
+      <input type="date" id="saleDate" class="w-full p-2 border rounded" />
+    </div>
+
+    <div class="bg-white p-4 rounded shadow mb-4">
+      <h2 class="text-lg font-semibold mb-2">Danh sách món ăn</h2>
+      <div id="productList" class="space-y-2"></div>
+    </div>
+
+    <button onclick="submitSales()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+      Ghi nhận bán hàng
+    </button>
+
+    <div id="message" class="mt-4 text-green-600 font-semibold"></div>
+  </div>
 
   <script>
-    const url = 'https://script.google.com/macros/s/AKfycbxiK817F32xKM-Kw2FBSxZo4_-IFF2lXMlcaezt3ytuiQjxLpex8Cq_nKSZ8BIt5YR2Fg/exec';
-    let data = {}, currentBranch = '', today = new Date().toISOString().split('T')[0];
-
-    document.getElementById('dateInput').value = today;
-
-    fetch(url)
-      .then(res => res.json())
-      .then(json => {
-        data = json;
-        const branches = Object.keys(data.branches);
-        const select = document.getElementById('branchSelect');
-        branches.forEach(b => select.innerHTML += `<option>${b}</option>`);
-        currentBranch = branches[0];
-        select.value = currentBranch;
-        renderTable();
-      });
-
-    document.getElementById('branchSelect').addEventListener('change', e => {
-      currentBranch = e.target.value;
-      renderTable();
-    });
-
-    function renderTable() {
-      const tbody = document.querySelector('#salesTable tbody');
-      tbody.innerHTML = '';
-      const stock = data.branches[currentBranch].stock;
-
-      stock.forEach(item => {
-        tbody.innerHTML += `
-          <tr>
-            <td>${item.name}</td>
-            <td>${item.stock}</td>
-            <td>${item.price}</td>
-            <td><input type="number" min="0" max="${item.stock}" value="0" data-name="${item.name}" data-price="${item.price}" onchange="calcTotal(this)"></td>
-            <td class="total">0</td>
-          </tr>`;
-      });
-    }
-
-    function calcTotal(input) {
-      const row = input.parentElement.parentElement;
-      const qty = Number(input.value);
-      const price = Number(input.dataset.price);
-      row.querySelector('.total').innerText = qty * price;
-
-      const totals = [...document.querySelectorAll('.total')].map(td => Number(td.innerText));
-      document.getElementById('totalRevenue').innerText = totals.reduce((a, b) => a + b, 0);
-    }
-
-    function submitSales() {
-      const date = document.getElementById('dateInput').value;
-      const inputs = document.querySelectorAll('input[type=number]');
-      const sales = [];
-      inputs.forEach(input => {
-        const qty = Number(input.value);
-        if (qty > 0) {
-          const name = input.dataset.name;
-          const price = Number(input.dataset.price);
-          sales.push({ name, quantity: qty, total: qty * price });
-        }
-      });
-
-      if (!sales.length) return alert('Chưa nhập số lượng nào');
-
-      const payload = {
-        branches: {
-          [currentBranch]: {
-            logs: [
-              {
-                date,
-                sales
-              }
-            ]
-          }
-        }
-      };
-
-      fetch(url, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-        mode: "no-cors",
-        headers: { 'Content-Type': 'application/json' }
-      })
-      .then(res => res.json())
-      .then(resp => {
-        if (resp.status === 'ok') alert('Đã ghi nhận bán hàng thành công!');
-        else alert('Lỗi ghi dữ liệu.');
-      });
-    }
+    <?!= include('client'); ?>
   </script>
 </body>
 </html>
