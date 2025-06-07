@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý chi nhánh Nhụy Nguyên</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f9f9f9; }
+    h1, h2 { color: #2c3e50; }
+    .branch { margin-bottom: 30px; padding: 15px; background: #fff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #eee; }
+    input[type="number"], input[type="text"] { width: 100px; }
+    button { padding: 5px 10px; cursor: pointer; }
+    .report { margin-top: 10px; font-weight: bold; color: #16a085; }
+    .add-form { margin-top: 15px; background: #f1f1f1; padding: 10px; border-radius: 6px; } /* 👈 NEW */
+  </style>
+</head>
+<body>
+
+<h1>🔧 Quản lý Chi Nhánh - Nhụy Nguyên</h1>
+<div id="branchContainer">Đang tải dữ liệu...</div>
+
+<script>
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfd_pHMmc9qGXJ4iT2LYXg78-WSxXVTHr5O0EeGcs5pa4RlZMB2Gs1xETul4XI-hPFTw/exec://script.google.com/macros/s/XXX/exec'; // Thay bằng URL của bạn
+  const TELEGRAM_TOKEN = '7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY';                         // Thay bằng token bot
+  const CHAT_ID = '6249154937';                                  // Thay bằng chat_id
+
+  let salesData = { branches: [], logs: [] };
+
+  async function fetchSalesData() {
+    try {
+      const res = await fetch(SCRIPT_URL);
+      salesData = await res.json();
+      renderBranches();
+    } catch (e) {
+      document.getElementById('branchContainer').innerHTML = '❌ Lỗi tải dữ liệu';
+      console.error(e);
+    }
+  }
+
+  async function saveSalesData() {
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify(salesData),
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+
+  async function sendTelegramMessage(message) {
+    const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: CHAT_ID, text: message })
+    });
+  }
+
+  function renderBranches() {
+    const container = document.getElementById('branchContainer');
+    container.innerHTML = '';
+
+    salesData.branches.forEach((branch, index) => {
+      const branchDiv = document.createElement('div');
+      branchDiv.className = 'branch';
+
+      branchDiv.innerHTML = `
+        <h2>${branch.name}</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Món</th>
+              <th>Tồn kho</th>
+              <th>Giá</th>
+              <th>Số lượng bán</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${branch.menu.map((item, i) => `
+              <tr>
+                <td>${item.name}</td>
+                <td id="stock-${index}-${i}">${item.stock}</td>
+                <td>${item.price.toLocaleString()}₫</td>
+                <td><input type="number" id="qty-${index}-${i}" min="1" max="${item.stock}" /></td>
+                <td><button onclick="sellItem(${index}, ${i})">Bán</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <!-- 👇 NEW: Form thêm sản phẩm -->
+        <div class="add-form">
+          <h4>➕ Thêm món mới</h4>
+          <input type="text" id="new-name-${index}" placeholder="Tên món" />
+          <input type="number" id="new-stock-${index}" placeholder="Tồn kho" />
+          <input type="number" id="new-price-${index}" placeholder="Giá" />
+          <button onclick="addItem(${index})">Thêm món</button>
+        </div>
+
+        <div class="report" id="report-${index}">Đang thống kê...</div>
+      `;
+
+      container.appendChild(branchDiv);
+    });
+
+    salesData.branches.forEach((b, i) => generateReport(i));
+  }
+
+  function generateReport(branchIndex) {
+    const branch = salesData.branches[branchIndex];
+    const logs = salesData.logs.filter(log => log.branch === branch.name);
+    const reportDiv = document.getElementById(`report-${branchIndex}`);
+
+    let totalRevenue = 0, totalItems = 0;
+    logs.forEach(log => {
+      const item = branch.menu.find(i => i.name === log.item);
+      if (item) {
+        totalRevenue += item.price * log.quantity;
+        totalItems += log.quantity;
+      }
+    });
+
+    reportDiv.innerHTML = `📊 Doanh thu: ${totalRevenue.toLocaleString()}₫ – Tổng số món bán: ${totalItems}`;
+  }
+
+  async function sellItem(branchIndex, itemIndex) {
+    const qtyInput = document.getElementById(`qty-${branchIndex}-${itemIndex}`);
+    const quantity = parseInt(qtyInput.value);
+
+    if (!quantity || quantity <= 0) {
+      alert("Vui lòng nhập số lượng hợp lệ.");
+      return;
+    }
+
+    const item = salesData.branches[branchIndex].menu[itemIndex];
+    if (quantity > item.stock) {
+      alert("Không đủ hàng tồn kho.");
+      return;
+    }
+
+    item.stock -= quantity;
+    document.getElementById(`stock-${branchIndex}-${itemIndex}`).textContent = item.stock;
+    qtyInput.value = '';
+
+    const log = {
+      branch: salesData.branches[branchIndex].name,
+      item: item.name,
+      quantity: quantity,
+      time: new Date().toISOString()
+    };
+    salesData.logs.push(log);
+
+    await saveSalesData();
+    await sendTelegramMessage(`📦 Đã bán ${quantity} x ${item.name} tại ${log.branch} lúc ${new Date().toLocaleTimeString()}`);
+    generateReport(branchIndex);
+
+    alert(`✅ Đã bán ${quantity} ${item.name}`);
+  }
+
+  // 👇 NEW: Hàm thêm sản phẩm
+  async function addItem(branchIndex) {
+    const name = document.getElementById(`new-name-${branchIndex}`).value.trim();
+    const stock = parseInt(document.getElementById(`new-stock-${branchIndex}`).value);
+    const price = parseInt(document.getElementById(`new-price-${branchIndex}`).value);
+
+    if (!name || isNaN(stock) || isNaN(price) || stock <= 0 || price <= 0) {
+      alert("Vui lòng nhập đầy đủ và hợp lệ.");
+      return;
+    }
+
+    salesData.branches[branchIndex].menu.push({ name, stock, price });
+    await saveSalesData();
+    alert(`✅ Đã thêm món ${name}`);
+    fetchSalesData(); // Cập nhật lại giao diện
+  }
+
+  fetchSalesData();
+</script>
+
+</body>
+</html>
