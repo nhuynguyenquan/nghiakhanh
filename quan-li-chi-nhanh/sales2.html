@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đăng nhập PIN - Chi nhánh</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .login-container {
+      background: #fff;
+      padding: 30px 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    input[type="password"] {
+      padding: 12px;
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 16px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 12px;
+      width: 100%;
+      background: #007BFF;
+      color: white;
+      border: none;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .message {
+      margin-top: 16px;
+      font-size: 15px;
+    }
+
+    .success {
+      color: green;
+    }
+
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>🔐 Đăng nhập bằng mã PIN</h2>
+    <input type="password" id="pinInput" placeholder="Nhập mã PIN" />
+    <button onclick="login()">Đăng nhập</button>
+    <div class="message" id="messageBox"></div>
+  </div>
+
+  <script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbd5QQ5B8KThT2Zbl3h_2vHRbLk2T45_Wc2Kbr6AtbRedfxKxravAC6bPfPAilg8WbFQ/exec';
+
+    async function login() {
+      const pin = document.getElementById("pinInput").value.trim();
+      const messageBox = document.getElementById("messageBox");
+
+      messageBox.textContent = "Đang kiểm tra...";
+      messageBox.className = "message";
+
+      if (!pin) {
+        messageBox.textContent = "Vui lòng nhập mã PIN.";
+        messageBox.classList.add("error");
+        return;
+      }
+
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "checkPin", pin })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          messageBox.textContent = "✔ Đăng nhập thành công - Chi nhánh: " + result.branch;
+          messageBox.classList.add("success");
+
+          // 👉 Ở đây bạn có thể chuyển sang giao diện bán hàng chi nhánh
+          // Ví dụ:
+          // window.location.href = `banhang.html?branch=${encodeURIComponent(result.branch)}`;
+        } else {
+          messageBox.textContent = result.message || "Mã PIN không đúng.";
+          messageBox.classList.add("error");
+        }
+      } catch (err) {
+        messageBox.textContent = "⚠ Lỗi kết nối đến server.";
+        messageBox.classList.add("error");
+      }
+    }
+  </script>
+</body>
+</html>
