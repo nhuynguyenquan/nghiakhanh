@@ -70,7 +70,13 @@ function renderBranches() {
     const div = document.createElement('div');
     div.className = 'branch';
 
-    let html = `<h2>${branch.name}</h2>`;
+    let html = `
+  <h2>${branch.name}</h2>
+  <label>Mã PIN: 
+    <input type="password" value="${branch.pin || ''}" 
+           onchange="editPin(${bIndex}, this.value)">
+  </label>
+`;
 
     html += `<table><tr><th>Món</th><th>Tồn kho</th><th>Giá</th><th>Bán</th><th></th></tr>`;
     branch.menu.forEach((item, iIndex) => {
@@ -126,7 +132,8 @@ function renderReport() {
 function addBranch() {
   const name = document.getElementById('newBranchName').value.trim();
   if (!name) return alert('Nhập tên chi nhánh!');
-  salesData.branches.push({ name, menu: [] });
+  const pin = prompt("Nhập mã PIN cho chi nhánh:");
+  salesData.branches.push({ name, pin, menu: [] });
   saveData();
 }
 
@@ -174,7 +181,10 @@ async function sendTelegram(msg) {
     body: JSON.stringify({ chat_id: CHAT_ID, text: msg })
   });
 }
-
+function editPin(bIndex, newPin) {
+  salesData.branches[bIndex].pin = newPin;
+  saveData(false);
+}
 async function saveData(refresh = true) {
   await fetch(SCRIPT_URL, {
     method: 'POST',
