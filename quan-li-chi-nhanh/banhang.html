@@ -183,11 +183,13 @@
     // if (result.status === "ok") { ... }
 
     alert("✅ Gửi đơn thành công!");
-    renderMenu(); // cập nhật lại số lượng còn trong kho
+    renderMenu(); 
+    renderTodayStats();
   } catch (err) {
     console.error(err);
     alert("⚠️ Đã có lỗi xảy ra khi gửi dữ liệu....Tải lại trang.");
     renderMenu();
+    renderTodayStats();
   }
 
   btn.disabled = false;
