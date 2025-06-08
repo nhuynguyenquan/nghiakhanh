@@ -100,10 +100,11 @@
   const items = [];
   const rows = document.querySelectorAll(".menu-item");
 
+  // Lấy danh sách món có số lượng > 0
   rows.forEach(row => {
     const name = row.dataset.name;
-    const qty = Number(row.querySelector("input").value);
-    if (qty > 0) items.push({ name, quantity: qty }); // đảm bảo quantity là số
+    const qty = parseInt(row.querySelector("input").value);
+    if (qty > 0) items.push({ name, quantity: qty });
   });
 
   if (items.length === 0) {
@@ -113,53 +114,52 @@
     return;
   }
 
-  // Đảm bảo log đúng cấu trúc
-  const logEntry = {
-    date: new Date().toISOString(),
-    branch: branchName,
-    items: items.map(item => ({
-      name: item.name,
-      quantity: Number(item.quantity)
-    }))
-  };
+  const now = new Date().toISOString();
 
-  salesData.logs.push(logEntry);
-
-  // Trừ kho
+  // Ghi log từng món theo đúng định dạng
   items.forEach(order => {
     const menuItem = branchData.menu.find(m => m.name === order.name);
+    const price = menuItem ? menuItem.price : 0;
+
+    salesData.logs.push({
+      branch: branchName,
+      item: order.name,
+      quantity: order.quantity,
+      price,
+      time: now
+    });
+
+    // Trừ kho
     if (menuItem) {
       menuItem.stock -= order.quantity;
       if (menuItem.stock < 0) menuItem.stock = 0;
     }
   });
 
-  // 🧪 Debug: in ra log mới
-  console.log("🧾 Ghi log:", logEntry);
-
   try {
     const res = await fetch(SCRIPT_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },mode:'no-cors',
+      headers: { "Content-Type": "application/json" },
+      mode: "no-cors", 
       body: JSON.stringify(salesData)
     });
 
-    const result = await res.json();
-    if (result.status === "ok") {
-      alert("✅ Gửi đơn thành công!");
-      renderMenu();
-    } else {
-      alert("❌ Gửi thất bại.");
-    }
+    // Nếu server trả kết quả (dùng mode: 'cors'), có thể xử lý kết quả ở đây
+    // const result = await res.json();
+    // if (result.status === "ok") { ... }
+
+    alert("✅ Gửi đơn thành công!");
+    renderMenu(); // cập nhật lại số lượng còn trong kho
   } catch (err) {
-    console.error("Lỗi ghi dữ liệu:", err);
-    alert("⚠️ Tải lại trang để tiếp tục.");
+    console.error(err);
+    alert("⚠️ Tải lại trang.");
     renderMenu();
   }
 
   btn.disabled = false;
   btn.innerText = "🧾 Gửi đơn hàng";
 }
+
   </script>
 </body>
 </html>
