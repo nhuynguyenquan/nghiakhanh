@@ -16,6 +16,39 @@
     .hidden { display: none; }
     #loginSection { text-align: center; }
     #loginSection input { padding: 10px; width: 80%; margin-bottom: 10px; }
+ 
+  .today-stats {
+    margin-top: 20px;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #f9f9f9;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    font-family: system-ui, sans-serif;
+  }
+
+  .today-stats h3 {
+    margin-top: 0;
+    color: #333;
+    font-size: 18px;
+  }
+
+  .today-stats ul {
+    padding-left: 20px;
+    margin: 10px 0;
+  }
+
+  .today-stats li {
+    line-height: 1.6;
+    color: #444;
+  }
+
+  .today-stats strong {
+    display: block;
+    margin-top: 10px;
+    color: #000;
+    font-size: 16px;
+  }
   </style>
 </head>
 <body>
@@ -33,6 +66,7 @@
       <h2 id="branchTitle"></h2>
       <div id="menuList"></div>
       <button id="submitOrderBtn" onclick="sendOrder()">🧾 Gửi đơn hàng</button>
+      <div id="statsToday" class="today-stats"></div>
     </div>
   </div>
 
@@ -159,7 +193,32 @@
   btn.disabled = false;
   btn.innerText = "🧾 Gửi đơn hàng";
 }
+function renderTodayStats() {
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const logsToday = salesData.logs.filter(log =>
+    log.time?.startsWith(today) && log.branch === branchName
+  );
 
+  const summary = {};
+  let total = 0;
+
+  logsToday.forEach(log => {
+    if (!summary[log.item]) summary[log.item] = { quantity: 0, total: 0 };
+    summary[log.item].quantity += log.quantity;
+    summary[log.item].total += log.quantity * log.price;
+    total += log.quantity * log.price;
+  });
+
+  const statsDiv = document.getElementById("statsToday");
+  statsDiv.innerHTML = `<h3>📊 Đơn hàng hôm nay:</h3><ul>
+    ${Object.entries(summary)
+      .map(
+        ([name, s]) =>
+          `<li>${name}: ${s.quantity} món ~ ${s.total.toLocaleString()}đ</li>`
+      )
+      .join("")}
+  </ul><strong>💰 Tổng tiền: ${total.toLocaleString()}đ</strong>`;
+}
   </script>
 </body>
 </html>
