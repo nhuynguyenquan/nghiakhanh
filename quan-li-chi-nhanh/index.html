@@ -138,16 +138,18 @@ function renderReport() {
 
   salesData.logs.forEach(log => {
     if (dateFilter && !log.time.startsWith(dateFilter)) return;
-    const branch = salesData.branches.find(b => b.name === log.branch);
-    const item = branch?.menu.find(i => i.name === log.item);
-    if (!item) return;
 
-    totalRevenue += item.price * log.quantity;
+    totalRevenue += (log.price || 0) * log.quantity;
     totalItems += log.quantity;
     counts[log.item] = (counts[log.item] || 0) + log.quantity;
   });
 
-  const topItems = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>`${k} (${v})`).join(', ');
+  const topItems = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([k, v]) => `${k} (${v})`)
+    .join(', ');
+
   report.innerText = `Tổng doanh thu: ${totalRevenue.toLocaleString()}₫, Số món bán: ${totalItems}, Món bán chạy: ${topItems}`;
 }
 
@@ -185,13 +187,16 @@ function sell(bIndex, iIndex) {
   const qty = parseInt(input.value);
   const item = salesData.branches[bIndex].menu[iIndex];
   if (!qty || qty <= 0 || qty > item.stock) return alert('Số lượng không hợp lệ.');
+
   item.stock -= qty;
   salesData.logs.push({
     branch: salesData.branches[bIndex].name,
     item: item.name,
     quantity: qty,
+    price: item.price, // 👉 Lưu giá tại thời điểm bán
     time: new Date().toISOString()
   });
+
   sendTelegram(`Đã bán ${qty} ${item.name} tại ${salesData.branches[bIndex].name}`);
   saveData();
 }
