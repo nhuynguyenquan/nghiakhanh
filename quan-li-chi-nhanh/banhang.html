@@ -216,7 +216,7 @@ function renderTodayStats() {
     ${Object.entries(summary)
       .map(
         ([name, s]) =>
-          `<li>${name}: ${s.quantity} suất/cái ~ ${s.total.toLocaleString()}đ</li>`
+          `<li>${name}: ${s.quantity} cái ~ ${s.total.toLocaleString()}đ</li>`
       )
       .join("")}
   </ul><strong>💰 Tổng tiền: ${total.toLocaleString()}đ</strong>`;
