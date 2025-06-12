@@ -77,7 +77,11 @@
       
     </div></div>
     <div id="stock" class="tab-content hidden">📊 <b>Tồn kho bánh</b> <div id="stockArea"></div></div>
-    <div id="sales" class="tab-content hidden">🛒 <b>Bán hàng</b> <div id="salesArea"></div></div>
+    <div id="sales" class="tab-content hidden">🛒 <b>Bán hàng</b> <div id="salesArea">
+      <input onchange="showRecipePreview(this.value)" list="products" placeholder="Chọn món">
+<span id="recipePreview" class="text-sm text-gray-600"></span>
+
+    </div></div>
     <div id="reports" class="tab-content hidden">📈 <b>Báo cáo thống kê</b> <div id="reportsArea"></div></div>
   </div>
 
@@ -344,6 +348,64 @@ function addNewRecipe() {
 document.querySelector('[data-tab="recipes"]').addEventListener("click", renderRecipes);
 
 
+function submitSale(branchId, productName, quantity) {
+  quantity = parseInt(quantity);
+  if (!recipes[productName]) {
+    alert("Không tìm thấy công thức cho sản phẩm này.");
+    return;
+  }
+
+  const ingredients = recipes[productName];
+  const branch = salesData.branches.find(b => b.id === branchId);
+  if (!branch) {
+    alert("Không tìm thấy chi nhánh.");
+    return;
+  }
+
+  // Kiểm tra đủ nguyên liệu không
+  for (const [ingName, ingQty] of Object.entries(ingredients)) {
+    const required = ingQty * quantity;
+    const available = branch.menu.find(item => item.name === ingName)?.stock || 0;
+    if (available < required) {
+      alert(`Kho ${ingName} không đủ (cần ${required}, còn ${available})`);
+      return;
+    }
+  }
+
+  // Trừ kho nguyên liệu
+  for (const [ingName, ingQty] of Object.entries(ingredients)) {
+    const required = ingQty * quantity;
+    const item = branch.menu.find(item => item.name === ingName);
+    if (item) {
+      item.stock -= required;
+    }
+  }
+
+  // Ghi log bán hàng
+  const today = new Date().toISOString().split("T")[0];
+  if (!branch.logs[today]) branch.logs[today] = [];
+  branch.logs[today].push({
+    product: productName,
+    quantity: quantity,
+    time: new Date().toLocaleTimeString()
+  });
+
+  alert("✅ Đã bán hàng và cập nhật kho.");
+  saveSalesData(); // Ghi lại vào file sales.json
+  renderMenu(branchId); // Cập nhật hiển thị lại kho
+}
+function showRecipePreview(productName, quantity = 1) {
+  const recipe = recipes[productName];
+  if (!recipe) {
+    document.getElementById("recipePreview").innerText = "Không có công thức.";
+    return;
+  }
+
+  const list = Object.entries(recipe)
+    .map(([name, qty]) => `${name}: ${qty * quantity}`)
+    .join(", ");
+  document.getElementById("recipePreview").innerText = `Sẽ trừ: ${list}`;
+}
 
   </script>
 </body>
