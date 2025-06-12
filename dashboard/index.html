@@ -3,126 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Quản lý kho - Nhụy Nguyên</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f7f7f7;
-    }
-
-    header {
-      background-color: #ff6600;
-      color: white;
-      text-align: center;
-      padding: 15px;
-      font-size: 20px;
-      font-weight: bold;
-    }
-
-    .container {
-      padding: 15px;
-    }
-
-    .section {
-      background: white;
-      border-radius: 10px;
-      padding: 15px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-
-    .section h2 {
-      margin-top: 0;
-      color: #ff6600;
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
-
-    .stock-item, .log-item, .item {
-      padding: 8px 0;
-      border-bottom: 1px solid #eee;
-    }
-
-    .stock-item:last-child, .log-item:last-child, .item:last-child {
-      border-bottom: none;
-    }
-
-    .key {
-      font-weight: bold;
-    }
-
-    .value {
-      float: right;
-      color: #333;
-    }
-
-    .log-item {
-      font-size: 14px;
-    }
-
-    @media (max-width: 600px) {
-      .section h2 {
-        font-size: 16px;
-      }
-    }
-  </style>
+  <title>Dashboard Quản Lý Quán Bánh</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-  <header>📦 Quản lý kho - Nhụy Nguyên</header>
-  <div class="container">
-    <div class="section" id="stockSection">
-      <h2>Tồn kho hiện tại</h2>
-      <div id="stockList">Đang tải...</div>
+<body class="bg-gray-100 text-gray-800">
+  <div class="max-w-screen-xl mx-auto p-4">
+    <h1 class="text-3xl font-bold mb-4">🎂 Dashboard Quản Lý Quán Bánh</h1>
+
+    <!-- Tab Menu -->
+    <div class="flex space-x-2 mb-4">
+      <button class="tab-btn px-4 py-2 bg-blue-500 text-white rounded" data-tab="ingredients">Nguyên liệu</button>
+      <button class="tab-btn px-4 py-2 bg-blue-500 text-white rounded" data-tab="recipes">Công thức</button>
+      <button class="tab-btn px-4 py-2 bg-blue-500 text-white rounded" data-tab="production">Sản xuất</button>
+      <button class="tab-btn px-4 py-2 bg-blue-500 text-white rounded" data-tab="stock">Kho bánh</button>
+      <button class="tab-btn px-4 py-2 bg-blue-500 text-white rounded" data-tab="sales">Bán hàng</button>
+      <button class="tab-btn px-4 py-2 bg-blue-500 text-white rounded" data-tab="reports">Báo cáo</button>
     </div>
 
-    <div class="section" id="logSection">
-      <h2>Lịch sử nhập/xuất</h2>
-      <div id="logList">Đang tải...</div>
-    </div>
-
-    <div class="section" id="itemSection">
-      <h2>Danh mục sản phẩm</h2>
-      <div id="itemList">Đang tải...</div>
-    </div>
+    <!-- Tab Contents -->
+    <div id="ingredients" class="tab-content hidden">📦 <b>Quản lý nguyên liệu</b> <div id="ingredientsArea"></div></div>
+    <div id="recipes" class="tab-content hidden">📘 <b>Định mức sản phẩm</b> <div id="recipesArea"></div></div>
+    <div id="production" class="tab-content hidden">🏭 <b>Kế hoạch sản xuất</b> <div id="productionArea"></div></div>
+    <div id="stock" class="tab-content hidden">📊 <b>Tồn kho bánh</b> <div id="stockArea"></div></div>
+    <div id="sales" class="tab-content hidden">🛒 <b>Bán hàng</b> <div id="salesArea"></div></div>
+    <div id="reports" class="tab-content hidden">📈 <b>Báo cáo thống kê</b> <div id="reportsArea"></div></div>
   </div>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const key = params.get('key');
+    // Kích hoạt tab
+    const tabs = document.querySelectorAll('.tab-btn');
+    const contents = document.querySelectorAll('.tab-content');
+    tabs.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tabId = btn.dataset.tab;
+        contents.forEach(c => c.classList.add('hidden'));
+        document.getElementById(tabId).classList.remove('hidden');
+      });
+    });
 
-    if (!key || !sessionStorage.getItem(key)) {
-      window.location.href = 'loader.html';
-    } else {
-      const data = JSON.parse(sessionStorage.getItem(key));
-
-      const stockList = document.getElementById('stockList');
-      stockList.innerHTML = '';
-      for (let k in data.stock) {
-        stockList.innerHTML += `<div class="stock-item"><span class="key">${k}</span><span class="value">${data.stock[k]}</span></div>`;
-      }
-
-      const logList = document.getElementById('logList');
-      logList.innerHTML = '';
-      if (data.logs.length === 0) {
-        logList.innerHTML = '<i>Chưa có lịch sử giao dịch</i>';
-      } else {
-        data.logs.slice(-20).reverse().forEach(log => {
-          logList.innerHTML += `<div class="log-item">• ${log.time || log.date || 'N/A'} - ${log.action || 'Giao dịch'}: ${log.name} (${log.quantity})</div>`;
-        });
-      }
-
-      const itemList = document.getElementById('itemList');
-      itemList.innerHTML = '';
-      if (data.items.length === 0) {
-        itemList.innerHTML = '<i>Không có sản phẩm nào được khai báo</i>';
-      } else {
-        data.items.forEach(name => {
-          itemList.innerHTML += `<div class="item">• ${name}</div>`;
-        });
-      }
-    }
+    // Load dữ liệu cho từng tab sau này từ JS
   </script>
 </body>
 </html>
