@@ -270,6 +270,19 @@ function updatePlanList() {
   ).join("");
   document.getElementById("planList").innerHTML = list;
 }
+document.querySelector('[data-tab="production"]').addEventListener("click", () => {
+  const select = document.getElementById("productSelect");
+  if (select.options.length === 0) {
+    Object.keys(recipes).forEach(p => {
+      const option = document.createElement("option");
+      option.value = p;
+      option.textContent = p;
+      select.appendChild(option);
+    });
+    updateStockList();
+    updatePlanList();
+  }
+});
 
   </script>
 </body>
