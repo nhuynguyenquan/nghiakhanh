@@ -129,6 +129,113 @@ function adjustIngredient(index, isAdd) {
 // Gọi khi mở tab
 document.querySelector('[data-tab="ingredients"]').addEventListener("click", renderIngredientsTable);
 
+
+// Dữ liệu mẫu
+const recipes = {
+  "Bánh mì bơ tỏi": { "Bột mì": 0.3, "Trứng": 1, "Bơ": 0.05 },
+  "Bánh bông lan": { "Bột mì": 0.2, "Trứng": 2, "Sữa": 0.1 }
+};
+
+let ingredientsStock = {
+  "Bột mì": 10,
+  "Trứng": 50,
+  "Bơ": 2,
+  "Sữa": 5
+};
+
+let planLogs = []; // danh sách kế hoạch trong ngày
+
+// Khởi tạo giao diện
+window.onload = () => {
+  const select = document.getElementById("productSelect");
+  Object.keys(recipes).forEach(p => {
+    const option = document.createElement("option");
+    option.value = p;
+    option.textContent = p;
+    select.appendChild(option);
+  });
+  updateStockList();
+  updatePlanList();
+};
+
+// Đổi tab
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// Tính nguyên liệu cần
+function calculateIngredients() {
+  const product = document.getElementById("productSelect").value;
+  const quantity = parseInt(document.getElementById("quantityInput").value);
+  const ingredients = recipes[product];
+  const output = [];
+
+  let allGood = true;
+
+  for (let ing in ingredients) {
+    const required = ingredients[ing] * quantity;
+    const available = ingredientsStock[ing] ?? 0;
+    const status = available >= required ? "✅ Đủ" : "❌ Thiếu";
+
+    if (available < required) allGood = false;
+
+    output.push(`<li>${ing}: cần <b>${required}</b>, còn <b>${available}</b> → 
+      <span class="${available >= required ? "sufficient" : "insufficient"}">${status}</span></li>`);
+  }
+
+  document.getElementById("ingredientsNeeded").innerHTML = `
+    <ul>${output.join("")}</ul>
+    <p><b>Kết luận:</b> ${allGood ? "✅ Đủ nguyên liệu" : "❌ Không đủ nguyên liệu"}</p>
+  `;
+}
+
+// Lưu kế hoạch
+function savePlan() {
+  const product = document.getElementById("productSelect").value;
+  const quantity = parseInt(document.getElementById("quantityInput").value);
+  const ingredients = recipes[product];
+
+  // Kiểm tra
+  for (let ing in ingredients) {
+    const required = ingredients[ing] * quantity;
+    if ((ingredientsStock[ing] ?? 0) < required) {
+      document.getElementById("message").textContent = `❌ Không đủ: ${ing}`;
+      return;
+    }
+  }
+
+  // Trừ kho
+  for (let ing in ingredients) {
+    ingredientsStock[ing] -= ingredients[ing] * quantity;
+  }
+
+  // Lưu vào log kế hoạch
+  const today = new Date().toISOString().split("T")[0];
+  planLogs.push({ date: today, product, quantity });
+
+  document.getElementById("message").textContent = "✅ Đã lưu kế hoạch & trừ nguyên liệu!";
+  document.getElementById("ingredientsNeeded").innerHTML = "";
+  updateStockList();
+  updatePlanList();
+}
+
+// Hiển thị tồn kho
+function updateStockList() {
+  const list = Object.entries(ingredientsStock).map(
+    ([ing, qty]) => `<li>${ing}: <b>${qty.toFixed(2)}</b></li>`
+  ).join("");
+  document.getElementById("stockList").innerHTML = list;
+}
+
+// Hiển thị kế hoạch hôm nay
+function updatePlanList() {
+  const list = planLogs.map(p =>
+    `<li>${p.date}: ${p.product} × <b>${p.quantity}</b></li>`
+  ).join("");
+  document.getElementById("planList").innerHTML = list;
+}
+
   </script>
 </body>
 </html>
