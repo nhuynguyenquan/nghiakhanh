@@ -22,7 +22,24 @@
 
     <!-- Tab Contents -->
     <div id="ingredients" class="tab-content hidden">📦 <b>Quản lý nguyên liệu</b> <div id="ingredientsArea"></div></div>
-    <div id="recipes" class="tab-content hidden">📘 <b>Định mức sản phẩm</b> <div id="recipesArea"></div></div>
+    <div id="recipes" class="tab-content hidden">📘 <b>Định mức sản phẩm</b> <div id="recipesArea">
+      <!-- Hiển thị danh sách công thức -->
+<div class="mb-4">
+  <h2 class="text-xl font-bold mb-2">📘 Danh sách công thức</h2>
+  <div id="recipesList" class="space-y-2"></div>
+</div>
+
+<!-- Form thêm công thức mới -->
+<div class="mt-6">
+  <h2 class="text-xl font-bold mb-2">➕ Thêm công thức mới</h2>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+    <input id="newRecipeName" class="p-2 border rounded" placeholder="Tên sản phẩm (VD: Bánh dứa)" />
+    <input id="newRecipeIngredients" class="p-2 border rounded" placeholder="Nguyên liệu (VD: Bột mì:0.3, Trứng:1)" />
+    <button onclick="addNewRecipe()" class="bg-blue-600 text-white p-2 rounded sm:col-span-2">Thêm công thức</button>
+  </div>
+</div>
+
+    </div></div>
     <div id="production" class="tab-content hidden">🏭 <b>Kế hoạch sản xuất</b> <div id="productionArea">
       <div class="bg-white shadow rounded p-4">
         <h2 class="text-xl font-bold mb-4">🏭 Lập kế hoạch sản xuất</h2>
@@ -283,6 +300,50 @@ document.querySelector('[data-tab="production"]').addEventListener("click", () =
     updatePlanList();
   }
 });
+
+
+function renderRecipes() {
+  const container = document.getElementById('recipesList');
+  container.innerHTML = Object.entries(recipes).map(([name, ingObj]) => {
+    const ings = Object.entries(ingObj)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(', ');
+    return `<div class="p-3 bg-white rounded shadow"><b>${name}</b>: ${ings}</div>`;
+  }).join('');
+}
+function addNewRecipe() {
+  const name = document.getElementById("newRecipeName").value.trim();
+  const ingStr = document.getElementById("newRecipeIngredients").value.trim();
+
+  if (!name || !ingStr) {
+    alert("Vui lòng nhập đầy đủ tên và nguyên liệu.");
+    return;
+  }
+
+  const ingArr = ingStr.split(',').map(x => x.split(':'));
+  const ingObj = {};
+
+  for (let [key, val] of ingArr) {
+    key = key.trim();
+    val = parseFloat(val);
+    if (!key || isNaN(val)) {
+      alert("Định dạng nguyên liệu không hợp lệ. VD: Bột mì:0.2, Trứng:1");
+      return;
+    }
+    ingObj[key] = val;
+  }
+
+  recipes[name] = ingObj;
+
+  document.getElementById("newRecipeName").value = "";
+  document.getElementById("newRecipeIngredients").value = "";
+
+  renderRecipes();
+  alert("✅ Đã thêm công thức mới!");
+}
+document.querySelector('[data-tab="recipes"]').addEventListener("click", renderRecipes);
+
+
 
   </script>
 </body>
