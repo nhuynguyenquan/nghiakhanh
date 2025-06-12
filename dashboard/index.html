@@ -41,7 +41,94 @@
       });
     });
 
-    // Load dữ liệu cho từng tab sau này từ JS
+   // Dữ liệu nguyên liệu mẫu (đọc từ file ingredients.json sau này)
+let ingredients = [
+  { name: "Bột mì", unit: "kg", quantity: 50 },
+  { name: "Trứng", unit: "quả", quantity: 100 },
+  { name: "Sữa", unit: "lít", quantity: 20 }
+];
+
+// Render bảng nguyên liệu
+function renderIngredientsTable() {
+  const area = document.getElementById('ingredientsArea');
+  area.innerHTML = `
+    <div class="mb-4">
+      <h2 class="text-xl font-bold mb-2">📦 Danh sách nguyên liệu</h2>
+      <table class="w-full table-auto bg-white shadow rounded">
+        <thead>
+          <tr class="bg-gray-200 text-left">
+            <th class="p-2">Nguyên liệu</th>
+            <th class="p-2">Đơn vị</th>
+            <th class="p-2">Số lượng</th>
+            <th class="p-2">Cảnh báo</th>
+            <th class="p-2">Nhập/Xuất</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${ingredients.map((item, i) => `
+            <tr class="border-b">
+              <td class="p-2">${item.name}</td>
+              <td class="p-2">${item.unit}</td>
+              <td class="p-2">${item.quantity}</td>
+              <td class="p-2 text-red-600">${item.quantity < 10 ? '⚠️ Gần hết' : ''}</td>
+              <td class="p-2">
+                <input type="number" id="amount-${i}" class="w-20 p-1 border rounded text-sm" />
+                <button class="bg-green-500 text-white px-2 py-1 rounded ml-1 text-sm" onclick="adjustIngredient(${i}, true)">Nhập</button>
+                <button class="bg-red-500 text-white px-2 py-1 rounded ml-1 text-sm" onclick="adjustIngredient(${i}, false)">Xuất</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-6">
+      <h2 class="text-xl font-bold mb-2">➕ Thêm nguyên liệu mới</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+        <input id="newName" placeholder="Tên nguyên liệu" class="p-2 border rounded" />
+        <input id="newUnit" placeholder="Đơn vị (kg, quả...)" class="p-2 border rounded" />
+        <input id="newQty" placeholder="Số lượng" type="number" class="p-2 border rounded" />
+        <button onclick="addIngredient()" class="bg-blue-600 text-white p-2 rounded">Thêm</button>
+      </div>
+    </div>
+  `;
+}
+
+// Thêm nguyên liệu mới
+function addIngredient() {
+  const name = document.getElementById("newName").value.trim();
+  const unit = document.getElementById("newUnit").value.trim();
+  const qty = parseFloat(document.getElementById("newQty").value);
+
+  if (name && unit && !isNaN(qty)) {
+    ingredients.push({ name, unit, quantity: qty });
+    renderIngredientsTable();
+  } else {
+    alert("Vui lòng nhập đầy đủ thông tin nguyên liệu.");
+  }
+}
+
+// Nhập hoặc xuất nguyên liệu
+function adjustIngredient(index, isAdd) {
+  const input = document.getElementById(`amount-${index}`);
+  const value = parseFloat(input.value);
+
+  if (!isNaN(value) && value > 0) {
+    if (!isAdd && ingredients[index].quantity < value) {
+      alert("Không đủ nguyên liệu để xuất.");
+      return;
+    }
+
+    ingredients[index].quantity += isAdd ? value : -value;
+    renderIngredientsTable();
+  } else {
+    alert("Vui lòng nhập số lượng hợp lệ.");
+  }
+}
+
+// Gọi khi mở tab
+document.querySelector('[data-tab="ingredients"]').addEventListener("click", renderIngredientsTable);
+
   </script>
 </body>
 </html>
