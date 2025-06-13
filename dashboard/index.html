@@ -76,7 +76,28 @@
       </div>
       
     </div></div>
-    <div id="stock" class="tab-content hidden">📊 <b>Tồn kho bánh</b> <div id="stockArea"></div></div>
+    <div id="stock" class="tab-content hidden">📊 <b>Tồn kho bánh</b> <div id="stockArea">
+      <label>Chi nhánh:</label>
+  <select id="branchSelect" onchange="renderMenu()"></select>
+
+  <div>
+    <label>Món bán:</label>
+    <input list="products" id="productName" onchange="showRecipePreview()">
+    <datalist id="products"></datalist>
+
+    <label>Số lượng:</label>
+    <input type="number" id="quantity" value="1" min="1" onchange="showRecipePreview()">
+
+    <button onclick="submitSale()">Bán</button>
+    <div id="recipePreview" class="text-sm"></div>
+  </div>
+
+  <h3>Tồn kho chi nhánh</h3>
+  <table id="stockTable">
+    <thead><tr><th>Tên</th><th>Tồn kho</th></tr></thead>
+    <tbody></tbody>
+  </table>
+    </div></div>
     <div id="sales" class="tab-content hidden">🛒 <b>Bán hàng</b> <div id="salesArea">
       <input onchange="showRecipePreview(this.value)" list="products" placeholder="Chọn món">
 <span id="recipePreview" class="text-sm text-gray-600"></span>
@@ -407,6 +428,93 @@ function showRecipePreview(productName, quantity = 1) {
   document.getElementById("recipePreview").innerText = `Sẽ trừ: ${list}`;
 }
 
+
+let salesData = {
+      branches: [
+        {
+          id: "cn1",
+          name: "Chi nhánh 1",
+          menu: [
+            { name: "Bột mì", stock: 10 },
+            { name: "Trứng", stock: 20 },
+            { name: "Men nở", stock: 5 }
+          ],
+          logs: {}
+        }
+      ],
+      recipes: {
+        "Bánh dứa": { "Bột mì": 0.2, "Trứng": 1 },
+        "Bánh mì": { "Bột mì": 0.15, "Men nở": 0.05 }
+      }
+    };
+
+    let recipes = {};
+
+    function init() {
+      recipes = salesData.recipes || {};
+      const branchSelect = document.getElementById("branchSelect");
+      branchSelect.innerHTML = salesData.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join("");
+      const productList = document.getElementById("products");
+      productList.innerHTML = Object.keys(recipes).map(p => `<option value="${p}">`).join("");
+      renderMenu();
+    }
+
+    function renderMenu() {
+      const branchId = document.getElementById("branchSelect").value;
+      const branch = salesData.branches.find(b => b.id === branchId);
+      const tbody = document.getElementById("stockTable").querySelector("tbody");
+      tbody.innerHTML = branch.menu.map(i => `<tr><td>${i.name}</td><td>${i.stock}</td></tr>`).join("");
+    }
+
+    function showRecipePreview() {
+      const name = document.getElementById("productName").value;
+      const quantity = parseInt(document.getElementById("quantity").value) || 1;
+      const recipe = recipes[name];
+      if (!recipe) {
+        document.getElementById("recipePreview").innerText = "Không có công thức.";
+        return;
+      }
+      const list = Object.entries(recipe)
+        .map(([n, q]) => `${n}: ${q * quantity}`)
+        .join(", ");
+      document.getElementById("recipePreview").innerText = `Sẽ trừ: ${list}`;
+    }
+
+    function submitSale() {
+      const productName = document.getElementById("productName").value;
+      const quantity = parseInt(document.getElementById("quantity").value);
+      const branchId = document.getElementById("branchSelect").value;
+
+      if (!recipes[productName]) return alert("Không có công thức.");
+      const ingredients = recipes[productName];
+      const branch = salesData.branches.find(b => b.id === branchId);
+
+      // Kiểm tra tồn kho
+      for (const [ing, qty] of Object.entries(ingredients)) {
+        const required = qty * quantity;
+        const available = branch.menu.find(i => i.name === ing)?.stock || 0;
+        if (available < required) {
+          return alert(`${ing} không đủ (cần ${required}, còn ${available})`);
+        }
+      }
+
+      // Trừ kho
+      for (const [ing, qty] of Object.entries(ingredients)) {
+        const item = branch.menu.find(i => i.name === ing);
+        if (item) item.stock -= qty * quantity;
+      }
+
+      // Ghi log
+      const today = new Date().toISOString().split("T")[0];
+      if (!branch.logs[today]) branch.logs[today] = [];
+      branch.logs[today].push({ product: productName, quantity, time: new Date().toLocaleTimeString() });
+
+      alert("✅ Đã bán và cập nhật kho.");
+      renderMenu();
+      // saveSalesData(); // Tùy bạn kết nối lưu lại lên server hoặc Drive
+    }
+
+    init();
   </script>
 </body>
 </html>
