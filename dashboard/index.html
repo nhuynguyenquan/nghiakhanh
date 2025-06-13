@@ -2,500 +2,176 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard Quản Lý Quán Bánh</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản lý quán bánh</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    nav { background-color: #333; display: flex; flex-wrap: wrap; }
+    nav button {
+      flex: 1;
+      padding: 1rem;
+      background: #444;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    nav button.active { background: #2196F3; }
+    .tab-content { display: none; padding: 1rem; }
+    .tab-content.active { display: block; }
+    h2 { margin-top: 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    .warning { color: red; font-weight: bold; }
+    input, select, button { margin: 5px 0; padding: 5px; }
+  </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
-  <div class="max-w-screen-xl mx-auto p-4">
-    <h1 class="text-3xl font-bold mb-4">🎂 Dashboard Quản Lý Quán Bánh</h1>
+<body>
+  <nav>
+    <button onclick="showTab('nguyenlieu')" class="active">Nguyên liệu</button>
+    <button onclick="showTab('congthuc')">Công thức</button>
+    <button onclick="showTab('sanxuat')">Sản xuất</button>
+    <button onclick="showTab('khobanh')">Kho bánh</button>
+    <button onclick="showTab('banhang')">Bán hàng</button>
+    <button onclick="showTab('baocao')">Báo cáo</button>
+  </nav>
 
-    <!-- Tab Menu -->
-    <div class="flex space-x-2 mb-4">
-      <button class="tab-btn px-4 py-2 bg-blue-500 text-white rounded" data-tab="ingredients">Nguyên liệu</button>
-      <button class="tab-btn px-4 py-2 bg-blue-500 text-white rounded" data-tab="recipes">Công thức</button>
-      <button class="tab-btn px-4 py-2 bg-blue-500 text-white rounded" data-tab="production">Sản xuất</button>
-      <button class="tab-btn px-4 py-2 bg-blue-500 text-white rounded" data-tab="stock">Kho bánh</button>
-      <button class="tab-btn px-4 py-2 bg-blue-500 text-white rounded" data-tab="sales">Bán hàng</button>
-      <button class="tab-btn px-4 py-2 bg-blue-500 text-white rounded" data-tab="reports">Báo cáo</button>
-    </div>
-
-    <!-- Tab Contents -->
-    <div id="ingredients" class="tab-content hidden">📦 <b>Quản lý nguyên liệu</b> <div id="ingredientsArea"></div></div>
-    <div id="recipes" class="tab-content hidden">📘 <b>Định mức sản phẩm</b> <div id="recipesArea">
-      <!-- Hiển thị danh sách công thức -->
-<div class="mb-4">
-  <h2 class="text-xl font-bold mb-2">📘 Danh sách công thức</h2>
-  <div id="recipesList" class="space-y-2"></div>
-</div>
-
-<!-- Form thêm công thức mới -->
-<div class="mt-6">
-  <h2 class="text-xl font-bold mb-2">➕ Thêm công thức mới</h2>
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-    <input id="newRecipeName" class="p-2 border rounded" placeholder="Tên sản phẩm (VD: Bánh dứa)" />
-    <input id="newRecipeIngredients" class="p-2 border rounded" placeholder="Nguyên liệu (VD: Bột mì:0.3, Trứng:1)" />
-    <button onclick="addNewRecipe()" class="bg-blue-600 text-white p-2 rounded sm:col-span-2">Thêm công thức</button>
+  <div id="nguyenlieu" class="tab-content active">
+    <h2>Quản lý Nguyên liệu</h2>
+    <table id="nguyenlieuTable">
+      <thead>
+        <tr><th>Tên</th><th>Số lượng</th><th>Đơn vị</th><th>Trạng thái</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <h3>Nhập / Xuất nguyên liệu</h3>
+    <input type="text" id="tenNguyenLieu" placeholder="Tên nguyên liệu">
+    <input type="number" id="soLuongNguyenLieu" placeholder="Số lượng">
+    <select id="loaiGiaoDich">
+      <option value="nhap">Nhập</option>
+      <option value="xuat">Xuất</option>
+    </select>
+    <button onclick="capNhatNguyenLieu()">Lưu</button>
+    <h3>Thêm nguyên liệu mới</h3>
+    <input type="text" id="tenMoi" placeholder="Tên">
+    <input type="text" id="donViMoi" placeholder="Đơn vị">
+    <input type="number" id="soLuongMoi" placeholder="Số lượng ban đầu">
+    <button onclick="themNguyenLieu()">Thêm</button>
   </div>
-</div>
 
-    </div></div>
-    <div id="production" class="tab-content hidden">🏭 <b>Kế hoạch sản xuất</b> <div id="productionArea">
-      <div class="bg-white shadow rounded p-4">
-        <h2 class="text-xl font-bold mb-4">🏭 Lập kế hoạch sản xuất</h2>
-        
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-          <div>
-            <label class="block mb-1 font-medium">Chọn sản phẩm:</label>
-            <select id="productSelect" class="w-full border rounded p-2"></select>
-          </div>
-          <div>
-            <label class="block mb-1 font-medium">Số lượng cần sản xuất:</label>
-            <input id="quantityInput" type="number" class="w-full border rounded p-2" placeholder="Nhập số lượng" />
-          </div>
-          <div class="flex items-end">
-            <button onclick="calculateIngredients()" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Kiểm tra nguyên liệu</button>
-          </div>
-        </div>
-      
-        <div id="ingredientsNeeded" class="mb-4 text-sm"></div>
-        <button onclick="savePlan()" class="bg-green-600 text-white px-4 py-2 rounded">✅ Lưu kế hoạch sản xuất</button>
-        <p id="message" class="mt-2 text-sm font-semibold text-red-600"></p>
-      
-        <hr class="my-6" />
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <h3 class="text-lg font-bold mb-2">📦 Tồn kho nguyên liệu</h3>
-            <ul id="stockList" class="list-disc list-inside text-sm"></ul>
-          </div>
-          <div>
-            <h3 class="text-lg font-bold mb-2">📅 Kế hoạch sản xuất hôm nay</h3>
-            <ul id="planList" class="list-disc list-inside text-sm"></ul>
-          </div>
-        </div>
-      </div>
-      
-    </div></div>
-    <div id="stock" class="tab-content hidden">📊 <b>Tồn kho bánh</b> <div id="stockArea">
-      
-    </div></div>
-    <div id="sales" class="tab-content hidden">🛒 <b>Bán hàng</b> <div id="salesArea">
-      <input onchange="showRecipePreview(this.value)" list="products" placeholder="Chọn món">
-<span id="recipePreview" class="text-sm text-gray-600"></span>
+  <div id="congthuc" class="tab-content">
+    <h2>Quản lý Công thức</h2>
+    <table>
+      <thead>
+        <tr><th>Tên bánh</th><th>Nguyên liệu</th><th>Thao tác</th></tr>
+      </thead>
+      <tbody id="congThucTable">
+        <tr><td>Bánh mì</td><td>Bột: 200g, Men: 5g, Muối: 2g</td><td><button>Sửa</button></td></tr>
+        <tr><td>Bánh kem</td><td>Bột: 300g, Sữa: 100ml, Trứng: 2</td><td><button>Sửa</button></td></tr>
+      </tbody>
+    </table>
+  </div>
 
-    </div></div>
-    <div id="reports" class="tab-content hidden">📈 <b>Báo cáo thống kê</b> <div id="reportsArea"></div></div>
+  <div id="sanxuat" class="tab-content">
+    <h2>Ghi nhận sản xuất</h2>
+    <input type="text" placeholder="Tên bánh">
+    <input type="number" placeholder="Số lượng">
+    <button>Ghi nhận</button>
+    <table>
+      <thead>
+        <tr><th>Ngày</th><th>Tên bánh</th><th>Số lượng</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>2025-06-08</td><td>Bánh mì</td><td>100</td></tr>
+        <tr><td>2025-06-08</td><td>Bánh kem</td><td>20</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="khobanh" class="tab-content">
+    <h2>Kho Bánh</h2>
+    <table>
+      <thead>
+        <tr><th>Tên bánh</th><th>Số lượng tồn</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Bánh mì</td><td>50</td></tr>
+        <tr><td>Bánh kem</td><td>10</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="banhang" class="tab-content">
+    <h2>Bán Hàng</h2>
+    <input type="text" placeholder="Tên bánh">
+    <input type="number" placeholder="Số lượng bán">
+    <button>Ghi nhận bán</button>
+    <table>
+      <thead>
+        <tr><th>Ngày</th><th>Tên bánh</th><th>Số lượng bán</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>2025-06-08</td><td>Bánh mì</td><td>20</td></tr>
+        <tr><td>2025-06-08</td><td>Bánh kem</td><td>5</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="baocao" class="tab-content">
+    <h2>Báo Cáo</h2>
+    <p><strong>Tổng sản xuất hôm nay:</strong> Bánh mì: 100, Bánh kem: 20</p>
+    <p><strong>Tổng bán hôm nay:</strong> Bánh mì: 20, Bánh kem: 5</p>
+    <p><strong>Tồn kho hiện tại:</strong> Bánh mì: 50, Bánh kem: 10</p>
   </div>
 
   <script>
-    // Kích hoạt tab
-    const tabs = document.querySelectorAll('.tab-btn');
-    const contents = document.querySelectorAll('.tab-content');
-    tabs.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tabId = btn.dataset.tab;
-        contents.forEach(c => c.classList.add('hidden'));
-        document.getElementById(tabId).classList.remove('hidden');
+    let nguyenLieu = [
+      { ten: "Bột mì", soLuong: 5, donVi: "kg" },
+      { ten: "Trứng", soLuong: 20, donVi: "quả" },
+      { ten: "Đường", soLuong: 3, donVi: "kg" }
+    ];
+
+    function showTab(tabId) {
+      document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
+      document.querySelectorAll("nav button").forEach(btn => btn.classList.remove("active"));
+      document.getElementById(tabId).classList.add("active");
+      event.target.classList.add("active");
+      if (tabId === "nguyenlieu") loadNguyenLieu();
+    }
+
+    function loadNguyenLieu() {
+      const tbody = document.querySelector("#nguyenlieuTable tbody");
+      tbody.innerHTML = "";
+      nguyenLieu.forEach(nl => {
+        const row = document.createElement("tr");
+        const canhBao = nl.soLuong < 2 ? "<span class='warning'>Gần hết</span>" : "";
+        row.innerHTML = `<td>${nl.ten}</td><td>${nl.soLuong}</td><td>${nl.donVi}</td><td>${canhBao}</td>`;
+        tbody.appendChild(row);
       });
-    });
-
-   // Dữ liệu nguyên liệu mẫu (đọc từ file ingredients.json sau này)
-let ingredients = [
-  { name: "Bột mì", unit: "kg", quantity: 50 },
-  { name: "Trứng", unit: "quả", quantity: 100 },
-  { name: "Sữa", unit: "lít", quantity: 20 }
-];
-
-// Render bảng nguyên liệu
-function renderIngredientsTable() {
-  const area = document.getElementById('ingredientsArea');
-  area.innerHTML = `
-    <div class="mb-4">
-      <h2 class="text-xl font-bold mb-2">📦 Danh sách nguyên liệu</h2>
-      <table class="w-full table-auto bg-white shadow rounded">
-        <thead>
-          <tr class="bg-gray-200 text-left">
-            <th class="p-2">Nguyên liệu</th>
-            <th class="p-2">Đơn vị</th>
-            <th class="p-2">Số lượng</th>
-            <th class="p-2">Cảnh báo</th>
-            <th class="p-2">Nhập/Xuất</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${ingredients.map((item, i) => `
-            <tr class="border-b">
-              <td class="p-2">${item.name}</td>
-              <td class="p-2">${item.unit}</td>
-              <td class="p-2">${item.quantity}</td>
-              <td class="p-2 text-red-600">${item.quantity < 10 ? '⚠️ Gần hết' : ''}</td>
-              <td class="p-2">
-                <input type="number" id="amount-${i}" class="w-20 p-1 border rounded text-sm" />
-                <button class="bg-green-500 text-white px-2 py-1 rounded ml-1 text-sm" onclick="adjustIngredient(${i}, true)">Nhập</button>
-                <button class="bg-red-500 text-white px-2 py-1 rounded ml-1 text-sm" onclick="adjustIngredient(${i}, false)">Xuất</button>
-              </td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-
-    <div class="mt-6">
-      <h2 class="text-xl font-bold mb-2">➕ Thêm nguyên liệu mới</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
-        <input id="newName" placeholder="Tên nguyên liệu" class="p-2 border rounded" />
-        <input id="newUnit" placeholder="Đơn vị (kg, quả...)" class="p-2 border rounded" />
-        <input id="newQty" placeholder="Số lượng" type="number" class="p-2 border rounded" />
-        <button onclick="addIngredient()" class="bg-blue-600 text-white p-2 rounded">Thêm</button>
-      </div>
-    </div>
-  `;
-}
-
-// Thêm nguyên liệu mới
-function addIngredient() {
-  const name = document.getElementById("newName").value.trim();
-  const unit = document.getElementById("newUnit").value.trim();
-  const qty = parseFloat(document.getElementById("newQty").value);
-
-  if (name && unit && !isNaN(qty)) {
-    ingredients.push({ name, unit, quantity: qty });
-    renderIngredientsTable();
-  } else {
-    alert("Vui lòng nhập đầy đủ thông tin nguyên liệu.");
-  }
-}
-
-// Nhập hoặc xuất nguyên liệu
-function adjustIngredient(index, isAdd) {
-  const input = document.getElementById(`amount-${index}`);
-  const value = parseFloat(input.value);
-
-  if (!isNaN(value) && value > 0) {
-    if (!isAdd && ingredients[index].quantity < value) {
-      alert("Không đủ nguyên liệu để xuất.");
-      return;
     }
 
-    ingredients[index].quantity += isAdd ? value : -value;
-    renderIngredientsTable();
-  } else {
-    alert("Vui lòng nhập số lượng hợp lệ.");
-  }
-}
-
-// Gọi khi mở tab
-document.querySelector('[data-tab="ingredients"]').addEventListener("click", renderIngredientsTable);
-
-//Tính năng lập kế hoạch sản xuất
-// Dữ liệu mẫu
-const recipes = {
-  "Bánh mì bơ tỏi": { "Bột mì": 0.3, "Trứng": 1, "Bơ": 0.05 },
-  "Bánh bông lan": { "Bột mì": 0.2, "Trứng": 2, "Sữa": 0.1 }
-};
-
-let ingredientsStock = {
-  "Bột mì": 10,
-  "Trứng": 50,
-  "Bơ": 2,
-  "Sữa": 5
-};
-
-let planLogs = []; // danh sách kế hoạch trong ngày
-
-// Khởi tạo giao diện
-window.onload = () => {
-  const select = document.getElementById("productSelect");
-  Object.keys(recipes).forEach(p => {
-    const option = document.createElement("option");
-    option.value = p;
-    option.textContent = p;
-    select.appendChild(option);
-  });
-  updateStockList();
-  updatePlanList();
-};
-
-// Đổi tab
-function showTab(id) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-// Tính nguyên liệu cần
-function calculateIngredients() {
-  const product = document.getElementById("productSelect").value;
-  const quantity = parseInt(document.getElementById("quantityInput").value);
-  const ingredients = recipes[product];
-  const output = [];
-
-  let allGood = true;
-
-  for (let ing in ingredients) {
-    const required = ingredients[ing] * quantity;
-    const available = ingredientsStock[ing] ?? 0;
-    const status = available >= required ? "✅ Đủ" : "❌ Thiếu";
-
-    if (available < required) allGood = false;
-
-    output.push(`<li>${ing}: cần <b>${required}</b>, còn <b>${available}</b> → 
-      <span class="${available >= required ? "sufficient" : "insufficient"}">${status}</span></li>`);
-  }
-
-  document.getElementById("ingredientsNeeded").innerHTML = `
-    <ul>${output.join("")}</ul>
-    <p><b>Kết luận:</b> ${allGood ? "✅ Đủ nguyên liệu" : "❌ Không đủ nguyên liệu"}</p>
-  `;
-}
-
-// Lưu kế hoạch
-function savePlan() {
-  const product = document.getElementById("productSelect").value;
-  const quantity = parseInt(document.getElementById("quantityInput").value);
-  const ingredients = recipes[product];
-
-  // Kiểm tra
-  for (let ing in ingredients) {
-    const required = ingredients[ing] * quantity;
-    if ((ingredientsStock[ing] ?? 0) < required) {
-      document.getElementById("message").textContent = `❌ Không đủ: ${ing}`;
-      return;
-    }
-  }
-
-  // Trừ kho
-  for (let ing in ingredients) {
-    ingredientsStock[ing] -= ingredients[ing] * quantity;
-  }
-
-  // Lưu vào log kế hoạch
-  const today = new Date().toISOString().split("T")[0];
-  planLogs.push({ date: today, product, quantity });
-
-  document.getElementById("message").textContent = "✅ Đã lưu kế hoạch & trừ nguyên liệu!";
-  document.getElementById("ingredientsNeeded").innerHTML = "";
-  updateStockList();
-  updatePlanList();
-}
-
-// Hiển thị tồn kho
-function updateStockList() {
-  const list = Object.entries(ingredientsStock).map(
-    ([ing, qty]) => `<li>${ing}: <b>${qty.toFixed(2)}</b></li>`
-  ).join("");
-  document.getElementById("stockList").innerHTML = list;
-}
-
-// Hiển thị kế hoạch hôm nay
-function updatePlanList() {
-  const list = planLogs.map(p =>
-    `<li>${p.date}: ${p.product} × <b>${p.quantity}</b></li>`
-  ).join("");
-  document.getElementById("planList").innerHTML = list;
-}
-document.querySelector('[data-tab="production"]').addEventListener("click", () => {
-  const select = document.getElementById("productSelect");
-  if (select.options.length === 0) {
-    Object.keys(recipes).forEach(p => {
-      const option = document.createElement("option");
-      option.value = p;
-      option.textContent = p;
-      select.appendChild(option);
-    });
-    updateStockList();
-    updatePlanList();
-  }
-});
-
-
-function renderRecipes() {
-  const container = document.getElementById('recipesList');
-  container.innerHTML = Object.entries(recipes).map(([name, ingObj]) => {
-    const ings = Object.entries(ingObj)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join(', ');
-    return `<div class="p-3 bg-white rounded shadow"><b>${name}</b>: ${ings}</div>`;
-  }).join('');
-}
-function addNewRecipe() {
-  const name = document.getElementById("newRecipeName").value.trim();
-  const ingStr = document.getElementById("newRecipeIngredients").value.trim();
-
-  if (!name || !ingStr) {
-    alert("Vui lòng nhập đầy đủ tên và nguyên liệu.");
-    return;
-  }
-
-  const ingArr = ingStr.split(',').map(x => x.split(':'));
-  const ingObj = {};
-
-  for (let [key, val] of ingArr) {
-    key = key.trim();
-    val = parseFloat(val);
-    if (!key || isNaN(val)) {
-      alert("Định dạng nguyên liệu không hợp lệ. VD: Bột mì:0.2, Trứng:1");
-      return;
-    }
-    ingObj[key] = val;
-  }
-
-  recipes[name] = ingObj;
-
-  document.getElementById("newRecipeName").value = "";
-  document.getElementById("newRecipeIngredients").value = "";
-
-  renderRecipes();
-  alert("✅ Đã thêm công thức mới!");
-}
-document.querySelector('[data-tab="recipes"]').addEventListener("click", renderRecipes);
-
-
-function submitSale(branchId, productName, quantity) {
-  quantity = parseInt(quantity);
-  if (!recipes[productName]) {
-    alert("Không tìm thấy công thức cho sản phẩm này.");
-    return;
-  }
-
-  const ingredients = recipes[productName];
-  const branch = salesData.branches.find(b => b.id === branchId);
-  if (!branch) {
-    alert("Không tìm thấy chi nhánh.");
-    return;
-  }
-
-  // Kiểm tra đủ nguyên liệu không
-  for (const [ingName, ingQty] of Object.entries(ingredients)) {
-    const required = ingQty * quantity;
-    const available = branch.menu.find(item => item.name === ingName)?.stock || 0;
-    if (available < required) {
-      alert(`Kho ${ingName} không đủ (cần ${required}, còn ${available})`);
-      return;
-    }
-  }
-
-  // Trừ kho nguyên liệu
-  for (const [ingName, ingQty] of Object.entries(ingredients)) {
-    const required = ingQty * quantity;
-    const item = branch.menu.find(item => item.name === ingName);
-    if (item) {
-      item.stock -= required;
-    }
-  }
-
-  // Ghi log bán hàng
-  const today = new Date().toISOString().split("T")[0];
-  if (!branch.logs[today]) branch.logs[today] = [];
-  branch.logs[today].push({
-    product: productName,
-    quantity: quantity,
-    time: new Date().toLocaleTimeString()
-  });
-
-  alert("✅ Đã bán hàng và cập nhật kho.");
-  saveSalesData(); // Ghi lại vào file sales.json
-  renderMenu(branchId); // Cập nhật hiển thị lại kho
-}
-function showRecipePreview(productName, quantity = 1) {
-  const recipe = recipes[productName];
-  if (!recipe) {
-    document.getElementById("recipePreview").innerText = "Không có công thức.";
-    return;
-  }
-
-  const list = Object.entries(recipe)
-    .map(([name, qty]) => `${name}: ${qty * quantity}`)
-    .join(", ");
-  document.getElementById("recipePreview").innerText = `Sẽ trừ: ${list}`;
-}
-
-
-let salesData = {
-      branches: [
-        {
-          id: "cn1",
-          name: "Chi nhánh 1",
-          menu: [
-            { name: "Bột mì", stock: 10 },
-            { name: "Trứng", stock: 20 },
-            { name: "Men nở", stock: 5 }
-          ],
-          logs: {}
-        }
-      ],
-      recipes: {
-        "Bánh dứa": { "Bột mì": 0.2, "Trứng": 1 },
-        "Bánh mì": { "Bột mì": 0.15, "Men nở": 0.05 }
+    function themNguyenLieu() {
+      const ten = document.getElementById("tenMoi").value;
+      const donVi = document.getElementById("donViMoi").value;
+      const soLuong = parseFloat(document.getElementById("soLuongMoi").value);
+      if (ten && donVi && !isNaN(soLuong)) {
+        nguyenLieu.push({ ten, donVi, soLuong });
+        loadNguyenLieu();
       }
-    };
-
-    let recipes = {};
-
-    function init() {
-      recipes = salesData.recipes || {};
-      const branchSelect = document.getElementById("branchSelect");
-      branchSelect.innerHTML = salesData.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join("");
-      const productList = document.getElementById("products");
-      productList.innerHTML = Object.keys(recipes).map(p => `<option value="${p}">`).join("");
-      renderMenu();
     }
 
-    function renderMenu() {
-      const branchId = document.getElementById("branchSelect").value;
-      const branch = salesData.branches.find(b => b.id === branchId);
-      const tbody = document.getElementById("stockTable").querySelector("tbody");
-      tbody.innerHTML = branch.menu.map(i => `<tr><td>${i.name}</td><td>${i.stock}</td></tr>`).join("");
-    }
-
-    function showRecipePreview() {
-      const name = document.getElementById("productName").value;
-      const quantity = parseInt(document.getElementById("quantity").value) || 1;
-      const recipe = recipes[name];
-      if (!recipe) {
-        document.getElementById("recipePreview").innerText = "Không có công thức.";
-        return;
+    function capNhatNguyenLieu() {
+      const ten = document.getElementById("tenNguyenLieu").value;
+      const soLuong = parseFloat(document.getElementById("soLuongNguyenLieu").value);
+      const loai = document.getElementById("loaiGiaoDich").value;
+      const item = nguyenLieu.find(nl => nl.ten.toLowerCase() === ten.toLowerCase());
+      if (item && !isNaN(soLuong)) {
+        if (loai === "nhap") item.soLuong += soLuong;
+        else if (loai === "xuat") item.soLuong = Math.max(0, item.soLuong - soLuong);
+        loadNguyenLieu();
       }
-      const list = Object.entries(recipe)
-        .map(([n, q]) => `${n}: ${q * quantity}`)
-        .join(", ");
-      document.getElementById("recipePreview").innerText = `Sẽ trừ: ${list}`;
     }
 
-    function submitSale() {
-      const productName = document.getElementById("productName").value;
-      const quantity = parseInt(document.getElementById("quantity").value);
-      const branchId = document.getElementById("branchSelect").value;
-
-      if (!recipes[productName]) return alert("Không có công thức.");
-      const ingredients = recipes[productName];
-      const branch = salesData.branches.find(b => b.id === branchId);
-
-      // Kiểm tra tồn kho
-      for (const [ing, qty] of Object.entries(ingredients)) {
-        const required = qty * quantity;
-        const available = branch.menu.find(i => i.name === ing)?.stock || 0;
-        if (available < required) {
-          return alert(`${ing} không đủ (cần ${required}, còn ${available})`);
-        }
-      }
-
-      // Trừ kho
-      for (const [ing, qty] of Object.entries(ingredients)) {
-        const item = branch.menu.find(i => i.name === ing);
-        if (item) item.stock -= qty * quantity;
-      }
-
-      // Ghi log
-      const today = new Date().toISOString().split("T")[0];
-      if (!branch.logs[today]) branch.logs[today] = [];
-      branch.logs[today].push({ product: productName, quantity, time: new Date().toLocaleTimeString() });
-
-      alert("✅ Đã bán và cập nhật kho.");
-      renderMenu();
-      // saveSalesData(); // Tùy bạn kết nối lưu lại lên server hoặc Drive
-    }
-
-    init();
+    window.onload = loadNguyenLieu;
   </script>
 </body>
 </html>
