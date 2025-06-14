@@ -34,6 +34,7 @@
   <h2>Nguyên liệu</h2>
   <input id="nlTen" placeholder="Tên nguyên liệu">
   <input id="nlSoLuong" type="number" placeholder="Số lượng">
+  <input id="nlDonVi" placeholder="Đơn vị (vd: gram, ml, cái)">
   <button onclick="themNguyenLieu()">Thêm</button>
   <table id="tableNguyenLieu"></table>
 </div>
@@ -41,7 +42,7 @@
 <div id="congthuc" class="tab" style="display:none">
   <h2>Công thức</h2>
   <input id="ctTen" placeholder="Tên bánh">
-  <textarea id="ctNguyenLieu" placeholder="Tên1:Số lượng, Tên2:Số lượng..."></textarea>
+  <div id="ctListNguyenLieu"></div>
   <button onclick="themCongThuc()">Thêm</button>
   <table id="tableCongThuc"></table>
 </div>
@@ -80,16 +81,28 @@ function showTab(id) {
   document.querySelectorAll('.tab').forEach(tab => tab.style.display = 'none');
   document.getElementById(id).style.display = 'block';
 }
-
+function renderListNguyenLieuForCongThuc() {
+  const div = document.getElementById("ctListNguyenLieu");
+  div.innerHTML = nguyenLieu.map(nl => `
+    <div>
+      <label>${nl.ten} (${nl.donvi}):</label>
+      <input type="number" id="ctsl_${nl.ten}" placeholder="Số lượng">
+    </div>
+  `).join("");
+}
 function themNguyenLieu() {
   const ten = document.getElementById("nlTen").value.trim();
-  const sl = parseInt(document.getElementById("nlSoLuong").value);
-  if (!ten || isNaN(sl)) return alert("Nhập đầy đủ tên và số lượng");
+  const sl = parseFloat(document.getElementById("nlSoLuong").value);
+  const dv = document.getElementById("nlDonVi").value.trim();
+  if (!ten || isNaN(sl) || !dv) return alert("Nhập đầy đủ tên, số lượng và đơn vị");
+
   const item = nguyenLieu.find(i => i.ten === ten);
   if (item) item.soluong += sl;
-  else nguyenLieu.push({ ten, soluong: sl });
+  else nguyenLieu.push({ ten, soluong: sl, donvi: dv });
+
   loadNguyenLieu();
 }
+
 
 function loadNguyenLieu() {
   const table = document.getElementById("tableNguyenLieu");
@@ -99,15 +112,23 @@ function loadNguyenLieu() {
 
 function themCongThuc() {
   const ten = document.getElementById("ctTen").value.trim();
-  const ngl = document.getElementById("ctNguyenLieu").value.trim();
-  if (!ten || !ngl) return alert("Nhập đầy đủ tên và nguyên liệu");
-  const list = ngl.split(",").map(x => {
-    const [t, sl] = x.split(":").map(s => s.trim());
-    return { ten: t, soluong: parseInt(sl) };
+  if (!ten) return alert("Nhập tên bánh");
+
+  const list = [];
+  nguyenLieu.forEach(nl => {
+    const sl = parseFloat(document.getElementById("ctsl_" + nl.ten).value);
+    if (!isNaN(sl) && sl > 0) list.push({ ten: nl.ten, soluong: sl });
   });
+
+  if (list.length === 0) return alert("Phải chọn ít nhất 1 nguyên liệu");
   congThuc[ten] = list;
   loadCongThuc();
   loadBanhSelect();
+}
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach(tab => tab.style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+  if (id === "congthuc") renderListNguyenLieuForCongThuc();
 }
 
 function loadCongThuc() {
@@ -129,20 +150,36 @@ function ghiNhanSanXuat() {
   const ten = document.getElementById("sxTenBanh").value;
   const sl = parseInt(document.getElementById("sxSoLuong").value);
   if (!ten || isNaN(sl)) return alert("Chọn bánh và số lượng");
-  lichSanXuat.push({ ten, soluong: sl, time: new Date().toISOString() });
 
   const ds = congThuc[ten];
+  // Kiểm tra đủ nguyên liệu
+  for (let ng of ds) {
+    const item = nguyenLieu.find(i => i.ten === ng.ten);
+    const required = ng.soluong * sl;
+    if (!item || item.soluong < required) {
+      return alert(`Không đủ nguyên liệu: ${ng.ten}`);
+    }
+  }
+
+  // Trừ nguyên liệu
   ds.forEach(ng => {
     const item = nguyenLieu.find(i => i.ten === ng.ten);
-    if (item) item.soluong -= ng.soluong * sl;
+    item.soluong -= ng.soluong * sl;
   });
 
+  lichSanXuat.push({ ten, soluong: sl, time: new Date().toISOString() });
   tonKho[ten] = (tonKho[ten] || 0) + sl;
 
   loadNguyenLieu();
   loadSanXuat();
   loadKhoBanh();
   saveDataToDrive();
+}
+function loadBanhSelect() {
+  const sx = document.getElementById("sxTenBanh");
+  const bh = document.getElementById("bhTenBanh");
+  const keys = Object.keys(congThuc);
+  sx.innerHTML = bh.innerHTML = keys.map(k => `<option>${k}</option>`).join("");
 }
 
 function loadSanXuat() {
