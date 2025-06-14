@@ -1,255 +1,232 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quản lý quán bánh</title>
+  <meta charset="UTF-8">
+  <title>Quản Lý Sản Xuất Bánh</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-    nav { background-color: #333; display: flex; flex-wrap: wrap; }
-    nav button {
-      flex: 1; padding: 1rem; background: #444;
-      color: white; border: none; cursor: pointer;
-    }
-    nav button.active { background: #2196F3; }
-    .tab-content { display: none; padding: 1rem; }
-    .tab-content.active { display: block; }
-    h2 { margin-top: 0; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    .warning { color: red; font-weight: bold; }
-    input, select, button { margin: 5px 5px 5px 0; padding: 5px; }
+    body { font-family: sans-serif; padding: 10px; max-width: 600px; margin: auto; }
+    h2 { margin-top: 30px; }
+    label, input, select, textarea, button { display: block; width: 100%; margin: 5px 0; }
+    input, select, textarea { padding: 6px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 4px; text-align: left; }
+    .nav { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+    .nav button { flex: 1; padding: 10px; }
   </style>
 </head>
 <body>
-  <nav>
-    <button onclick="showTab('nguyenlieu')" class="active">Nguyên liệu</button>
-    <button onclick="showTab('congthuc')">Công thức</button>
-    <button onclick="showTab('sanxuat')">Sản xuất</button>
-    <button onclick="showTab('khobanh')">Kho bánh</button>
-    <button onclick="showTab('banhang')">Bán hàng</button>
-    <button onclick="showTab('baocao')">Báo cáo</button>
-  </nav>
 
-  <div id="nguyenlieu" class="tab-content active">
-    <h2>Quản lý Nguyên liệu</h2>
-    <table id="nguyenlieuTable">
-      <thead>
-        <tr><th>Tên</th><th>Số lượng</th><th>Đơn vị</th><th>Trạng thái</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <h3>Nhập / Xuất nguyên liệu</h3>
-    <input type="text" id="tenNguyenLieu" placeholder="Tên nguyên liệu">
-    <input type="number" id="soLuongNguyenLieu" placeholder="Số lượng">
-    <select id="loaiGiaoDich">
-      <option value="nhap">Nhập</option>
-      <option value="xuat">Xuất</option>
-    </select>
-    <button onclick="capNhatNguyenLieu()">Lưu</button>
-    <h3>Thêm nguyên liệu mới</h3>
-    <input type="text" id="tenMoi" placeholder="Tên">
-    <input type="text" id="donViMoi" placeholder="Đơn vị">
-    <input type="number" id="soLuongMoi" placeholder="Số lượng ban đầu">
-    <button onclick="themNguyenLieu()">Thêm</button>
-  </div>
+<h1>🧁 Quản Lý Sản Xuất Bánh</h1>
 
-  <div id="congthuc" class="tab-content">
-    <h2>Quản lý Công thức</h2>
-    <table>
-      <thead>
-        <tr><th>Tên bánh</th><th>Nguyên liệu</th></tr>
-      </thead>
-      <tbody id="congThucTable"></tbody>
-    </table>
-  </div>
+<div class="nav">
+  <button onclick="showTab('nguyenlieu')">Nguyên liệu</button>
+  <button onclick="showTab('congthuc')">Công thức</button>
+  <button onclick="showTab('sanxuat')">Sản xuất</button>
+  <button onclick="showTab('banhang')">Bán hàng</button>
+  <button onclick="showTab('baocao')">Báo cáo</button>
+  <button onclick="saveDataToDrive()">💾 Lưu Drive</button>
+  <button onclick="loadDataFromDrive()">🔄 Tải Drive</button>
+</div>
 
-  <div id="sanxuat" class="tab-content">
-    <h2>Ghi nhận sản xuất</h2>
-    <input type="text" id="tenBanhSX" placeholder="Tên bánh">
-    <input type="number" id="soLuongSX" placeholder="Số lượng">
-    <button onclick="ghiNhanSanXuat()">Ghi nhận</button>
-    <table>
-      <thead><tr><th>Ngày</th><th>Tên bánh</th><th>Số lượng</th></tr></thead>
-      <tbody id="lichSanXuatTable"></tbody>
-    </table>
-  </div>
+<!-- Tabs -->
+<div id="nguyenlieu" class="tab">
+  <h2>Nguyên liệu</h2>
+  <input id="nlTen" placeholder="Tên nguyên liệu">
+  <input id="nlSoLuong" type="number" placeholder="Số lượng">
+  <button onclick="themNguyenLieu()">Thêm</button>
+  <table id="tableNguyenLieu"></table>
+</div>
 
-  <div id="khobanh" class="tab-content">
-    <h2>Kho Bánh</h2>
-    <table>
-      <thead><tr><th>Tên bánh</th><th>Số lượng tồn</th></tr></thead>
-      <tbody id="khoBanhTable"></tbody>
-    </table>
-  </div>
+<div id="congthuc" class="tab" style="display:none">
+  <h2>Công thức</h2>
+  <input id="ctTen" placeholder="Tên bánh">
+  <textarea id="ctNguyenLieu" placeholder="Tên1:Số lượng, Tên2:Số lượng..."></textarea>
+  <button onclick="themCongThuc()">Thêm</button>
+  <table id="tableCongThuc"></table>
+</div>
 
-  <div id="banhang" class="tab-content">
-    <h2>Bán Hàng</h2>
-    <input type="text" id="tenBanhBan" placeholder="Tên bánh">
-    <input type="number" id="soLuongBan" placeholder="Số lượng bán">
-    <button onclick="ghiNhanBanHang()">Ghi nhận bán</button>
-    <table>
-      <thead><tr><th>Ngày</th><th>Tên bánh</th><th>Số lượng bán</th></tr></thead>
-      <tbody id="lichBanHangTable"></tbody>
-    </table>
-  </div>
+<div id="sanxuat" class="tab" style="display:none">
+  <h2>Ghi nhận sản xuất</h2>
+  <select id="sxTenBanh"></select>
+  <input id="sxSoLuong" type="number" placeholder="Số lượng">
+  <button onclick="ghiNhanSanXuat()">Ghi nhận</button>
+  <table id="tableSanXuat"></table>
+</div>
 
-  <div id="baocao" class="tab-content">
-    <h2>Báo Cáo</h2>
-    <div id="baoCaoNoiDung"></div>
-  </div>
+<div id="banhang" class="tab" style="display:none">
+  <h2>Ghi nhận bán hàng</h2>
+  <select id="bhTenBanh"></select>
+  <input id="bhSoLuong" type="number" placeholder="Số lượng">
+  <button onclick="ghiNhanBanHang()">Ghi nhận</button>
+  <table id="tableBanHang"></table>
+</div>
 
-  <script>
-    // Dữ liệu mẫu
-    const nguyenLieu = [
-      { ten: "Bột mì", soLuong: 5, donVi: "kg" },
-      { ten: "Trứng", soLuong: 20, donVi: "quả" },
-      { ten: "Đường", soLuong: 3, donVi: "kg" }
-    ];
+<div id="baocao" class="tab" style="display:none">
+  <h2>Tồn kho bánh</h2>
+  <table id="tableKhoBanh"></table>
+</div>
 
-    const congThuc = {
-      "Bánh mì": { "Bột mì": 0.2, "Men": 0.005, "Muối": 0.002 },
-      "Bánh kem": { "Bột mì": 0.3, "Sữa": 0.1, "Trứng": 2 }
-    };
+<script>
+let nguyenLieu = [];
+let congThuc = {};
+let lichSanXuat = [];
+let banHang = [];
+let tonKho = {};
 
-    const lichSanXuat = [];
-    const banHang = [];
+const SERVER_URL = "YOUR_SCRIPT_URL_HERE"; // 👈 Thay bằng URL Google Apps Script
 
-    function showTab(tabId) {
-      document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
-      document.querySelectorAll("nav button").forEach(btn => btn.classList.remove("active"));
-      document.getElementById(tabId).classList.add("active");
-      event.target.classList.add("active");
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach(tab => tab.style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+}
 
-      switch (tabId) {
-        case "nguyenlieu": loadNguyenLieu(); break;
-        case "congthuc": loadCongThuc(); break;
-        case "sanxuat": loadSanXuat(); break;
-        case "khobanh": loadKhoBanh(); break;
-        case "banhang": loadBanHang(); break;
-        case "baocao": loadBaoCao(); break;
-      }
-    }
+function themNguyenLieu() {
+  const ten = document.getElementById("nlTen").value.trim();
+  const sl = parseInt(document.getElementById("nlSoLuong").value);
+  if (!ten || isNaN(sl)) return alert("Nhập đầy đủ tên và số lượng");
+  const item = nguyenLieu.find(i => i.ten === ten);
+  if (item) item.soluong += sl;
+  else nguyenLieu.push({ ten, soluong: sl });
+  loadNguyenLieu();
+}
 
-    function loadNguyenLieu() {
-      const tbody = document.querySelector("#nguyenlieuTable tbody");
-      tbody.innerHTML = "";
-      nguyenLieu.forEach(nl => {
-        const row = document.createElement("tr");
-        const warning = nl.soLuong < 2 ? "<span class='warning'>Gần hết</span>" : "";
-        row.innerHTML = `<td>${nl.ten}</td><td>${nl.soLuong}</td><td>${nl.donVi}</td><td>${warning}</td>`;
-        tbody.appendChild(row);
+function loadNguyenLieu() {
+  const table = document.getElementById("tableNguyenLieu");
+  table.innerHTML = "<tr><th>Tên</th><th>Số lượng</th></tr>" +
+    nguyenLieu.map(i => `<tr><td>${i.ten}</td><td>${i.soluong}</td></tr>`).join("");
+}
+
+function themCongThuc() {
+  const ten = document.getElementById("ctTen").value.trim();
+  const ngl = document.getElementById("ctNguyenLieu").value.trim();
+  if (!ten || !ngl) return alert("Nhập đầy đủ tên và nguyên liệu");
+  const list = ngl.split(",").map(x => {
+    const [t, sl] = x.split(":").map(s => s.trim());
+    return { ten: t, soluong: parseInt(sl) };
+  });
+  congThuc[ten] = list;
+  loadCongThuc();
+  loadBanhSelect();
+}
+
+function loadCongThuc() {
+  const table = document.getElementById("tableCongThuc");
+  table.innerHTML = "<tr><th>Tên bánh</th><th>Nguyên liệu</th></tr>" +
+    Object.entries(congThuc).map(([ten, ds]) =>
+      `<tr><td>${ten}</td><td>${ds.map(i => `${i.ten}:${i.soluong}`).join(", ")}</td></tr>`
+    ).join("");
+}
+
+function loadBanhSelect() {
+  const sx = document.getElementById("sxTenBanh");
+  const bh = document.getElementById("bhTenBanh");
+  const keys = Object.keys(congThuc);
+  sx.innerHTML = bh.innerHTML = keys.map(k => `<option>${k}</option>`).join("");
+}
+
+function ghiNhanSanXuat() {
+  const ten = document.getElementById("sxTenBanh").value;
+  const sl = parseInt(document.getElementById("sxSoLuong").value);
+  if (!ten || isNaN(sl)) return alert("Chọn bánh và số lượng");
+  lichSanXuat.push({ ten, soluong: sl, time: new Date().toISOString() });
+
+  const ds = congThuc[ten];
+  ds.forEach(ng => {
+    const item = nguyenLieu.find(i => i.ten === ng.ten);
+    if (item) item.soluong -= ng.soluong * sl;
+  });
+
+  tonKho[ten] = (tonKho[ten] || 0) + sl;
+
+  loadNguyenLieu();
+  loadSanXuat();
+  loadKhoBanh();
+  saveDataToDrive();
+}
+
+function loadSanXuat() {
+  const table = document.getElementById("tableSanXuat");
+  table.innerHTML = "<tr><th>Bánh</th><th>Số lượng</th><th>Thời gian</th></tr>" +
+    lichSanXuat.map(i => `<tr><td>${i.ten}</td><td>${i.soluong}</td><td>${i.time}</td></tr>`).join("");
+}
+
+function ghiNhanBanHang() {
+  const ten = document.getElementById("bhTenBanh").value;
+  const sl = parseInt(document.getElementById("bhSoLuong").value);
+  if (!ten || isNaN(sl)) return alert("Chọn bánh và số lượng");
+  banHang.push({ ten, soluong: sl, time: new Date().toISOString() });
+  tonKho[ten] = (tonKho[ten] || 0) - sl;
+  loadKhoBanh();
+  loadBanHang();
+  saveDataToDrive();
+}
+
+function loadBanHang() {
+  const table = document.getElementById("tableBanHang");
+  table.innerHTML = "<tr><th>Bánh</th><th>Số lượng</th><th>Thời gian</th></tr>" +
+    banHang.map(i => `<tr><td>${i.ten}</td><td>${i.soluong}</td><td>${i.time}</td></tr>`).join("");
+}
+
+function loadKhoBanh() {
+  const table = document.getElementById("tableKhoBanh");
+  table.innerHTML = "<tr><th>Bánh</th><th>Tồn kho</th></tr>" +
+    Object.entries(tonKho).map(([ten, sl]) =>
+      `<tr><td>${ten}</td><td>${sl}</td></tr>`
+    ).join("");
+}
+
+// ==== Google Drive Functions ====
+
+function saveDataToDrive() {
+  const data = {
+    nguyenLieu,
+    congThuc,
+    lichSanXuat,
+    banHang
+  };
+  fetch(SERVER_URL, {
+    method: "POST",
+    body: JSON.stringify(data)
+  })
+  .then(res => res.text())
+  .then(msg => alert("✅ Đã lưu: " + msg))
+  .catch(err => alert("❌ Lỗi lưu: " + err));
+}
+
+function loadDataFromDrive() {
+  fetch(SERVER_URL)
+    .then(res => res.json())
+    .then(data => {
+      nguyenLieu = data.nguyenLieu || [];
+      congThuc = data.congThuc || {};
+      lichSanXuat = data.lichSanXuat || [];
+      banHang = data.banHang || [];
+
+      tonKho = {};
+      lichSanXuat.forEach(i => {
+        tonKho[i.ten] = (tonKho[i.ten] || 0) + i.soluong;
+        const ds = congThuc[i.ten] || [];
+        ds.forEach(ng => {
+          const item = nguyenLieu.find(k => k.ten === ng.ten);
+          if (item) item.soluong -= ng.soluong * i.soluong;
+        });
       });
-    }
+      banHang.forEach(i => tonKho[i.ten] = (tonKho[i.ten] || 0) - i.soluong);
 
-    function themNguyenLieu() {
-      const ten = document.getElementById("tenMoi").value;
-      const donVi = document.getElementById("donViMoi").value;
-      const soLuong = parseFloat(document.getElementById("soLuongMoi").value);
-      if (ten && donVi && !isNaN(soLuong)) {
-        nguyenLieu.push({ ten, donVi, soLuong });
-        loadNguyenLieu();
-      }
-    }
-
-    function capNhatNguyenLieu() {
-      const ten = document.getElementById("tenNguyenLieu").value;
-      const soLuong = parseFloat(document.getElementById("soLuongNguyenLieu").value);
-      const loai = document.getElementById("loaiGiaoDich").value;
-      const item = nguyenLieu.find(nl => nl.ten.toLowerCase() === ten.toLowerCase());
-      if (item && !isNaN(soLuong)) {
-        if (loai === "nhap") item.soLuong += soLuong;
-        else if (loai === "xuat") item.soLuong = Math.max(0, item.soLuong - soLuong);
-        loadNguyenLieu();
-      }
-    }
-
-    function loadCongThuc() {
-      const tbody = document.getElementById("congThucTable");
-      tbody.innerHTML = "";
-      for (let ten in congThuc) {
-        const ngl = Object.entries(congThuc[ten]).map(([k,v]) => `${k}: ${v}`).join(", ");
-        const row = document.createElement("tr");
-        row.innerHTML = `<td>${ten}</td><td>${ngl}</td>`;
-        tbody.appendChild(row);
-      }
-    }
-
-    function ghiNhanSanXuat() {
-      const ten = document.getElementById("tenBanhSX").value;
-      const sl = parseInt(document.getElementById("soLuongSX").value);
-      if (ten && !isNaN(sl)) {
-        lichSanXuat.push({ ten, soLuong: sl, ngay: new Date().toISOString().split('T')[0] });
-        loadSanXuat();
-        loadKhoBanh();
-        loadBaoCao();
-      }
-    }
-
-    function loadSanXuat() {
-      const tbody = document.getElementById("lichSanXuatTable");
-      tbody.innerHTML = "";
-      lichSanXuat.forEach(item => {
-        const row = document.createElement("tr");
-        row.innerHTML = `<td>${item.ngay}</td><td>${item.ten}</td><td>${item.soLuong}</td>`;
-        tbody.appendChild(row);
-      });
-    }
-
-    function ghiNhanBanHang() {
-      const ten = document.getElementById("tenBanhBan").value;
-      const sl = parseInt(document.getElementById("soLuongBan").value);
-      if (ten && !isNaN(sl)) {
-        banHang.push({ ten, soLuong: sl, ngay: new Date().toISOString().split('T')[0] });
-        loadBanHang();
-        loadKhoBanh();
-        loadBaoCao();
-      }
-    }
-
-    function loadBanHang() {
-      const tbody = document.getElementById("lichBanHangTable");
-      tbody.innerHTML = "";
-      banHang.forEach(item => {
-        const row = document.createElement("tr");
-        row.innerHTML = `<td>${item.ngay}</td><td>${item.ten}</td><td>${item.soLuong}</td>`;
-        tbody.appendChild(row);
-      });
-    }
-
-    function loadKhoBanh() {
-      const kho = {};
-      lichSanXuat.forEach(sp => {
-        kho[sp.ten] = (kho[sp.ten] || 0) + sp.soLuong;
-      });
-      banHang.forEach(sp => {
-        kho[sp.ten] = (kho[sp.ten] || 0) - sp.soLuong;
-      });
-      const tbody = document.getElementById("khoBanhTable");
-      tbody.innerHTML = "";
-      for (let ten in kho) {
-        const row = document.createElement("tr");
-        row.innerHTML = `<td>${ten}</td><td>${kho[ten]}</td>`;
-        tbody.appendChild(row);
-      }
-    }
-
-    function loadBaoCao() {
-      const ngay = new Date().toISOString().split('T')[0];
-      const spSX = {}, spBan = {};
-      lichSanXuat.filter(i => i.ngay === ngay).forEach(i => spSX[i.ten] = (spSX[i.ten] || 0) + i.soLuong);
-      banHang.filter(i => i.ngay === ngay).forEach(i => spBan[i.ten] = (spBan[i.ten] || 0) + i.soLuong);
-      const html = `
-        <p><strong>Tổng sản xuất hôm nay:</strong> ${Object.entries(spSX).map(([k,v]) => `${k}: ${v}`).join(", ")}</p>
-        <p><strong>Tổng bán hôm nay:</strong> ${Object.entries(spBan).map(([k,v]) => `${k}: ${v}`).join(", ")}</p>
-      `;
-      document.getElementById("baoCaoNoiDung").innerHTML = html;
-      loadKhoBanh();
-    }
-
-    window.onload = () => {
       loadNguyenLieu();
-    };
-  </script>
+      loadCongThuc();
+      loadBanhSelect();
+      loadSanXuat();
+      loadBanHang();
+      loadKhoBanh();
+    })
+    .catch(err => alert("❌ Lỗi tải dữ liệu: " + err));
+}
+
+// Auto load on start
+loadDataFromDrive();
+</script>
+
 </body>
 </html>
