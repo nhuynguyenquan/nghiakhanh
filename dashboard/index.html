@@ -8,12 +8,8 @@
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
     nav { background-color: #333; display: flex; flex-wrap: wrap; }
     nav button {
-      flex: 1;
-      padding: 1rem;
-      background: #444;
-      color: white;
-      border: none;
-      cursor: pointer;
+      flex: 1; padding: 1rem; background: #444;
+      color: white; border: none; cursor: pointer;
     }
     nav button.active { background: #2196F3; }
     .tab-content { display: none; padding: 1rem; }
@@ -22,7 +18,7 @@
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     .warning { color: red; font-weight: bold; }
-    input, select, button { margin: 5px 0; padding: 5px; }
+    input, select, button { margin: 5px 5px 5px 0; padding: 5px; }
   </style>
 </head>
 <body>
@@ -62,80 +58,77 @@
     <h2>Quản lý Công thức</h2>
     <table>
       <thead>
-        <tr><th>Tên bánh</th><th>Nguyên liệu</th><th>Thao tác</th></tr>
+        <tr><th>Tên bánh</th><th>Nguyên liệu</th></tr>
       </thead>
-      <tbody id="congThucTable">
-        <tr><td>Bánh mì</td><td>Bột: 200g, Men: 5g, Muối: 2g</td><td><button>Sửa</button></td></tr>
-        <tr><td>Bánh kem</td><td>Bột: 300g, Sữa: 100ml, Trứng: 2</td><td><button>Sửa</button></td></tr>
-      </tbody>
+      <tbody id="congThucTable"></tbody>
     </table>
   </div>
 
   <div id="sanxuat" class="tab-content">
     <h2>Ghi nhận sản xuất</h2>
-    <input type="text" placeholder="Tên bánh">
-    <input type="number" placeholder="Số lượng">
-    <button>Ghi nhận</button>
+    <input type="text" id="tenBanhSX" placeholder="Tên bánh">
+    <input type="number" id="soLuongSX" placeholder="Số lượng">
+    <button onclick="ghiNhanSanXuat()">Ghi nhận</button>
     <table>
-      <thead>
-        <tr><th>Ngày</th><th>Tên bánh</th><th>Số lượng</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>2025-06-08</td><td>Bánh mì</td><td>100</td></tr>
-        <tr><td>2025-06-08</td><td>Bánh kem</td><td>20</td></tr>
-      </tbody>
+      <thead><tr><th>Ngày</th><th>Tên bánh</th><th>Số lượng</th></tr></thead>
+      <tbody id="lichSanXuatTable"></tbody>
     </table>
   </div>
 
   <div id="khobanh" class="tab-content">
     <h2>Kho Bánh</h2>
     <table>
-      <thead>
-        <tr><th>Tên bánh</th><th>Số lượng tồn</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>Bánh mì</td><td>50</td></tr>
-        <tr><td>Bánh kem</td><td>10</td></tr>
-      </tbody>
+      <thead><tr><th>Tên bánh</th><th>Số lượng tồn</th></tr></thead>
+      <tbody id="khoBanhTable"></tbody>
     </table>
   </div>
 
   <div id="banhang" class="tab-content">
     <h2>Bán Hàng</h2>
-    <input type="text" placeholder="Tên bánh">
-    <input type="number" placeholder="Số lượng bán">
-    <button>Ghi nhận bán</button>
+    <input type="text" id="tenBanhBan" placeholder="Tên bánh">
+    <input type="number" id="soLuongBan" placeholder="Số lượng bán">
+    <button onclick="ghiNhanBanHang()">Ghi nhận bán</button>
     <table>
-      <thead>
-        <tr><th>Ngày</th><th>Tên bánh</th><th>Số lượng bán</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>2025-06-08</td><td>Bánh mì</td><td>20</td></tr>
-        <tr><td>2025-06-08</td><td>Bánh kem</td><td>5</td></tr>
-      </tbody>
+      <thead><tr><th>Ngày</th><th>Tên bánh</th><th>Số lượng bán</th></tr></thead>
+      <tbody id="lichBanHangTable"></tbody>
     </table>
   </div>
 
   <div id="baocao" class="tab-content">
     <h2>Báo Cáo</h2>
-    <p><strong>Tổng sản xuất hôm nay:</strong> Bánh mì: 100, Bánh kem: 20</p>
-    <p><strong>Tổng bán hôm nay:</strong> Bánh mì: 20, Bánh kem: 5</p>
-    <p><strong>Tồn kho hiện tại:</strong> Bánh mì: 50, Bánh kem: 10</p>
+    <div id="baoCaoNoiDung"></div>
   </div>
 
   <script>
-    let nguyenLieu = [
+    // Dữ liệu mẫu
+    const nguyenLieu = [
       { ten: "Bột mì", soLuong: 5, donVi: "kg" },
       { ten: "Trứng", soLuong: 20, donVi: "quả" },
       { ten: "Đường", soLuong: 3, donVi: "kg" }
     ];
+
+    const congThuc = {
+      "Bánh mì": { "Bột mì": 0.2, "Men": 0.005, "Muối": 0.002 },
+      "Bánh kem": { "Bột mì": 0.3, "Sữa": 0.1, "Trứng": 2 }
+    };
+
+    const lichSanXuat = [];
+    const banHang = [];
 
     function showTab(tabId) {
       document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
       document.querySelectorAll("nav button").forEach(btn => btn.classList.remove("active"));
       document.getElementById(tabId).classList.add("active");
       event.target.classList.add("active");
-      if (tabId === "nguyenlieu") loadNguyenLieu();
+
+      switch (tabId) {
+        case "nguyenlieu": loadNguyenLieu(); break;
+        case "congthuc": loadCongThuc(); break;
+        case "sanxuat": loadSanXuat(); break;
+        case "khobanh": loadKhoBanh(); break;
+        case "banhang": loadBanHang(); break;
+        case "baocao": loadBaoCao(); break;
+      }
     }
 
     function loadNguyenLieu() {
@@ -143,8 +136,8 @@
       tbody.innerHTML = "";
       nguyenLieu.forEach(nl => {
         const row = document.createElement("tr");
-        const canhBao = nl.soLuong < 2 ? "<span class='warning'>Gần hết</span>" : "";
-        row.innerHTML = `<td>${nl.ten}</td><td>${nl.soLuong}</td><td>${nl.donVi}</td><td>${canhBao}</td>`;
+        const warning = nl.soLuong < 2 ? "<span class='warning'>Gần hết</span>" : "";
+        row.innerHTML = `<td>${nl.ten}</td><td>${nl.soLuong}</td><td>${nl.donVi}</td><td>${warning}</td>`;
         tbody.appendChild(row);
       });
     }
@@ -171,7 +164,92 @@
       }
     }
 
-    window.onload = loadNguyenLieu;
+    function loadCongThuc() {
+      const tbody = document.getElementById("congThucTable");
+      tbody.innerHTML = "";
+      for (let ten in congThuc) {
+        const ngl = Object.entries(congThuc[ten]).map(([k,v]) => `${k}: ${v}`).join(", ");
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${ten}</td><td>${ngl}</td>`;
+        tbody.appendChild(row);
+      }
+    }
+
+    function ghiNhanSanXuat() {
+      const ten = document.getElementById("tenBanhSX").value;
+      const sl = parseInt(document.getElementById("soLuongSX").value);
+      if (ten && !isNaN(sl)) {
+        lichSanXuat.push({ ten, soLuong: sl, ngay: new Date().toISOString().split('T')[0] });
+        loadSanXuat();
+        loadKhoBanh();
+        loadBaoCao();
+      }
+    }
+
+    function loadSanXuat() {
+      const tbody = document.getElementById("lichSanXuatTable");
+      tbody.innerHTML = "";
+      lichSanXuat.forEach(item => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${item.ngay}</td><td>${item.ten}</td><td>${item.soLuong}</td>`;
+        tbody.appendChild(row);
+      });
+    }
+
+    function ghiNhanBanHang() {
+      const ten = document.getElementById("tenBanhBan").value;
+      const sl = parseInt(document.getElementById("soLuongBan").value);
+      if (ten && !isNaN(sl)) {
+        banHang.push({ ten, soLuong: sl, ngay: new Date().toISOString().split('T')[0] });
+        loadBanHang();
+        loadKhoBanh();
+        loadBaoCao();
+      }
+    }
+
+    function loadBanHang() {
+      const tbody = document.getElementById("lichBanHangTable");
+      tbody.innerHTML = "";
+      banHang.forEach(item => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${item.ngay}</td><td>${item.ten}</td><td>${item.soLuong}</td>`;
+        tbody.appendChild(row);
+      });
+    }
+
+    function loadKhoBanh() {
+      const kho = {};
+      lichSanXuat.forEach(sp => {
+        kho[sp.ten] = (kho[sp.ten] || 0) + sp.soLuong;
+      });
+      banHang.forEach(sp => {
+        kho[sp.ten] = (kho[sp.ten] || 0) - sp.soLuong;
+      });
+      const tbody = document.getElementById("khoBanhTable");
+      tbody.innerHTML = "";
+      for (let ten in kho) {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${ten}</td><td>${kho[ten]}</td>`;
+        tbody.appendChild(row);
+      }
+    }
+
+    function loadBaoCao() {
+      const ngay = new Date().toISOString().split('T')[0];
+      const spSX = {}, spBan = {};
+      lichSanXuat.filter(i => i.ngay === ngay).forEach(i => spSX[i.ten] = (spSX[i.ten] || 0) + i.soLuong);
+      banHang.filter(i => i.ngay === ngay).forEach(i => spBan[i.ten] = (spBan[i.ten] || 0) + i.soLuong);
+      const html = `
+        <p><strong>Tổng sản xuất hôm nay:</strong> ${Object.entries(spSX).map(([k,v]) => `${k}: ${v}`).join(", ")}</p>
+        <p><strong>Tổng bán hôm nay:</strong> ${Object.entries(spBan).map(([k,v]) => `${k}: ${v}`).join(", ")}</p>
+      `;
+      document.getElementById("baoCaoNoiDung").innerHTML = html;
+      loadKhoBanh();
+    }
+
+    window.onload = () => {
+      loadNguyenLieu();
+    };
   </script>
 </body>
 </html>
