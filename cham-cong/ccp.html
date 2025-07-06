@@ -6,158 +6,189 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { font-family: sans-serif; text-align: center; padding: 1rem; }
-    select, button { font-size: 1.2rem; margin: 10px; padding: 10px; width: 80%; }
+    select, button, input { font-size: 1.2rem; margin: 10px; padding: 10px; width: 80%; }
     #status { margin-top: 1rem; font-weight: bold; color: green; }
+    #app { display: none; }
   </style>
 </head>
 <body>
+
+<!-- 🔐 Màn hình nhập PIN -->
+<div id="loginBox">
+  <h2>🔐 Nhập mã PIN</h2>
+  <input type="password" id="pinInput" placeholder="Mã PIN...">
+  <button onclick="checkPin()">Tiếp tục</button>
+  <p id="loginMsg" style="color:red;"></p>
+</div>
+
+<!-- 🕒 Giao diện chấm công -->
+<div id="app">
   <h2>🕒 Chấm công</h2>
   <select id="employeeSelect" onchange="updateButtons()"></select><br>
-  <input type="password" id="pinInput" placeholder="Nhập PIN..." style="font-size:1.2rem;padding:10px;width:80%">
   <button id="checkInBtn" onclick="checkIn()">✅ Vào ca</button>
   <button id="checkOutBtn" onclick="checkOut()">⛔ Ra ca</button>
   <div id="status"></div>
+</div>
 
-  <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwj8Lzj70AuiGW_0wXrLylLrs99CAKLXa-MW_m3I4t1zmrcmlc9AdEVj8m2Y9IOXP5Ysw/exec';
-    let data = {};
+<script>
+  const API_URL = 'https://script.google.com/macros/s/AKfycbygLiXyIXgDVfWdbOsH24bYSrSrI8ezFKyHw1xYtBdhl81C2DPGMaSB2N41bcipgn5juA/exec';
+  const API_PIN = 'https://script.google.com/macros/s/AKfycbzOry6wmWk8JPYtZuF_ThdfqzJGlpjVek1G2r3gb-fpKFScLeB3iPYj7Dk3I3VvDTIUeA/exec'; // chỉnh theo mã triển khai PIN
+  let data = {};
+  let pinList = [];
 
-    async function loadData() {
-      const res = await fetch(API_URL);
-      data = await res.json();
+  // Bước 1: Tải PIN từ file pin.json
+  async function loadPinList() {
+    const res = await fetch(API_PIN);
+    const json = await res.json();
+    pinList = json.pins || [];
+  }
 
-      if (!Array.isArray(data.employees)) data.employees = [];
-      if (!Array.isArray(data.attendance)) data.attendance = [];
+  // Bước 2: Kiểm tra PIN
+  async function checkPin() {
+    const input = document.getElementById("pinInput").value.trim();
+    if (!input) return;
+    await loadPinList();
 
-      const sel = document.getElementById("employeeSelect");
-      sel.innerHTML = data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join("");
-      updateButtons();
+    if (!pinList.includes(input)) {
+      document.getElementById("loginMsg").innerText = "❌ Mã PIN không đúng.";
+      return;
     }
 
-    function formatTime(iso) {
-      const d = new Date(iso);
-      return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-    }
+    // Nếu đúng PIN
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    loadData();
+  }
 
-    function getName(id) {
-      const emp = data.employees.find(e => e.id === id);
-      return emp ? emp.name : "Không rõ";
-    }
+  // Bước 3: Giao diện chấm công (giữ nguyên)
+  async function loadData() {
+    const res = await fetch(API_URL);
+    data = await res.json();
 
-    function roundDown15(date) {
-      const minutes = date.getMinutes();
-      const rounded = minutes - (minutes % 15);
-      date.setMinutes(rounded, 0, 0);
+    if (!Array.isArray(data.employees)) data.employees = [];
+    if (!Array.isArray(data.attendance)) data.attendance = [];
+
+    const sel = document.getElementById("employeeSelect");
+    sel.innerHTML = data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join("");
+    updateButtons();
+  }
+
+  function formatTime(iso) {
+    const d = new Date(iso);
+    return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function getName(id) {
+    const emp = data.employees.find(e => e.id === id);
+    return emp ? emp.name : "Không rõ";
+  }
+
+  function roundDown15(date) {
+    const minutes = date.getMinutes();
+    const rounded = minutes - (minutes % 15);
+    date.setMinutes(rounded, 0, 0);
+    return date;
+  }
+
+  function roundUp15(date) {
+    const minutes = date.getMinutes();
+    const mod = minutes % 15;
+    if (mod === 0) {
+      date.setSeconds(0, 0);
       return date;
     }
+    date.setMinutes(minutes + (15 - mod), 0, 0);
+    return date;
+  }
 
-    function roundUp15(date) {
-      const minutes = date.getMinutes();
-      const mod = minutes % 15;
-      if (mod === 0) {
-        date.setSeconds(0, 0);
-        return date;
-      }
-      date.setMinutes(minutes + (15 - mod), 0, 0);
-      return date;
+  function getShiftTimeRange() {
+    const now = new Date();
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(now);
+    end.setHours(23, 59, 59, 999);
+    return { start: start.toISOString(), end: end.toISOString() };
+  }
+
+  function updateButtons() {
+    const id = document.getElementById("employeeSelect").value;
+    const { start, end } = getShiftTimeRange();
+
+    const logs = data.attendance
+      .filter(a => a.employeeId === id && a.checkIn >= start && a.checkIn <= end)
+      .sort((a, b) => new Date(b.checkIn) - new Date(a.checkIn));
+
+    const entry = logs.find(a => !a.checkOut);
+
+    const checkInBtn = document.getElementById("checkInBtn");
+    const checkOutBtn = document.getElementById("checkOutBtn");
+    const status = document.getElementById("status");
+
+    if (!entry) {
+      checkInBtn.disabled = false;
+      checkOutBtn.disabled = true;
+      status.textContent = "🟡 Sẵn sàng vào ca mới";
+    } else {
+      checkInBtn.disabled = true;
+      checkOutBtn.disabled = false;
+      status.textContent = entry.checkOut
+        ? `🔴 Đã ra ca lúc ${formatTime(entry.checkOut)}`
+        : `🟢 Đang làm ca bắt đầu lúc ${formatTime(entry.checkIn)}`;
+    }
+  }
+
+  async function checkIn() {
+    const id = document.getElementById("employeeSelect").value;
+    const now = roundUp15(new Date());
+    const isoNow = now.toISOString();
+
+    const { start, end } = getShiftTimeRange();
+    const alreadyCheckedIn = data.attendance.some(a =>
+      a.employeeId === id &&
+      a.checkIn >= start &&
+      a.checkIn <= end &&
+      !a.checkOut
+    );
+    if (alreadyCheckedIn) {
+      alert("⛔ Đã vào ca hôm nay.");
+      return;
     }
 
-    function getShiftTimeRange() {
-      const now = new Date();
-      const start = new Date(now);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(now);
-      end.setHours(23, 59, 59, 999);
-      return { start: start.toISOString(), end: end.toISOString() };
-    }
-
-    function updateButtons() {
-      const id = document.getElementById("employeeSelect").value;
-      const { start, end } = getShiftTimeRange();
-
-      const logs = data.attendance
-        .filter(a => a.employeeId === id && a.checkIn >= start && a.checkIn <= end)
-        .sort((a, b) => new Date(b.checkIn) - new Date(a.checkIn));
-
-      const entry = logs.find(a => !a.checkOut);
-
-      const checkInBtn = document.getElementById("checkInBtn");
-      const checkOutBtn = document.getElementById("checkOutBtn");
-      const status = document.getElementById("status");
-
-      if (!entry) {
-        checkInBtn.disabled = false;
-        checkOutBtn.disabled = true;
-        status.textContent = "🟡 Sẵn sàng vào ca mới";
-      } else {
-        checkInBtn.disabled = true;
-        checkOutBtn.disabled = false;
-        status.textContent = entry.checkOut
-          ? `🔴 Đã ra ca lúc ${formatTime(entry.checkOut)}`
-          : `🟢 Đang làm ca bắt đầu lúc ${formatTime(entry.checkIn)}`;
-      }
-    }
-
-    async function checkIn() {
-      const id = document.getElementById("employeeSelect").value;
-      const pin = document.getElementById("pinInput").value.trim();   // ➜ lấy PIN
-  if (!pin) return alert("Nhập PIN!");
-      const now = roundUp15(new Date());
-      const isoNow = now.toISOString();
-
-      const { start, end } = getShiftTimeRange();
-      const alreadyCheckedIn = data.attendance.some(a =>
-        a.employeeId === id &&
-        a.checkIn >= start &&
-        a.checkIn <= end &&
-        !a.checkOut
-      );
-      if (alreadyCheckedIn) {
-        alert("⛔ Đã vào ca hôm nay.");
-        return;
-      }
-
-      data.attendance.push({ employeeId: id, checkIn: isoNow, checkOut: "" });
-     const res = await saveData(pin);
-    if (!res.success) return alert("❌ Lỗi khi gửi dữ liệu!");
-
+    data.attendance.push({ employeeId: id, checkIn: isoNow, checkOut: "" });
+    await saveData();
     alert("✅ Đã vào ca lúc " + formatTime(isoNow));
-      await loadData(); // Load lại dữ liệu mới
-    }
+    await loadData();
+  }
 
-    async function checkOut() {
-      const id = document.getElementById("employeeSelect").value;
-      const pin = document.getElementById("pinInput").value.trim();
-  if (!pin) return alert("Nhập PIN!");
-      const now = roundDown15(new Date());
-      const isoNow = now.toISOString();
+  async function checkOut() {
+    const id = document.getElementById("employeeSelect").value;
+    const now = roundDown15(new Date());
+    const isoNow = now.toISOString();
 
-      const { start, end } = getShiftTimeRange();
-      const entry = data.attendance.find(a =>
-        a.employeeId === id &&
-        a.checkIn >= start &&
-        a.checkIn <= end &&
-        !a.checkOut
-      );
+    const { start, end } = getShiftTimeRange();
+    const entry = data.attendance.find(a =>
+      a.employeeId === id &&
+      a.checkIn >= start &&
+      a.checkIn <= end &&
+      !a.checkOut
+    );
 
-      if (!entry) return alert("Không tìm thấy ca làm hôm nay.");
+    if (!entry) return alert("Không tìm thấy ca làm hôm nay.");
 
-      entry.checkOut = isoNow;
-      const res = await saveData(pin);
-    if (!res.success) return alert("❌ Lỗi khi gửi dữ liệu!");
-
+    entry.checkOut = isoNow;
+    await saveData();
     alert("⛔ Đã ra ca lúc " + formatTime(isoNow));
     await loadData();
-    }
-async function saveData(pin) {
-  const res = await fetch(API_URL, {
-    method : "POST", mode: "no-cors",
-    headers: { 'Content-Type': 'application/json' },
-    body   : JSON.stringify({ pin, attendance: data.attendance })
-  });
-  return res.ok ? { success: true } : { success: false, error: "Gửi thất bại" };
-}
-    loadData();
-  </script>
+  }
+
+  async function saveData() {
+    await fetch(API_URL, {
+      method: "POST",
+      mode: "no-cors",
+      body: JSON.stringify(data),
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+</script>
 </body>
 </html>
