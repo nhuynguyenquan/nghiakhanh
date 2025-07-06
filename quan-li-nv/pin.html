@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tạo Mã PIN</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      max-width: 400px;
+      margin: auto;
+    }
+    input, button {
+      font-size: 1.2rem;
+      padding: 0.5rem;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+    #status {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>🔐 Tạo Mã PIN</h2>
+  <input type="password" id="pin" placeholder="Nhập mã PIN" />
+  <button onclick="taoPin()">Lưu PIN</button>
+  <div id="status"></div>
+
+  <script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOry6wmWk8JPYtZuF_ThdfqzJGlpjVek1G2r3gb-fpKFScLeB3iPYj7Dk3I3VvDTIUeA/exec'; 
+
+    function taoPin() {
+      const pin = document.getElementById("pin").value;
+      const status = document.getElementById("status");
+
+      if (!pin) {
+        status.textContent = "❗ Vui lòng nhập mã PIN.";
+        return;
+      }
+
+      status.textContent = "⏳ Đang gửi...";
+
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        mode:"no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin, action: "save" })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          status.textContent = "✅ Đã lưu mã PIN thành công.";
+        } else {
+          status.textContent = "❌ Lỗi: " + data.message;
+        }
+      })
+      .catch(err => {
+        status.textContent = "❌ Không có phản hồi: " + err;
+      });
+    }
+  </script>
+</body>
+</html>
