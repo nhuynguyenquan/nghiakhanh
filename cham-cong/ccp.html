@@ -19,7 +19,7 @@
   <div id="status"></div>
 
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbznjbdCO7M0-CVpU-betd5e5sKVmmz1dzzjTiePiFt_ckbFJERzA9Gpzzp4L6H3Mjd98g/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycby8tpaNHMzmF7UvZKlLCFI4QPjNxl_aY1FAXLZqFrwA0Y0x9qbMaRLDoAXuj_umF03jwQ/exec';
     let data = {};
 
     async function loadData() {
@@ -118,9 +118,10 @@
       }
 
       data.attendance.push({ employeeId: id, checkIn: isoNow, checkOut: "" });
-      await saveData();
-      alert("✅ Đã vào ca lúc " + formatTime(isoNow));
-      //sendTelegram(`🟢 ${getName(id)} đã vào ca lúc ${formatTime(isoNow)}`);
+     const res = await saveData(pin);
+    if (!res.success) return alert("❌ Lỗi khi gửi dữ liệu!");
+
+    alert("✅ Đã vào ca lúc " + formatTime(isoNow));
       await loadData(); // Load lại dữ liệu mới
     }
 
@@ -142,21 +143,20 @@
       if (!entry) return alert("Không tìm thấy ca làm hôm nay.");
 
       entry.checkOut = isoNow;
-      await saveData();
-      alert("⛔ Đã ra ca lúc " + formatTime(isoNow));
-      //sendTelegram(`🔴 ${getName(id)} đã ra ca lúc ${formatTime(isoNow)}`);
-      await loadData(); // Load lại dữ liệu mới
-    }
+      const res = await saveData(pin);
+    if (!res.success) return alert("❌ Lỗi khi gửi dữ liệu!");
 
-    async function saveData() {
-      await fetch(API_URL, {
-        method: "POST",
-        mode: "no-cors",
-         body   : JSON.stringify({ pin, attendance: data.attendance }),
-        headers: { 'Content-Type': 'application/json' }
-      });
+    alert("⛔ Đã ra ca lúc " + formatTime(isoNow));
+    await loadData();
     }
-
+async function saveData(pin) {
+  const res = await fetch(API_URL, {
+    method : "POST", mode: "no-cors",
+    headers: { 'Content-Type': 'application/json' },
+    body   : JSON.stringify({ pin, attendance: data.attendance })
+  });
+  return res.ok ? { success: true } : { success: false, error: "Gửi thất bại" };
+}
     loadData();
   </script>
 </body>
