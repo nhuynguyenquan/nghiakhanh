@@ -2,69 +2,69 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Chấm công nhân viên</title>
+  <title>Chấm công</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { font-family: sans-serif; text-align: center; padding: 1rem; }
     select, button, input { font-size: 1.2rem; margin: 10px; padding: 10px; width: 80%; }
     #status { margin-top: 1rem; font-weight: bold; color: green; }
-    #app { display: none; }
   </style>
 </head>
 <body>
 
-<!-- 🔐 Màn hình nhập PIN -->
-<div id="loginBox">
-  <h2>🔐 Nhập mã PIN</h2>
-  <input type="password" id="pinInput" placeholder="Mã PIN...">
-  <button onclick="checkPin()">Tiếp tục</button>
-  <p id="loginMsg" style="color:red;"></p>
-</div>
+  <div id="loginBox">
+    <h2>🔐 Nhập mã PIN</h2>
+    <input type="password" id="pinInput" placeholder="Mã PIN...">
+    <button onclick="checkPin()">🔓 Vào hệ thống</button>
+    <div id="loginMsg" style="color:red;font-weight:bold;"></div>
+  </div>
 
-<!-- 🕒 Giao diện chấm công -->
-<div id="app">
-  <h2>🕒 Chấm công</h2>
-  <select id="employeeSelect" onchange="updateButtons()"></select><br>
-  <button id="checkInBtn" onclick="checkIn()">✅ Vào ca</button>
-  <button id="checkOutBtn" onclick="checkOut()">⛔ Ra ca</button>
-  <div id="status"></div>
-</div>
+  <div id="app" style="display:none;">
+    <h2>🕒 Chấm công</h2>
+    <select id="employeeSelect" onchange="updateButtons()"></select><br>
+    <button id="checkInBtn" onclick="checkIn()">✅ Vào ca</button>
+    <button id="checkOutBtn" onclick="checkOut()">⛔ Ra ca</button>
+    <div id="status"></div>
+  </div>
 
 <script>
-  const API_URL = 'https://script.google.com/macros/s/AKfycbygLiXyIXgDVfWdbOsH24bYSrSrI8ezFKyHw1xYtBdhl81C2DPGMaSB2N41bcipgn5juA/exec';
-  const API_PIN = 'https://script.google.com/macros/s/AKfycbzOry6wmWk8JPYtZuF_ThdfqzJGlpjVek1G2r3gb-fpKFScLeB3iPYj7Dk3I3VvDTIUeA/exec';
-  let data = {};
-  let pinList = [];
+  const API_URL = 'https://script.google.com/macros/s/AKfycbygLiXyIXgDVfWdbOsH24bYSrSrI8ezFKyHw1xYtBdhl81C2DPGMaSB2N41bcipgn5juA/exec'; // chấm công
+  const PIN_URL = 'https://script.google.com/macros/s/AKfycbzOry6wmWk8JPYtZuF_ThdfqzJGlpjVek1G2r3gb-fpKFScLeB3iPYj7Dk3I3VvDTIUeA/exec'; // mã PIN
+  let data = {}, pinList = [];
 
-  // Bước 1: Tải PIN từ file pin.json
-  async function loadPinList() {
-    const res = await fetch(API_PIN);
-    const json = await res.json();
-    pinList = json.pins || [];
+  async function sha256(str) {
+    const utf8 = new TextEncoder().encode(str);
+    const hash = await crypto.subtle.digest("SHA-256", utf8);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
-  // Bước 2: Kiểm tra PIN
   async function checkPin() {
     const input = document.getElementById("pinInput").value.trim();
     if (!input) return;
-    await loadPinList();
 
-    if (!pinList.includes(input)) {
-      document.getElementById("loginMsg").innerText = "❌ Mã PIN không đúng.";
+    if (pinList.length === 0) await loadPinList();
+    const hashed = await sha256(input);
+
+    if (!pinList.includes(hashed)) {
+      document.getElementById("loginMsg").textContent = "❌ Mã PIN không hợp lệ.";
       return;
     }
 
-    // Nếu đúng PIN
+    // Thành công
     document.getElementById("loginBox").style.display = "none";
     document.getElementById("app").style.display = "block";
     loadData();
   }
 
-  // Bước 3: Giao diện chấm công (giữ nguyên)
+  async function loadPinList() {
+    const res = await fetch(PIN_URL);
+    const json = await res.json();
+    pinList = json.pins || [];
+  }
+
   async function loadData() {
     const res = await fetch(API_URL);
     data = await res.json();
-
     if (!Array.isArray(data.employees)) data.employees = [];
     if (!Array.isArray(data.attendance)) data.attendance = [];
 
@@ -189,6 +189,7 @@
       headers: { 'Content-Type': 'application/json' }
     });
   }
+
 </script>
 </body>
 </html>
