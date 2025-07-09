@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Chấm công nhân viên</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 1rem; }
+    select, button { font-size: 1.2rem; margin: 10px; padding: 10px; width: 80%; }
+    #status { margin-top: 1rem; font-weight: bold; color: green; }
+  </style>
+</head>
+<body>
+  <h2>🕒 Chấm công</h2>
+  <select id="employeeSelect" onchange="updateButtons()"></select><br>
+  <button id="checkInBtn" onclick="checkIn()">✅ Vào ca</button>
+  <button id="checkOutBtn" onclick="checkOut()">⛔ Ra ca</button>
+  <div id="status"></div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbygLiXyIXgDVfWdbOsH24bYSrSrI8ezFKyHw1xYtBdhl81C2DPGMaSB2N41bcipgn5juA/exec';
+    let data = {};
+
+    async function loadData() {
+      const res = await fetch(API_URL);
+      data = await res.json();
+
+      if (!Array.isArray(data.employees)) data.employees = [];
+      if (!Array.isArray(data.attendance)) data.attendance = [];
+
+      const sel = document.getElementById("employeeSelect");
+      sel.innerHTML = data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join("");
+      updateButtons();
+    }
+
+    function formatTime(iso) {
+      const d = new Date(iso);
+      return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function getName(id) {
+      const emp = data.employees.find(e => e.id === id);
+      return emp ? emp.name : "Không rõ";
+    }
+
+    function roundDown15(date) {
+      const minutes = date.getMinutes();
+      const rounded = minutes - (minutes % 15);
+      date.setMinutes(rounded, 0, 0);
+      return date;
+    }
+
+    function roundUp15(date) {
+      const minutes = date.getMinutes();
+      const mod = minutes % 15;
+      if (mod === 0) {
+        date.setSeconds(0, 0);
+        return date;
+      }
+      date.setMinutes(minutes + (15 - mod), 0, 0);
+      return date;
+    }
+
+    function getShiftTimeRange() {
+      const now = new Date();
+      const start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(now);
+      end.setHours(23, 59, 59, 999);
+      return { start: start.toISOString(), end: end.toISOString() };
+    }
+
+    function updateButtons() {
+      const id = document.getElementById("employeeSelect").value;
+      const { start, end } = getShiftTimeRange();
+
+      const logs = data.attendance
+        .filter(a => a.employeeId === id && a.checkIn >= start && a.checkIn <= end)
+        .sort((a, b) => new Date(b.checkIn) - new Date(a.checkIn));
+
+      const entry = logs.find(a => !a.checkOut);
+
+      const checkInBtn = document.getElementById("checkInBtn");
+      const checkOutBtn = document.getElementById("checkOutBtn");
+      const status = document.getElementById("status");
+
+      if (!entry) {
+        checkInBtn.disabled = false;
+        checkOutBtn.disabled = true;
+        status.textContent = "🟡 Sẵn sàng vào ca mới";
+      } else {
+        checkInBtn.disabled = true;
+        checkOutBtn.disabled = false;
+        status.textContent = entry.checkOut
+          ? `🔴 Đã ra ca lúc ${formatTime(entry.checkOut)}`
+          : `🟢 Đang làm ca bắt đầu lúc ${formatTime(entry.checkIn)}`;
+      }
+    }
+
+    async function checkIn() {
+      const id = document.getElementById("employeeSelect").value;
+      const now = roundUp15(new Date());
+      const isoNow = now.toISOString();
+
+      const { start, end } = getShiftTimeRange();
+      const alreadyCheckedIn = data.attendance.some(a =>
+        a.employeeId === id &&
+        a.checkIn >= start &&
+        a.checkIn <= end &&
+        !a.checkOut
+      );
+      if (alreadyCheckedIn) {
+        alert("⛔ Đã vào ca hôm nay.");
+        return;
+      }
+
+      data.attendance.push({ employeeId: id, checkIn: isoNow, checkOut: "" });
+      await saveData();
+      alert("✅ Đã vào ca lúc " + formatTime(isoNow));
+      //sendTelegram(`🟢 ${getName(id)} đã vào ca lúc ${formatTime(isoNow)}`);
+      await loadData(); // Load lại dữ liệu mới
+    }
+
+    async function checkOut() {
+      const id = document.getElementById("employeeSelect").value;
+      const now = roundDown15(new Date());
+      const isoNow = now.toISOString();
+
+      const { start, end } = getShiftTimeRange();
+      const entry = data.attendance.find(a =>
+        a.employeeId === id &&
+        a.checkIn >= start &&
+        a.checkIn <= end &&
+        !a.checkOut
+      );
+
+      if (!entry) return alert("Không tìm thấy ca làm hôm nay.");
+
+      entry.checkOut = isoNow;
+      await saveData();
+      alert("⛔ Đã ra ca lúc " + formatTime(isoNow));
+      //sendTelegram(`🔴 ${getName(id)} đã ra ca lúc ${formatTime(isoNow)}`);
+      await loadData(); // Load lại dữ liệu mới
+    }
+
+    async function saveData() {
+      await fetch(API_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
