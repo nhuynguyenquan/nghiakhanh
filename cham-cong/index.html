@@ -12,7 +12,20 @@
   </style>
 </head>
 <body>
-
+<div id="loadingOverlay" style="
+  display:none;
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  background:rgba(255,255,255,0.8);
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.5rem;
+  font-weight:bold;
+  color:#333;">
+  ⏳ Đang xử lý...
+</div>
 <!-- Khung đăng nhập PIN -->
 <div id="loginBox">
   <h2>🔐 Nhập mã PIN</h2>
@@ -162,6 +175,15 @@ async function saveData(){
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(data)
   });
+}
+function showLoading(msg = "⏳ Đang xử lý...") {
+  const el = document.getElementById("loadingOverlay");
+  el.textContent = msg;
+  el.style.display = "flex";
+}
+
+function hideLoading() {
+  document.getElementById("loadingOverlay").style.display = "none";
 }
 </script>
 </body>
