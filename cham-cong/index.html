@@ -26,7 +26,8 @@
   color:#333;">
   ⏳ Đang xử lý...
 </div>
-<!-- Khung đăng nhập PIN -->
+
+<!-- Đăng nhập PIN -->
 <div id="loginBox">
   <h2>🔐 Nhập mã PIN</h2>
   <input id="pinInput" type="password" placeholder="Mã PIN...">
@@ -44,100 +45,108 @@
 </div>
 
 <script>
-/* ---------- CẤU HÌNH ---------- */
 const API_URL = 'https://script.google.com/macros/s/AKfycbygLiXyIXgDVfWdbOsH24bYSrSrI8ezFKyHw1xYtBdhl81C2DPGMaSB2N41bcipgn5juA/exec';
 const PIN_URL = 'https://script.google.com/macros/s/AKfycbzOry6wmWk8JPYtZuF_ThdfqzJGlpjVek1G2r3gb-fpKFScLeB3iPYj7Dk3I3VvDTIUeA/exec';
 
 let data = {}, pinList = [];
 
-/* ---------- SHA‑256 ---------- */
 async function sha256(str){
   const buf = new TextEncoder().encode(str);
   const hash = await crypto.subtle.digest("SHA-256", buf);
   return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-/* ---------- KIỂM TRA PIN ---------- */
 async function checkPin(){
   const input = document.getElementById("pinInput").value.trim();
   if (!input) return;
 
   showLoading("🔐 Đang kiểm tra mã PIN...");
-  if (pinList.length === 0) await loadPinList();
-
-  const hashed = await sha256(input);
-  if (!pinList.includes(hashed)) {
+  try {
+    if (pinList.length === 0) await loadPinList();
+    const hashed = await sha256(input);
+    if (!pinList.includes(hashed)) {
+      document.getElementById("loginMsg").textContent = "❌ Mã PIN không hợp lệ.";
+      hideLoading();
+      return;
+    }
+    savePinSession(hashed);
+    await openApp();
+  } catch (err) {
+    document.getElementById("loginMsg").textContent = "⚠️ Lỗi khi xác minh PIN.";
     hideLoading();
-    document.getElementById("loginMsg").textContent = "❌ Mã PIN không hợp lệ.";
-    return;
   }
-
-  savePinSession(hashed);
-  await openApp();  // sẽ gọi hideLoading() trong openApp
 }
 
-/* ---------- LƯU & KHÔI PHỤC PIN TRONG SESSION ---------- */
-function todayStr(){ return new Date().toISOString().slice(0,10); } // yyyy-mm-dd
+function todayStr(){ return new Date().toISOString().slice(0,10); }
 
 function savePinSession(hash){
   sessionStorage.setItem("pinData", JSON.stringify({hash, date: todayStr()}));
 }
 
 function getPinSession(){
-  try{ return JSON.parse(sessionStorage.getItem("pinData")||"{}"); }
-  catch{ return {}; }
+  try { return JSON.parse(sessionStorage.getItem("pinData") || "{}"); }
+  catch { return {}; }
 }
 
 function clearPinSession(){
   sessionStorage.removeItem("pinData");
 }
 
-/* ---------- TẢI PIN LIST SHA‑256 ---------- */
-async function loadPinList() {
+async function loadPinList(){
   try {
     const res = await fetch(PIN_URL);
     const json = await res.json();
     pinList = json.pins || [];
   } catch (err) {
-    hideLoading();
-    document.getElementById("loginMsg").textContent = "⚠️ Lỗi tải PIN. Vui lòng thử lại.";
+    throw new Error("Không tải được danh sách PIN.");
   }
 }
 
-/* ---------- KHỞI ĐỘNG ---------- */
 (async function bootstrap(){
-  await loadPinList();                       // tải sẵn danh sách PIN
-  const saved = getPinSession();
-  if(saved.hash && saved.date === todayStr() && pinList.includes(saved.hash)){
-    openApp();                               // valid -> bỏ qua đăng nhập
-  } else {
-    clearPinSession();                       // hết hạn / không hợp lệ
+  try {
+    await loadPinList();
+    const saved = getPinSession();
+    if (saved.hash && saved.date === todayStr() && pinList.includes(saved.hash)) {
+      await openApp();
+    } else {
+      clearPinSession();
+    }
+  } catch (err) {
+    document.getElementById("loginMsg").textContent = "⚠️ Không thể tải danh sách mã PIN.";
+    hideLoading();
   }
-  // Timer: mỗi 60s kiểm tra sang ngày mới
-  setInterval(()=>{ if(getPinSession().date !== todayStr()){ location.reload(); } }, 60000);
+  setInterval(() => {
+    if (getPinSession().date !== todayStr()) location.reload();
+  }, 60000);
 })();
 
-/* ---------- MỞ GIAO DIỆN CHẤM CÔNG ---------- */
 async function openApp(){
-  document.getElementById("loginBox").style.display = "none";
-  document.getElementById("app").style.display = "block";
-  await loadData();
-  hideLoading(); // thêm ở đây
+  try {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    await loadData();
+  } catch (err) {
+    alert("❌ Không thể tải dữ liệu chấm công.");
+  } finally {
+    hideLoading();
+  }
 }
 
-/* ---------- LOAD DATA (KHÔNG ĐỔI) ---------- */
 async function loadData(){
-  const res = await fetch(API_URL);
-  data = await res.json();
-  if(!Array.isArray(data.employees))  data.employees  = [];
-  if(!Array.isArray(data.attendance)) data.attendance = [];
+  try {
+    const res = await fetch(API_URL);
+    data = await res.json();
+    if (!Array.isArray(data.employees))  data.employees = [];
+    if (!Array.isArray(data.attendance)) data.attendance = [];
 
-  const sel = document.getElementById("employeeSelect");
-  sel.innerHTML = data.employees.map(e=>`<option value="${e.id}">${e.name}</option>`).join("");
-  updateButtons();
+    const sel = document.getElementById("employeeSelect");
+    sel.innerHTML = data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join("");
+    updateButtons();
+  } catch (err) {
+    throw new Error("Lỗi khi tải dữ liệu.");
+  }
 }
 
-/* ---------- CÁC HÀM CHẤM CÔNG GIỮ NGUYÊN ---------- */
 function formatTime(i){ return new Date(i).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}); }
 function roundUp15(d){const m=d.getMinutes(),adj=m%15?15-m%15:0;d.setMinutes(m+adj,0,0);return d;}
 function roundDown15(d){d.setMinutes(d.getMinutes()-d.getMinutes()%15,0,0);return d;}
@@ -167,11 +176,16 @@ async function checkIn(){
     return alert("⛔ Đã vào ca hôm nay.");
 
   showLoading("🔄 Đang ghi nhận vào ca...");
-  data.attendance.push({ employeeId: id, checkIn: roundUp15(new Date()).toISOString(), checkOut: "" });
-  await saveData();
-  alert("✅ Đã vào ca!");
-  await loadData();
-  hideLoading();
+  try {
+    data.attendance.push({ employeeId: id, checkIn: roundUp15(new Date()).toISOString(), checkOut: "" });
+    await saveData();
+    alert("✅ Đã vào ca!");
+    await loadData();
+  } catch (err) {
+    alert("❌ Lỗi khi ghi nhận vào ca.");
+  } finally {
+    hideLoading();
+  }
 }
 
 async function checkOut(){
@@ -181,21 +195,27 @@ async function checkOut(){
   if (!entry) return alert("Không tìm thấy ca làm hôm nay.");
 
   showLoading("🔄 Đang ghi nhận ra ca...");
-  entry.checkOut = roundDown15(new Date()).toISOString();
-  await saveData();
-  alert("⛔ Đã ra ca!");
-  await loadData();
-  hideLoading();
+  try {
+    entry.checkOut = roundDown15(new Date()).toISOString();
+    await saveData();
+    alert("⛔ Đã ra ca!");
+    await loadData();
+  } catch (err) {
+    alert("❌ Lỗi khi ghi nhận ra ca.");
+  } finally {
+    hideLoading();
+  }
 }
 
 async function saveData(){
-  await fetch(API_URL,{
-    method:"POST",
-    mode:"no-cors",
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(data)
+  await fetch(API_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
   });
 }
+
 function showLoading(msg = "⏳ Đang xử lý...") {
   const el = document.getElementById("loadingOverlay");
   el.textContent = msg;
