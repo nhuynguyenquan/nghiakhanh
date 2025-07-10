@@ -93,10 +93,15 @@ function clearPinSession(){
 }
 
 /* ---------- TẢI PIN LIST SHA‑256 ---------- */
-async function loadPinList(){
-  const res = await fetch(PIN_URL);
-  const json = await res.json();
-  pinList = json.pins || [];
+async function loadPinList() {
+  try {
+    const res = await fetch(PIN_URL);
+    const json = await res.json();
+    pinList = json.pins || [];
+  } catch (err) {
+    hideLoading();
+    document.getElementById("loginMsg").textContent = "⚠️ Lỗi tải PIN. Vui lòng thử lại.";
+  }
 }
 
 /* ---------- KHỞI ĐỘNG ---------- */
