@@ -60,16 +60,20 @@ async function sha256(str){
 /* ---------- KIỂM TRA PIN ---------- */
 async function checkPin(){
   const input = document.getElementById("pinInput").value.trim();
-  if(!input) return;
-  if(pinList.length===0) await loadPinList();
+  if (!input) return;
+
+  showLoading("🔐 Đang kiểm tra mã PIN...");
+  if (pinList.length === 0) await loadPinList();
 
   const hashed = await sha256(input);
-  if(!pinList.includes(hashed)){
-    document.getElementById("loginMsg").textContent="❌ Mã PIN không hợp lệ.";
+  if (!pinList.includes(hashed)) {
+    hideLoading();
+    document.getElementById("loginMsg").textContent = "❌ Mã PIN không hợp lệ.";
     return;
   }
-  savePinSession(hashed);          // lưu pin + ngày
-  openApp();
+
+  savePinSession(hashed);
+  await openApp();  // sẽ gọi hideLoading() trong openApp
 }
 
 /* ---------- LƯU & KHÔI PHỤC PIN TRONG SESSION ---------- */
@@ -110,9 +114,10 @@ async function loadPinList(){
 
 /* ---------- MỞ GIAO DIỆN CHẤM CÔNG ---------- */
 async function openApp(){
-  document.getElementById("loginBox").style.display="none";
-  document.getElementById("app").style.display="block";
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("app").style.display = "block";
   await loadData();
+  hideLoading(); // thêm ở đây
 }
 
 /* ---------- LOAD DATA (KHÔNG ĐỔI) ---------- */
@@ -151,21 +156,31 @@ function updateButtons(){
 }
 
 async function checkIn(){
-  const id=document.getElementById("employeeSelect").value;
-  const {start,end}=getShiftTimeRange();
-  if(data.attendance.some(a=>a.employeeId===id&&a.checkIn>=start&&a.checkIn<=end&&!a.checkOut))
-     return alert("⛔ Đã vào ca hôm nay.");
-  data.attendance.push({employeeId:id,checkIn:roundUp15(new Date()).toISOString(),checkOut:""});
-  await saveData(); alert("✅ Đã vào ca!"); loadData();
+  const id = document.getElementById("employeeSelect").value;
+  const { start, end } = getShiftTimeRange();
+  if (data.attendance.some(a => a.employeeId === id && a.checkIn >= start && a.checkIn <= end && !a.checkOut))
+    return alert("⛔ Đã vào ca hôm nay.");
+
+  showLoading("🔄 Đang ghi nhận vào ca...");
+  data.attendance.push({ employeeId: id, checkIn: roundUp15(new Date()).toISOString(), checkOut: "" });
+  await saveData();
+  alert("✅ Đã vào ca!");
+  await loadData();
+  hideLoading();
 }
 
 async function checkOut(){
-  const id=document.getElementById("employeeSelect").value;
-  const {start,end}=getShiftTimeRange();
-  const entry=data.attendance.find(a=>a.employeeId===id&&a.checkIn>=start&&a.checkIn<=end&&!a.checkOut);
-  if(!entry) return alert("Không tìm thấy ca làm hôm nay.");
-  entry.checkOut=roundDown15(new Date()).toISOString();
-  await saveData(); alert("⛔ Đã ra ca!"); loadData();
+  const id = document.getElementById("employeeSelect").value;
+  const { start, end } = getShiftTimeRange();
+  const entry = data.attendance.find(a => a.employeeId === id && a.checkIn >= start && a.checkIn <= end && !a.checkOut);
+  if (!entry) return alert("Không tìm thấy ca làm hôm nay.");
+
+  showLoading("🔄 Đang ghi nhận ra ca...");
+  entry.checkOut = roundDown15(new Date()).toISOString();
+  await saveData();
+  alert("⛔ Đã ra ca!");
+  await loadData();
+  hideLoading();
 }
 
 async function saveData(){
