@@ -27,7 +27,7 @@
   ⏳ Đang xử lý...
 </div>
 
-<!-- Đăng nhập PIN -->
+<!-- Đăng nhập -->
 <div id="loginBox">
   <h2>🔐 Nhập mã PIN</h2>
   <input id="pinInput" type="password" placeholder="Mã PIN...">
@@ -35,7 +35,7 @@
   <div id="loginMsg" style="color:red;font-weight:bold;"></div>
 </div>
 
-<!-- Giao diện chấm công -->
+<!-- App -->
 <div id="app">
   <h2>🕒 Chấm công</h2>
   <select id="employeeSelect" onchange="updateButtons()"></select><br>
@@ -50,13 +50,55 @@ const PIN_URL = 'https://script.google.com/macros/s/AKfycbzOry6wmWk8JPYtZuF_Thdf
 
 let data = {}, pinList = [];
 
-async function sha256(str){
+// SHA256
+async function sha256(str) {
   const buf = new TextEncoder().encode(str);
   const hash = await crypto.subtle.digest("SHA-256", buf);
-  return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function checkPin(){
+// Loading UI
+function showLoading(msg = "⏳ Đang xử lý...") {
+  const el = document.getElementById("loadingOverlay");
+  el.textContent = msg;
+  el.style.display = "flex";
+}
+
+function hideLoading() {
+  document.getElementById("loadingOverlay").style.display = "none";
+}
+
+// Helper
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+function savePinSession(hash) {
+  sessionStorage.setItem("pinData", JSON.stringify({ hash, date: todayStr() }));
+}
+function getPinSession() {
+  try {
+    return JSON.parse(sessionStorage.getItem("pinData") || "{}");
+  } catch {
+    return {};
+  }
+}
+function clearPinSession() {
+  sessionStorage.removeItem("pinData");
+}
+
+// Load PIN
+async function loadPinList() {
+  try {
+    const res = await fetch(PIN_URL, { cache: 'no-store' });
+    const json = await res.json();
+    pinList = json.pins || [];
+  } catch (e) {
+    throw new Error("Không tải được danh sách mã PIN.");
+  }
+}
+
+// Kiểm tra mã PIN
+async function checkPin() {
   const input = document.getElementById("pinInput").value.trim();
   if (!input) return;
 
@@ -71,38 +113,15 @@ async function checkPin(){
     }
     savePinSession(hashed);
     await openApp();
-  } catch (err) {
-    document.getElementById("loginMsg").textContent = "⚠️ Lỗi khi xác minh PIN.";
+  } catch (e) {
+    document.getElementById("loginMsg").textContent = "⚠️ Lỗi kiểm tra mã PIN.";
     hideLoading();
   }
 }
 
-function todayStr(){ return new Date().toISOString().slice(0,10); }
-
-function savePinSession(hash){
-  sessionStorage.setItem("pinData", JSON.stringify({hash, date: todayStr()}));
-}
-
-function getPinSession(){
-  try { return JSON.parse(sessionStorage.getItem("pinData") || "{}"); }
-  catch { return {}; }
-}
-
-function clearPinSession(){
-  sessionStorage.removeItem("pinData");
-}
-
-async function loadPinList(){
-  try {
-    const res = await fetch(PIN_URL);
-    const json = await res.json();
-    pinList = json.pins || [];
-  } catch (err) {
-    throw new Error("Không tải được danh sách PIN.");
-  }
-}
-
-(async function bootstrap(){
+// Bootstrap
+(async function init() {
+  showLoading("⏳ Đang tải...");
   try {
     await loadPinList();
     const saved = getPinSession();
@@ -110,120 +129,129 @@ async function loadPinList(){
       await openApp();
     } else {
       clearPinSession();
+      hideLoading();
     }
-  } catch (err) {
-    document.getElementById("loginMsg").textContent = "⚠️ Không thể tải danh sách mã PIN.";
+  } catch (e) {
+    document.getElementById("loginMsg").textContent = "⚠️ Lỗi khởi động: " + e.message;
     hideLoading();
   }
+
+  // Auto reload khi sang ngày
   setInterval(() => {
     if (getPinSession().date !== todayStr()) location.reload();
   }, 60000);
 })();
 
-async function openApp(){
+// Mở app
+async function openApp() {
   try {
     document.getElementById("loginBox").style.display = "none";
     document.getElementById("app").style.display = "block";
     await loadData();
-  } catch (err) {
+  } catch (e) {
     alert("❌ Không thể tải dữ liệu chấm công.");
   } finally {
     hideLoading();
   }
 }
 
-async function loadData(){
+// Tải dữ liệu
+async function loadData() {
   try {
-    const res = await fetch(API_URL);
+    const res = await fetch(API_URL, { cache: 'no-store' });
     data = await res.json();
-    if (!Array.isArray(data.employees))  data.employees = [];
+    if (!Array.isArray(data.employees)) data.employees = [];
     if (!Array.isArray(data.attendance)) data.attendance = [];
 
     const sel = document.getElementById("employeeSelect");
     sel.innerHTML = data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join("");
     updateButtons();
-  } catch (err) {
-    throw new Error("Lỗi khi tải dữ liệu.");
+  } catch (e) {
+    throw new Error("Không tải được dữ liệu chấm công.");
   }
 }
 
-function formatTime(i){ return new Date(i).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}); }
-function roundUp15(d){const m=d.getMinutes(),adj=m%15?15-m%15:0;d.setMinutes(m+adj,0,0);return d;}
-function roundDown15(d){d.setMinutes(d.getMinutes()-d.getMinutes()%15,0,0);return d;}
-function getShiftTimeRange(){
-  const n=new Date(),s=new Date(n);s.setHours(0,0,0,0);const e=new Date(n);e.setHours(23,59,59,999);
-  return { start:s.toISOString(), end:e.toISOString() };
+// Thời gian
+function formatTime(i) {
+  return new Date(i).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+}
+function roundUp15(d) {
+  const m = d.getMinutes(), adj = m % 15 ? 15 - m % 15 : 0;
+  d.setMinutes(m + adj, 0, 0); return d;
+}
+function roundDown15(d) {
+  d.setMinutes(d.getMinutes() - d.getMinutes() % 15, 0, 0); return d;
+}
+function getShiftTimeRange() {
+  const now = new Date(), s = new Date(now), e = new Date(now);
+  s.setHours(0, 0, 0, 0); e.setHours(23, 59, 59, 999);
+  return { start: s.toISOString(), end: e.toISOString() };
 }
 
-function updateButtons(){
-  const id=document.getElementById("employeeSelect").value;
-  const {start,end} = getShiftTimeRange();
-  const logs=data.attendance.filter(a=>a.employeeId===id&&a.checkIn>=start&&a.checkIn<=end)
-                            .sort((a,b)=>new Date(b.checkIn)-new Date(a.checkIn));
-  const entry=logs.find(a=>!a.checkOut);
-  document.getElementById("checkInBtn").disabled = !!entry;
-  document.getElementById("checkOutBtn").disabled= !entry;
-  document.getElementById("status").textContent = entry
-        ? entry.checkOut ? `🔴 Đã ra ca lúc ${formatTime(entry.checkOut)}`
-                         : `🟢 Đang làm ca bắt đầu lúc ${formatTime(entry.checkIn)}`
-        : "🟡 Sẵn sàng vào ca mới";
-}
-
-async function checkIn(){
+// Update trạng thái nút
+function updateButtons() {
   const id = document.getElementById("employeeSelect").value;
   const { start, end } = getShiftTimeRange();
-  if (data.attendance.some(a => a.employeeId === id && a.checkIn >= start && a.checkIn <= end && !a.checkOut))
-    return alert("⛔ Đã vào ca hôm nay.");
+  const logs = data.attendance.filter(a => a.employeeId === id && a.checkIn >= start && a.checkIn <= end)
+                              .sort((a, b) => new Date(b.checkIn) - new Date(a.checkIn));
+  const entry = logs.find(a => !a.checkOut);
 
-  showLoading("🔄 Đang ghi nhận vào ca...");
+  document.getElementById("checkInBtn").disabled = !!entry;
+  document.getElementById("checkOutBtn").disabled = !entry;
+  document.getElementById("status").textContent = entry
+    ? entry.checkOut ? `🔴 Đã ra ca lúc ${formatTime(entry.checkOut)}`
+                     : `🟢 Đang làm ca bắt đầu lúc ${formatTime(entry.checkIn)}`
+    : "🟡 Sẵn sàng vào ca mới";
+}
+
+// Chấm công
+async function checkIn() {
+  const id = document.getElementById("employeeSelect").value;
+  const { start, end } = getShiftTimeRange();
+  if (data.attendance.some(a => a.employeeId === id && a.checkIn >= start && a.checkIn <= end && !a.checkOut)) {
+    return alert("⛔ Đã vào ca hôm nay.");
+  }
+
+  showLoading("🔄 Ghi nhận vào ca...");
   try {
     data.attendance.push({ employeeId: id, checkIn: roundUp15(new Date()).toISOString(), checkOut: "" });
     await saveData();
     alert("✅ Đã vào ca!");
     await loadData();
-  } catch (err) {
+  } catch (e) {
     alert("❌ Lỗi khi ghi nhận vào ca.");
   } finally {
     hideLoading();
   }
 }
 
-async function checkOut(){
+async function checkOut() {
   const id = document.getElementById("employeeSelect").value;
   const { start, end } = getShiftTimeRange();
   const entry = data.attendance.find(a => a.employeeId === id && a.checkIn >= start && a.checkIn <= end && !a.checkOut);
   if (!entry) return alert("Không tìm thấy ca làm hôm nay.");
 
-  showLoading("🔄 Đang ghi nhận ra ca...");
+  showLoading("🔄 Ghi nhận ra ca...");
   try {
     entry.checkOut = roundDown15(new Date()).toISOString();
     await saveData();
     alert("⛔ Đã ra ca!");
     await loadData();
-  } catch (err) {
+  } catch (e) {
     alert("❌ Lỗi khi ghi nhận ra ca.");
   } finally {
     hideLoading();
   }
 }
 
-async function saveData(){
+// Gửi dữ liệu
+async function saveData() {
   await fetch(API_URL, {
     method: "POST",
     mode: "no-cors",
-    headers: {'Content-Type': 'application/json'},
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   });
-}
-
-function showLoading(msg = "⏳ Đang xử lý...") {
-  const el = document.getElementById("loadingOverlay");
-  el.textContent = msg;
-  el.style.display = "flex";
-}
-
-function hideLoading() {
-  document.getElementById("loadingOverlay").style.display = "none";
 }
 </script>
 </body>
