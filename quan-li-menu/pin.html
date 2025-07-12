@@ -26,15 +26,23 @@
 <body>
   <h2>🔐 Tạo Mã PIN</h2>
   <input type="password" id="pin" placeholder="Nhập mã PIN" />
+  <input type="hidden" id="tokenField" />
   <button onclick="taoPin()">Lưu PIN</button>
   <div id="status"></div>
+  <a href="../quan-li-nv/">trở lại</a>
 
   <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOry6wmWk8JPYtZuF_ThdfqzJGlpjVek1G2r3gb-fpKFScLeB3iPYj7Dk3I3VvDTIUeA/exec'; 
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzyTFPLK-0soB4y0o-Ilf00ZJK-z88i5sl8XK6aiCecAV4jcCtpDvMbRzbbu21jFJxaRg/exec'; // Thay bằng URL của bạn
+
+    function generateToken() {
+      return 'token_' + Date.now() + '_' + Math.random().toString(36).substring(2, 10);
+    }
 
     function taoPin() {
       const pin = document.getElementById("pin").value;
       const status = document.getElementById("status");
+      const token = generateToken();
+      document.getElementById("tokenField").value = token;
 
       if (!pin) {
         status.textContent = "❗ Vui lòng nhập mã PIN.";
@@ -45,21 +53,45 @@
 
       fetch(SCRIPT_URL, {
         method: "POST",
-        mode:"no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin, action: "save" })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          status.textContent = "✅ Đã lưu mã PIN thành công.";
-        } else {
-          status.textContent = "❌ Lỗi: " + data.message;
-        }
-      })
-      .catch(err => {
-        status.textContent = "❌ Không có phản hồi: " + err;
+        mode: "no-cors",
+        body: new URLSearchParams({
+          action: "savePin",
+          data: JSON.stringify({ pin, token })
+        })
       });
+
+      // Bắt đầu kiểm tra trạng thái sau khi gửi
+      waitForLog(token).then(log => {
+        if (log && log.status === "success") {
+          status.textContent = "✅ Đã lưu mã PIN thành công.";
+        } else if (log && log.status === "error") {
+          status.textContent = "❌ Lỗi khi lưu mã PIN.";
+        } else {
+          status.textContent = "⚠️ Không có phản hồi từ server sau 10 giây.";
+        }
+      });
+    }
+
+    async function waitForLog(token, maxWait = 10000, interval = 1000) {
+      const start = Date.now();
+      while (Date.now() - start < maxWait) {
+        const log = await getLogByToken(token);
+        if (log) return log;
+        await new Promise(r => setTimeout(r, interval));
+      }
+      return null;
+    }
+
+    async function getLogByToken(token) {
+      try {
+        const res = await fetch(`${SCRIPT_URL}?action=getLogs&token=${token}`);
+        if (!res.ok) throw new Error("Lỗi kết nối");
+        const log = await res.json();
+        return log.token ? log : null;
+      } catch (err) {
+        console.error("Lỗi khi lấy trạng thái:", err);
+        return null;
+      }
     }
   </script>
 </body>
