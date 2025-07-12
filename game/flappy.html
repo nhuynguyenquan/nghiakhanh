@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flappy Bird Mini</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      text-align: center;
+      font-family: sans-serif;
+      background: #70c5ce;
+      margin: 0;
+      padding: 0;
+    }
+
+    canvas {
+      display: block;
+      margin: 10px auto;
+      border: 2px solid #333;
+      background: url('https://i.imgur.com/rS0Rk7V.png') repeat-x;
+      background-size: cover;
+    }
+
+    h1 {
+      margin-top: 10px;
+    }
+
+    #scoreBoard {
+      font-size: 18px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🐤 Flappy Bird Mini</h1>
+  <canvas id="gameCanvas" width="400" height="600"></canvas>
+  <div id="scoreBoard">Điểm: 0 | Kỷ lục: 0</div>
+  <p>Nhấn phím cách hoặc chạm để bay!</p>
+
+  <!-- Nhạc nền -->
+  <audio id="bgm" loop autoplay>
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreBoard = document.getElementById('scoreBoard');
+    const bgm = document.getElementById('bgm');
+
+    // Chim (ảnh)
+    const birdImg = new Image();
+    birdImg.src = 'https://i.imgur.com/OdL0XPt.png';
+
+    let bird = {
+      x: 80,
+      y: 150,
+      radius: 20,
+      gravity: 0.6,
+      lift: -10,
+      velocity: 0
+    };
+
+    let pipes = [];
+    let pipeWidth = 60;
+    let pipeGap = 150;
+    let frame = 0;
+    let score = 0;
+    let highScore = localStorage.getItem("flappyHighScore") || 0;
+
+    function drawBird() {
+      ctx.drawImage(birdImg, bird.x - bird.radius, bird.y - bird.radius, 40, 40);
+    }
+
+    function drawPipe(pipe) {
+      ctx.fillStyle = "#228B22";
+      ctx.fillRect(pipe.x, 0, pipeWidth, pipe.top);
+      ctx.fillRect(pipe.x, pipe.top + pipeGap, pipeWidth, canvas.height - pipe.top - pipeGap);
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Chim rơi
+      bird.velocity += bird.gravity;
+      bird.y += bird.velocity;
+
+      if (bird.y + bird.radius > canvas.height || bird.y - bird.radius < 0) {
+        gameOver();
+        return;
+      }
+
+      drawBird();
+
+      // Ống
+      if (frame % 90 === 0) {
+        let top = Math.random() * (canvas.height / 2);
+        pipes.push({ x: canvas.width, top: top });
+      }
+
+      pipes.forEach((pipe, i) => {
+        pipe.x -= 2;
+        drawPipe(pipe);
+
+        // Va chạm
+        if (
+          bird.x + bird.radius > pipe.x &&
+          bird.x - bird.radius < pipe.x + pipeWidth &&
+          (bird.y - bird.radius < pipe.top || bird.y + bird.radius > pipe.top + pipeGap)
+        ) {
+          gameOver();
+          return;
+        }
+
+        // Ghi điểm
+        if (pipe.x + pipeWidth === Math.floor(bird.x)) {
+          score++;
+          if (score > highScore) {
+            highScore = score;
+            localStorage.setItem("flappyHighScore", highScore);
+          }
+        }
+      });
+
+      // Xóa ống ra ngoài
+      pipes = pipes.filter(pipe => pipe.x + pipeWidth > 0);
+
+      // Hiển thị điểm
+      scoreBoard.innerText = `Điểm: ${score} | Kỷ lục: ${highScore}`;
+
+      frame++;
+      requestAnimationFrame(update);
+    }
+
+    function gameOver() {
+      alert("🎮 Game Over!\nĐiểm của bạn: " + score);
+      score = 0;
+      bird.y = 150;
+      bird.velocity = 0;
+      pipes = [];
+      frame = 0;
+      update();
+    }
+
+    function flap() {
+      bird.velocity = bird.lift;
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.code === "Space") flap();
+    });
+
+    document.addEventListener("touchstart", flap);
+    bgm.volume = 0.3; // Giảm âm lượng
+    update(); // Bắt đầu game
+  </script>
+</body>
+</html>
