@@ -56,8 +56,8 @@
       x: 80,
       y: 150,
       radius: 20,
-      gravity: 0.6,
-      lift: -10,
+      gravity: 0.3,
+      lift: -6,
       velocity: 0
     };
 
@@ -99,7 +99,7 @@
       }
 
       pipes.forEach((pipe, i) => {
-        pipe.x -= 2;
+        pipe.x -= 1.2;
         drawPipe(pipe);
 
         // Va chạm
