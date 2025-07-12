@@ -146,10 +146,10 @@
 
       drawBird();
 
-      // Ống
+      // Ống mới
       if (frame % 200 === 0) {
         let top = Math.random() * (canvas.height / 2);
-        pipes.push({ x: canvas.width, top: top });
+        pipes.push({ x: canvas.width, top: top, passed: false });
       }
 
       for (let i = 0; i < pipes.length; i++) {
@@ -167,9 +167,10 @@
           return;
         }
 
-        // Ghi điểm khi chim bay qua ống
-        if (pipe.x + pipeWidth === Math.floor(bird.x)) {
+        // Cộng điểm khi chim bay qua ống (chỉ cộng 1 lần)
+        if (pipe.x + pipeWidth < bird.x && !pipe.passed) {
           score++;
+          pipe.passed = true;
           if (score > highScore) {
             highScore = score;
             localStorage.setItem("flappyHighScore", highScore);
