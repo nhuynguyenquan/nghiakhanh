@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gửi dữ liệu mẫu</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body { font-family: sans-serif; padding: 1rem; max-width: 400px; margin: auto; }
+    input, button { width: 100%; margin: 0.5rem 0; padding: 0.5rem; font-size: 1.1rem; }
+    #status { margin-top: 1rem; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>📤 Gửi dữ liệu mẫu</h2>
+  <input id="name" placeholder="Tên" />
+  <input id="age" type="number" placeholder="Tuổi" />
+  <button onclick="guiDuLieu()">Gửi dữ liệu</button>
+  <div id="status">Trạng thái sẽ hiển thị ở đây</div>
+
+  <script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwauZPR6aY2htdgyCUkIHurERxJCh3PC7enqHO22KOIdQhiHacvbGKfl7Rzc99IzlMiaQ/exec';
+
+    function generateToken() {
+      return "token_" + Date.now() + "_" + Math.random().toString(36).substring(2, 10);
+    }
+
+    async function guiDuLieu() {
+      const name = document.getElementById("name").value;
+      const age  = document.getElementById("age").value;
+      const token = generateToken();
+
+      document.getElementById("status").textContent = "⏳ Đang gửi...";
+
+      // Gửi dữ liệu
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify({ name, age, token })
+      });
+
+      // Kiểm tra kết quả
+      const result = await waitForStatus(token);
+      if (result?.status === "success") {
+        document.getElementById("status").textContent = "✅ Gửi thành công!";
+      } else if (result?.status === "error") {
+        document.getElementById("status").textContent = "❌ Gửi thất bại!";
+      } else {
+        document.getElementById("status").textContent = "⚠️ Không có phản hồi từ server sau 10 giây.";
+      }
+    }
+
+    async function waitForStatus(token, maxWait = 10000, interval = 1000) {
+      const start = Date.now();
+      while (Date.now() - start < maxWait) {
+        const res = await fetch(`${SCRIPT_URL}?action=status&token=${token}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.status) return json;
+        }
+        await new Promise(r => setTimeout(r, interval));
+      }
+      return null;
+    }
+  </script>
+</body>
+</html>
