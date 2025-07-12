@@ -11,15 +11,6 @@
       padding: 0;
       background: #f4f6f8;
     }
-    .container {
-      max-width: 480px;
-      margin: auto;
-      padding: 20px;
-    }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
-    input, select, button { margin: 5px; padding: 5px; }
-    .summary { margin-top: 20px; font-weight: bold; }
     nav {
       display: flex;
       justify-content: center;
@@ -36,41 +27,67 @@
       text-align: center;
       color: #d35400;
     }
-    #month-filter {
-      margin: 10px auto;
+    label, input, select, button {
       display: block;
-      padding: 5px;
+      width: 90%;
+      margin: 8px auto;
+      padding: 8px;
+      font-size: 1rem;
     }
-    #pagination {
+    .summary {
+      margin: 10px auto;
       text-align: center;
-      margin: 20px 0;
-    }
-    #pagination button {
-      margin: 2px;
-      padding: 5px 10px;
-    }
-    .active-page {
-      background-color: #d35400;
-      color: white;
       font-weight: bold;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    table thead {
+      background-color: #eee;
+    }
+    button {
+      padding: 5px 8px;
+      font-size: 1rem;
+    }
+    .month-box {
+      border: 1px solid #ccc;
+      margin: 10px;
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .month-header {
+      background: #d35400;
+      color: white;
+      padding: 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .month-header strong {
+      font-size: 1rem;
     }
   </style>
 </head>
 <body>
   <nav>
     <a href="../quan-li-thu-chi/">Quản Lí Thu Chi</a>
-    <a href="../quan-li-kho/">Quản Lí kho</a>
+    <a href="../quan-li-kho/">Quản Lí Kho</a>
     <a href="../quan-li-menu/">Quản Lí Menu</a>
-    <a href="../quan-li-nv">Quản lí nhân viên</a>
-    <a href="../quan-li-sx">Quản lí sản xuất</a>
+    <a href="../quan-li-nv/">Quản Lí Nhân Viên</a>
+    <a href="../quan-li-sx/">Quản Lí Sản Xuất</a>
     <a href="../quan-li-chi-nhanh/">Quản Lí Chi Nhánh</a>
   </nav>
 
   <h2>Quản lý thu chi Nhụy Nguyên</h2>
-
-  <select id="month-filter" onchange="changeMonth()">
-    <option value="">Tất cả các tháng</option>
-  </select>
 
   <label for="amount">Số tiền:</label>
   <input type="number" id="amount" placeholder="VD: 100000">
@@ -87,123 +104,123 @@
     Tổng thu: <span id="total-income">0</span> VND | Tổng chi: <span id="total-expense">0</span> VND
   </div>
 
-  <table id="transaction-table">
-    <thead>
-      <tr>
-        <th>Số tiền</th>
-        <th>Loại</th>
-        <th>Mô tả</th>
-        <th>Ngày</th>
-        <th>Hành động</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <div id="pagination"></div>
+  <div id="transaction-container"></div>
 
   <script>
-    let transactions = [];
-    let currentPage = 1;
-    const itemsPerPage = 20;
     const API_URL = "https://script.google.com/macros/s/AKfycbzaaylyRMuHUrx4UkBS30bGKfQXozCwSaNhJBlKYkDx5tHl-oBghK-kokxMSfTLyJPL/exec";
     const TELEGRAM_BOT_TOKEN = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";
     const TELEGRAM_CHAT_ID = "6249154937";
+    let transactions = [];
 
     async function fetchTransactions() {
       try {
-        let response = await fetch(API_URL);
-        let data = await response.json();
+        const res = await fetch(API_URL);
+        const data = await res.json();
         return data.transactions || [];
-      } catch (error) {
-        console.error("❌ Lỗi lấy dữ liệu:", error);
+      } catch (err) {
+        console.error("❌ Lỗi lấy dữ liệu:", err);
         return [];
       }
     }
 
-    function changeMonth() {
-      currentPage = 1;
-      updateUI();
-    }
-
-    function populateMonthFilter() {
-      const select = document.getElementById("month-filter");
-      const months = [...new Set(transactions.map(t => t.date?.slice(0, 7)))].sort().reverse();
-      const now = new Date();
-      const currentMonth = now.toISOString().slice(0, 7);
-      months.forEach(m => {
-        const option = document.createElement("option");
-        option.value = m;
-        option.textContent = `Tháng ${m.slice(5, 7)}/${m.slice(0, 4)}`;
-        if (m === currentMonth) option.selected = true;
-        select.appendChild(option);
-      });
-    }
-
     function updateUI() {
-      const tableBody = document.querySelector("#transaction-table tbody");
+      const container = document.getElementById("transaction-container");
+      container.innerHTML = "";
+
       let totalIncome = 0;
       let totalExpense = 0;
-      const selectedMonth = document.getElementById("month-filter").value;
-      let filtered = selectedMonth
-        ? transactions.filter(t => t.date?.startsWith(selectedMonth))
-        : transactions;
 
-      const sorted = [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date));
-      const start = (currentPage - 1) * itemsPerPage;
-      const paginated = sorted.slice(start, start + itemsPerPage);
+      const grouped = {};
+      transactions.forEach(t => {
+        const month = t.date?.slice(0, 7); // YYYY-MM
+        if (!grouped[month]) grouped[month] = [];
+        grouped[month].push(t);
+      });
 
-      tableBody.innerHTML = "";
-      paginated.forEach((t, index) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${t.amount.toLocaleString("vi-VN")} VND</td>
-          <td>${t.type === "income" ? "Thu" : "Chi"}</td>
-          <td>${t.note}</td>
-          <td>${new Date(t.date).toLocaleString("vi-VN")}</td>
-          <td>
-            <button onclick="editTransaction(${transactions.indexOf(t)})">✏️</button>
-            <button onclick="deleteTransaction(${transactions.indexOf(t)})">🗑️</button>
-          </td>`;
-        tableBody.appendChild(row);
+      const sortedMonths = Object.keys(grouped).sort().reverse();
 
-        if (t.type === "income") totalIncome += t.amount;
-        else totalExpense += t.amount;
+      sortedMonths.forEach(month => {
+        const list = grouped[month].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        let income = 0;
+        let expense = 0;
+        list.forEach(t => {
+          if (t.type === "income") income += t.amount;
+          else expense += t.amount;
+        });
+        totalIncome += income;
+        totalExpense += expense;
+
+        const monthBox = document.createElement("div");
+        monthBox.className = "month-box";
+
+        const header = document.createElement("div");
+        header.className = "month-header";
+
+        const title = document.createElement("strong");
+        title.textContent = `📅 Tháng ${month.slice(5, 7)}/${month.slice(0, 4)} - Thu: ${income.toLocaleString("vi-VN")} VND, Chi: ${expense.toLocaleString("vi-VN")} VND`;
+
+        const toggle = document.createElement("span");
+        toggle.textContent = "🔽";
+
+        header.appendChild(title);
+        header.appendChild(toggle);
+
+        const table = document.createElement("table");
+        table.style.display = "none";
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>Số tiền</th>
+              <th>Loại</th>
+              <th>Mô tả</th>
+              <th>Ngày</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        `;
+
+        list.forEach(t => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${t.amount.toLocaleString("vi-VN")} VND</td>
+            <td>${t.type === "income" ? "Thu" : "Chi"}</td>
+            <td>${t.note}</td>
+            <td>${new Date(t.date).toLocaleString("vi-VN")}</td>
+            <td>
+              <button onclick="editTransaction(${transactions.indexOf(t)})">✏️</button>
+              <button onclick="deleteTransaction(${transactions.indexOf(t)})">🗑️</button>
+            </td>
+          `;
+          table.querySelector("tbody").appendChild(row);
+        });
+
+        header.onclick = () => {
+          table.style.display = table.style.display === "none" ? "table" : "none";
+          toggle.textContent = table.style.display === "none" ? "🔽" : "🔼";
+        };
+
+        monthBox.appendChild(header);
+        monthBox.appendChild(table);
+        container.appendChild(monthBox);
       });
 
       document.getElementById("total-income").textContent = totalIncome.toLocaleString("vi-VN");
       document.getElementById("total-expense").textContent = totalExpense.toLocaleString("vi-VN");
-      renderPagination(sorted.length);
-    }
-
-    function renderPagination(totalItems) {
-      const totalPages = Math.ceil(totalItems / itemsPerPage);
-      const container = document.getElementById("pagination");
-      container.innerHTML = "";
-      for (let i = 1; i <= totalPages; i++) {
-        const btn = document.createElement("button");
-        btn.textContent = i;
-        btn.className = i === currentPage ? "active-page" : "";
-        btn.onclick = () => {
-          currentPage = i;
-          updateUI();
-        };
-        container.appendChild(btn);
-      }
     }
 
     async function addTransaction() {
-      let amount = document.getElementById("amount").value;
-      let type = document.getElementById("type").value;
-      let note = document.getElementById("note").value;
-
+      const amount = parseInt(document.getElementById("amount").value);
+      const type = document.getElementById("type").value;
+      const note = document.getElementById("note").value;
       if (!amount || isNaN(amount)) {
         alert("Vui lòng nhập số tiền hợp lệ!");
         return;
       }
 
       const transaction = {
-        amount: parseInt(amount),
+        amount,
         type,
         note,
         date: new Date().toISOString()
@@ -225,23 +242,37 @@
           mode: "no-cors"
         });
       } catch (err) {
-        console.error("Lỗi khi gửi dữ liệu:", err);
+        console.error("❌ Lỗi khi gửi:", err);
+      }
+    }
+
+    async function saveAllTransactions() {
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ transactions }),
+          mode: "no-cors"
+        });
+      } catch (err) {
+        console.error("❌ Lỗi khi lưu toàn bộ:", err);
       }
     }
 
     async function deleteTransaction(index) {
-      if (!confirm("Bạn có chắc muốn xoá giao dịch này?")) return;
+      if (!confirm("Bạn có chắc muốn xoá?")) return;
       transactions.splice(index, 1);
       await saveAllTransactions();
       updateUI();
     }
 
     function editTransaction(index) {
-      let t = transactions[index];
+      const t = transactions[index];
       document.getElementById("amount").value = t.amount;
       document.getElementById("type").value = t.type;
       document.getElementById("note").value = t.note;
-      document.getElementById("submit-btn").onclick = async function () {
+
+      document.getElementById("submit-btn").onclick = async () => {
         transactions[index] = {
           amount: parseInt(document.getElementById("amount").value),
           type: document.getElementById("type").value,
@@ -254,20 +285,6 @@
       };
     }
 
-    async function saveAllTransactions() {
-      const clean = transactions.filter(t => t && t.amount && t.type);
-      try {
-        await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ transactions: clean }),
-          mode: "no-cors"
-        });
-      } catch (err) {
-        console.error("Lỗi khi lưu toàn bộ:", err);
-      }
-    }
-
     function resetForm() {
       document.getElementById("amount").value = "";
       document.getElementById("type").value = "income";
@@ -275,14 +292,14 @@
       document.getElementById("submit-btn").onclick = addTransaction;
     }
 
-    function sendToTelegram(transaction) {
-      let message = `📌 *Giao dịch mới*:\n💰 *Số tiền:* ${transaction.amount.toLocaleString("vi-VN")} VND\n📂 *Loại:* ${transaction.type === "income" ? "Thu nhập" : "Chi tiêu"}\n📝 *Mô tả:* ${transaction.note}`;
+    function sendToTelegram(t) {
+      const msg = `📌 *Giao dịch mới*:\n💰 *Số tiền:* ${t.amount.toLocaleString("vi-VN")} VND\n📂 *Loại:* ${t.type === "income" ? "Thu nhập" : "Chi tiêu"}\n📝 *Mô tả:* ${t.note}`;
       fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: TELEGRAM_CHAT_ID,
-          text: message,
+          text: msg,
           parse_mode: "Markdown"
         })
       }).then(r => r.json())
@@ -293,7 +310,6 @@
 
     window.onload = async () => {
       transactions = await fetchTransactions();
-      populateMonthFilter();
       updateUI();
       document.getElementById("submit-btn").onclick = addTransaction;
     };
