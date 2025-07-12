@@ -2,92 +2,71 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Gửi dữ liệu mẫu</title>
+  <title>📤 Gửi Dữ Liệu Mẫu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 1rem;
-      max-width: 400px;
-      margin: auto;
-    }
-    input, button {
-      width: 100%;
-      margin: 0.5rem 0;
-      padding: 0.5rem;
-      font-size: 1.1rem;
-    }
-    #status {
-      margin-top: 1rem;
-      font-weight: bold;
-    }
-    .token {
-      font-size: 0.9rem;
-      word-break: break-all;
-      color: #555;
-    }
+    body { font-family: sans-serif; padding: 1rem; max-width: 400px; margin: auto; }
+    input, button { width: 100%; margin: 0.5rem 0; padding: 0.5rem; font-size: 1.1rem; }
+    #status { margin-top: 1rem; font-weight: bold; }
   </style>
 </head>
 <body>
-  <h2>📤 Gửi dữ liệu mẫu</h2>
+  <h2>📤 Gửi Dữ Liệu Mẫu</h2>
   <input id="name" placeholder="Tên" />
   <input id="age" type="number" placeholder="Tuổi" />
-  <button onclick="guiDuLieu()">📤 Gửi dữ liệu</button>
-  <input id="token" placeholder="Token kiểm tra" readonly class="token" />
-  <button onclick="kiemTraTrangThai()">🔄 Kiểm tra trạng thái</button>
-  <div id="status">⏳ Chưa gửi dữ liệu</div>
+  <button onclick="guiDuLieu()">Gửi dữ liệu</button>
+  <div id="status">Trạng thái sẽ hiển thị ở đây</div>
 
   <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdEhsiuisVc7bIyj63dt1NVUAvhgq3cX1pXPtP_gm77xLaSC4Qnf6ZVQ8tgFtdQHsrCg/exec';
+    const POST_URL = 'https://script.google.com/macros/s/AKfycbzaQ0OIcnqeg_V5wQBi4nWK0Db5pWg5oH9SAjx-jryhf0Y3yRGCAwm9EH4SjOFUyaxvcg/exec';
+    const STATUS_URL = 'https://script.google.com/macros/s/AKfycbxebkFry0hWHwb6n7pAVmiCMzjTt1W-GtDjTwXhP202E9XsGB8sdCTiQqoOD3QDIPE46w/exec';
 
     function generateToken() {
       return "token_" + Date.now() + "_" + Math.random().toString(36).substring(2, 10);
     }
 
-    function guiDuLieu() {
+    async function guiDuLieu() {
       const name = document.getElementById("name").value;
-      const age = document.getElementById("age").value;
+      const age  = document.getElementById("age").value;
       const token = generateToken();
       const statusBox = document.getElementById("status");
 
-      document.getElementById("token").value = token;
+      if (!name || !age) {
+        statusBox.textContent = "⚠️ Vui lòng nhập đầy đủ tên và tuổi.";
+        return;
+      }
+
       statusBox.textContent = "⏳ Đang gửi dữ liệu...";
 
-      // Gửi dữ liệu (không chờ phản hồi)
-      fetch(SCRIPT_URL, {
+      // Gửi dữ liệu mà không cần chờ phản hồi
+      fetch(POST_URL, {
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, age, token })
       });
 
-      statusBox.textContent = "📨 Đã gửi. Đang kiểm tra phản hồi...";
-
-      // Tự động kiểm tra sau 5 giây
+      // Tự động kiểm tra trạng thái sau 5 giây
       setTimeout(() => kiemTraTrangThai(token), 5000);
     }
 
-    async function kiemTraTrangThai(tk = null) {
-      const token = tk || document.getElementById("token").value;
+    async function kiemTraTrangThai(token) {
       const statusBox = document.getElementById("status");
-
-      if (!token) {
-        statusBox.textContent = "⚠️ Chưa có token để kiểm tra.";
-        return;
-      }
-
       try {
-        const res = await fetch(`${SCRIPT_URL}?action=status&token=${token}`);
-        const json = await res.json();
-
-        if (json.status === "success") {
-          statusBox.textContent = "✅ Gửi thành công!";
-        } else if (json.status === "error") {
-          statusBox.textContent = "❌ Gửi thất bại!";
+        const res = await fetch(`${STATUS_URL}?action=status&token=${token}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.status === "success") {
+            statusBox.textContent = "✅ Gửi thành công!";
+          } else if (json.status === "error") {
+            statusBox.textContent = "❌ Gửi thất bại!";
+          } else {
+            statusBox.textContent = "⚠️ Không có trạng thái phù hợp.";
+          }
         } else {
-          statusBox.textContent = "⏳ Chưa có phản hồi từ server.";
+          statusBox.textContent = "⚠️ Không thể truy vấn trạng thái.";
         }
-      } catch (err) {
+      } catch (e) {
         statusBox.textContent = "❌ Lỗi khi truy vấn trạng thái.";
       }
     }
