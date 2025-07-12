@@ -19,7 +19,7 @@
 
   <script>
     const POST_URL = 'https://script.google.com/macros/s/AKfycbzaQ0OIcnqeg_V5wQBi4nWK0Db5pWg5oH9SAjx-jryhf0Y3yRGCAwm9EH4SjOFUyaxvcg/exec';
-    const STATUS_URL = 'https://script.google.com/macros/s/AKfycbxebkFry0hWHwb6n7pAVmiCMzjTt1W-GtDjTwXhP202E9XsGB8sdCTiQqoOD3QDIPE46w/exec';
+    const STATUS_URL = 'https://script.google.com/macros/s/AKfycbxRo0Yw1x8wz8cRBKVLf-wy5l7L58LQMRnac39QQDEVg3Anitne_3ihXCebge89adD1GA/exec';
 
     function generateToken() {
       return "token_" + Date.now() + "_" + Math.random().toString(36).substring(2, 10);
@@ -38,7 +38,7 @@
 
       statusBox.textContent = "⏳ Đang gửi dữ liệu...";
 
-      // Gửi dữ liệu mà không cần chờ phản hồi
+      // Gửi dữ liệu
       fetch(POST_URL, {
         method: "POST",
         mode: "no-cors",
@@ -46,28 +46,28 @@
         body: JSON.stringify({ name, age, token })
       });
 
-      // Tự động kiểm tra trạng thái sau 5 giây
-      setTimeout(() => kiemTraTrangThai(token), 5000);
+      // Kiểm tra trạng thái sau 5 giây
+      setTimeout(() => checkStatusFromJson(token), 5000);
     }
 
-    async function kiemTraTrangThai(token) {
+    async function checkStatusFromJson(token) {
       const statusBox = document.getElementById("status");
       try {
-        const res = await fetch(`${STATUS_URL}?action=status&token=${token}`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.status === "success") {
-            statusBox.textContent = "✅ Gửi thành công!";
-          } else if (json.status === "error") {
-            statusBox.textContent = "❌ Gửi thất bại!";
-          } else {
-            statusBox.textContent = "⚠️ Không có trạng thái phù hợp.";
-          }
+        const res = await fetch(STATUS_URL);
+        const json = await res.json();
+
+        const logs = Array.isArray(json.logs) ? json.logs : [];
+        const found = logs.find(log => log.token === token);
+
+        if (found?.status === "success") {
+          statusBox.textContent = "✅ Gửi thành công!";
+        } else if (found?.status === "error") {
+          statusBox.textContent = "❌ Gửi thất bại!";
         } else {
-          statusBox.textContent = "⚠️ Không thể truy vấn trạng thái.";
+          statusBox.textContent = "⚠️ Không có trạng thái sau 5 giây.";
         }
-      } catch (e) {
-        statusBox.textContent = "❌ Lỗi khi truy vấn trạng thái.";
+      } catch (err) {
+        statusBox.textContent = "❌ Lỗi khi tải status.json";
       }
     }
   </script>
