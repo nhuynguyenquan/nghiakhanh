@@ -122,6 +122,10 @@
 
     let animationId;
 
+    function updateScore() {
+      scoreBoard.innerText = `Điểm: ${score} | Kỷ lục: ${highScore}`;
+    }
+
     function drawBird() {
       ctx.drawImage(birdImg, bird.x - bird.radius, bird.y - bird.radius, 40, 40);
     }
@@ -175,14 +179,12 @@
             highScore = score;
             localStorage.setItem("flappyHighScore", highScore);
           }
+          updateScore(); // Cập nhật điểm ngay khi thay đổi
         }
       }
 
       // Xóa ống ra ngoài
       pipes = pipes.filter(pipe => pipe.x + pipeWidth > 0);
-
-      // Hiển thị điểm
-      scoreBoard.innerText = `Điểm: ${score} | Kỷ lục: ${highScore}`;
 
       frame++;
       animationId = requestAnimationFrame(update);
@@ -210,7 +212,7 @@
       pipes = [];
       frame = 0;
 
-      // Bắt đầu lại game
+      updateScore();
       update();
     });
 
@@ -222,6 +224,7 @@
 
     bgm.volume = 0.3; // Giảm âm lượng
 
+    updateScore();
     update(); // Bắt đầu game
   </script>
 </body>
