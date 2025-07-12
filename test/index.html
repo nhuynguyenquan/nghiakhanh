@@ -1,45 +1,96 @@
-<button onclick="gui()">📤 Gửi dữ liệu</button>
-<button onclick="kiemTra()">🔄 Kiểm tra trạng thái</button>
-<input id="token" placeholder="Token để kiểm tra" />
-<div id="status"></div>
-
-<script>
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzaQ0OIcnqeg_V5wQBi4nWK0Db5pWg5oH9SAjx-jryhf0Y3yRGCAwm9EH4SjOFUyaxvcg/exec';
-
-  function generateToken() {
-    return "token_" + Date.now() + "_" + Math.random().toString(36).substring(2, 10);
-  }
-
-  function gui() {
-    const token = generateToken();
-    const name = "Tên mẫu";
-    const age = 20;
-
-    // Lưu lại token để kiểm tra
-    document.getElementById("token").value = token;
-    document.getElementById("status").textContent = "⏳ Đã gửi dữ liệu. Hãy kiểm tra trạng thái sau vài giây.";
-
-    fetch(SCRIPT_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, age, token })
-    });
-  }
-
-  async function kiemTra() {
-    const token = document.getElementById("token").value.trim();
-    if (!token) return alert("Nhập token để kiểm tra");
-
-    const res = await fetch(`${SCRIPT_URL}?action=status&token=${token}`);
-    const data = await res.json();
-
-    if (data?.status === "success") {
-      document.getElementById("status").textContent = "✅ Thành công!";
-    } else if (data?.status === "error") {
-      document.getElementById("status").textContent = "❌ Thất bại!";
-    } else {
-      document.getElementById("status").textContent = "⏳ Chưa có kết quả.";
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gửi dữ liệu mẫu</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 1rem;
+      max-width: 400px;
+      margin: auto;
     }
-  }
-</script>
+    input, button {
+      width: 100%;
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      font-size: 1.1rem;
+    }
+    #status {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    .token {
+      font-size: 0.9rem;
+      word-break: break-all;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h2>📤 Gửi dữ liệu mẫu</h2>
+  <input id="name" placeholder="Tên" />
+  <input id="age" type="number" placeholder="Tuổi" />
+  <button onclick="guiDuLieu()">📤 Gửi dữ liệu</button>
+  <input id="token" placeholder="Token kiểm tra" readonly class="token" />
+  <button onclick="kiemTraTrangThai()">🔄 Kiểm tra trạng thái</button>
+  <div id="status">⏳ Chưa gửi dữ liệu</div>
+
+  <script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzaQ0OIcnqeg_V5wQBi4nWK0Db5pWg5oH9SAjx-jryhf0Y3yRGCAwm9EH4SjOFUyaxvcg/exec';
+
+    function generateToken() {
+      return "token_" + Date.now() + "_" + Math.random().toString(36).substring(2, 10);
+    }
+
+    function guiDuLieu() {
+      const name = document.getElementById("name").value;
+      const age = document.getElementById("age").value;
+      const token = generateToken();
+      const statusBox = document.getElementById("status");
+
+      document.getElementById("token").value = token;
+      statusBox.textContent = "⏳ Đang gửi dữ liệu...";
+
+      // Gửi dữ liệu (không chờ phản hồi)
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, age, token })
+      });
+
+      statusBox.textContent = "📨 Đã gửi. Đang kiểm tra phản hồi...";
+
+      // Tự động kiểm tra sau 5 giây
+      setTimeout(() => kiemTraTrangThai(token), 5000);
+    }
+
+    async function kiemTraTrangThai(tk = null) {
+      const token = tk || document.getElementById("token").value;
+      const statusBox = document.getElementById("status");
+
+      if (!token) {
+        statusBox.textContent = "⚠️ Chưa có token để kiểm tra.";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${SCRIPT_URL}?action=status&token=${token}`);
+        const json = await res.json();
+
+        if (json.status === "success") {
+          statusBox.textContent = "✅ Gửi thành công!";
+        } else if (json.status === "error") {
+          statusBox.textContent = "❌ Gửi thất bại!";
+        } else {
+          statusBox.textContent = "⏳ Chưa có phản hồi từ server.";
+        }
+      } catch (err) {
+        statusBox.textContent = "❌ Lỗi khi truy vấn trạng thái.";
+      }
+    }
+  </script>
+</body>
+</html>
