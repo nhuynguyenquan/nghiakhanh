@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<title>Game Sắp Xếp Ô Số - Đa cấp độ</title>
+<style>
+  body {
+    font-family: sans-serif;
+    text-align: center;
+    margin-top: 30px;
+  }
+  #puzzle {
+    margin: 20px auto;
+    display: grid;
+    grid-gap: 3px;
+    /* grid-template-columns sẽ set JS theo size */
+  }
+  .tile {
+    background: #4CAF50;
+    color: white;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .empty {
+    background: #ddd;
+    cursor: default;
+  }
+  #shuffleBtn {
+    margin-top: 15px;
+    padding: 10px 20px;
+    font-size: 18px;
+    cursor: pointer;
+  }
+  #moves {
+    margin-top: 10px;
+    font-size: 18px;
+  }
+  #levelSelect {
+    font-size: 18px;
+    padding: 5px 10px;
+  }
+</style>
+</head>
+<body>
+
+<h2>Game Sắp Xếp Ô Số - Đa cấp độ</h2>
+
+<label for="levelSelect">Chọn cấp độ:</label>
+<select id="levelSelect">
+  <option value="3">3 x 3</option>
+  <option value="4">4 x 4</option>
+  <option value="5">5 x 5</option>
+</select>
+
+<div id="puzzle"></div>
+<button id="shuffleBtn">Trộn Ô</button>
+<div id="moves">Số nước đi: 0</div>
+
+<script>
+  const puzzle = document.getElementById('puzzle');
+  const shuffleBtn = document.getElementById('shuffleBtn');
+  const movesDisplay = document.getElementById('moves');
+  const levelSelect = document.getElementById('levelSelect');
+
+  let size = 3;
+  let tiles = [];
+  let emptyIndex;
+  let moves = 0;
+
+  function initPuzzle() {
+    tiles = [];
+    for(let i = 1; i < size * size; i++) {
+      tiles.push(i);
+    }
+    tiles.push(null);
+    emptyIndex = tiles.length - 1;
+    moves = 0;
+    movesDisplay.textContent = 'Số nước đi: 0';
+
+    puzzle.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+
+    render();
+  }
+
+  function render() {
+    puzzle.innerHTML = '';
+    let tileSize = Math.min(80, Math.floor(300 / size));
+    tiles.forEach((num, idx) => {
+      const div = document.createElement('div');
+      div.classList.add('tile');
+      div.style.width = tileSize + 'px';
+      div.style.height = tileSize + 'px';
+
+      if(num === null) {
+        div.classList.add('empty');
+        div.textContent = '';
+      } else {
+        div.textContent = num;
+        div.addEventListener('click', () => tryMove(idx));
+      }
+      puzzle.appendChild(div);
+    });
+  }
+
+  function canMove(idx) {
+    const adjacent = [
+      emptyIndex - 1,
+      emptyIndex + 1,
+      emptyIndex - size,
+      emptyIndex + size
+    ];
+    if (adjacent.includes(idx)) {
+      // Kiểm tra không nhảy hàng ngang
+      const emptyRow = Math.floor(emptyIndex / size);
+      const idxRow = Math.floor(idx / size);
+      if (emptyRow === idxRow || emptyIndex % size === idx % size) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function tryMove(idx) {
+    if(canMove(idx)) {
+      tiles[emptyIndex] = tiles[idx];
+      tiles[idx] = null;
+      emptyIndex = idx;
+      moves++;
+      movesDisplay.textContent = 'Số nước đi: ' + moves;
+      render();
+      if(checkWin()) {
+        setTimeout(() => alert('🎉 Bạn đã thắng!'), 100);
+      }
+    }
+  }
+
+  function checkWin() {
+    for(let i = 0; i < tiles.length - 1; i++) {
+      if(tiles[i] !== i + 1) return false;
+    }
+    return true;
+  }
+
+  function shuffle() {
+    let shuffleMoves = size * size * 50; // số lần trộn tăng theo size
+    let lastMove = -1;
+    while(shuffleMoves > 0) {
+      const possibleMoves = [];
+      for(let i = 0; i < tiles.length; i++) {
+        if(canMove(i) && i !== lastMove) possibleMoves.push(i);
+      }
+      if(possibleMoves.length === 0) break;
+      const moveTo = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+      tiles[emptyIndex] = tiles[moveTo];
+      tiles[moveTo] = null;
+      lastMove = emptyIndex;
+      emptyIndex = moveTo;
+      shuffleMoves--;
+    }
+    moves = 0;
+    movesDisplay.textContent = 'Số nước đi: 0';
+    render();
+  }
+
+  shuffleBtn.addEventListener('click', shuffle);
+
+  levelSelect.addEventListener('change', () => {
+    size = parseInt(levelSelect.value);
+    initPuzzle();
+  });
+
+  initPuzzle();
+</script>
+
+</body>
+</html>
