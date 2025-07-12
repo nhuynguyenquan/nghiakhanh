@@ -1,72 +1,45 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8" />
-  <title>Gửi dữ liệu mẫu</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body { font-family: sans-serif; padding: 1rem; max-width: 400px; margin: auto; }
-    input, button { width: 100%; margin: 0.5rem 0; padding: 0.5rem; font-size: 1.1rem; }
-    #status { margin-top: 1rem; font-weight: bold; }
-  </style>
-</head>
-<body>
-  <h2>📤 Gửi dữ liệu mẫu</h2>
-  <input id="name" placeholder="Tên" />
-  <input id="age" type="number" placeholder="Tuổi" />
-  <button onclick="guiDuLieu()">Gửi dữ liệu</button>
-  <div id="status">Trạng thái sẽ hiển thị ở đây</div>
+<button onclick="gui()">📤 Gửi dữ liệu</button>
+<button onclick="kiemTra()">🔄 Kiểm tra trạng thái</button>
+<input id="token" placeholder="Token để kiểm tra" />
+<div id="status"></div>
 
-  <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzaQ0OIcnqeg_V5wQBi4nWK0Db5pWg5oH9SAjx-jryhf0Y3yRGCAwm9EH4SjOFUyaxvcg/exec';
+<script>
+  const SCRIPT_URL = '...';
 
-    function generateToken() {
+  function generateToken() {
     return "token_" + Date.now() + "_" + Math.random().toString(36).substring(2, 10);
   }
 
-  async function guiDuLieu() {
-    const name = document.getElementById("name").value;
-    const age  = document.getElementById("age").value;
+  function gui() {
     const token = generateToken();
-    const statusBox = document.getElementById("status");
+    const name = "Tên mẫu";
+    const age = 20;
 
-    statusBox.textContent = "⏳ Đang gửi...";
+    // Lưu lại token để kiểm tra
+    document.getElementById("token").value = token;
+    document.getElementById("status").textContent = "⏳ Đã gửi dữ liệu. Hãy kiểm tra trạng thái sau vài giây.";
 
-    // Gửi dữ liệu (không cần chờ phản hồi)
     fetch(SCRIPT_URL, {
       method: "POST",
       mode: "no-cors",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, age, token })
     });
+  }
 
-    // Chờ trạng thái từ status.json
-    const result = await waitForStatus(token);
-    if (result?.status === "success") {
-      statusBox.textContent = "✅ Gửi thành công!";
-    } else if (result?.status === "error") {
-      statusBox.textContent = "❌ Gửi thất bại!";
+  async function kiemTra() {
+    const token = document.getElementById("token").value.trim();
+    if (!token) return alert("Nhập token để kiểm tra");
+
+    const res = await fetch(`${SCRIPT_URL}?action=status&token=${token}`);
+    const data = await res.json();
+
+    if (data?.status === "success") {
+      document.getElementById("status").textContent = "✅ Thành công!";
+    } else if (data?.status === "error") {
+      document.getElementById("status").textContent = "❌ Thất bại!";
     } else {
-      statusBox.textContent = "⚠️ Không có phản hồi từ server sau 10 giây.";
+      document.getElementById("status").textContent = "⏳ Chưa có kết quả.";
     }
   }
-
-  async function waitForStatus(token, maxWait = 10000, interval = 1000) {
-    const start = Date.now();
-    while (Date.now() - start < maxWait) {
-      try {
-        const res = await fetch(`${SCRIPT_URL}?action=status&token=${token}`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.status) return json;
-        }
-      } catch (e) {
-        // Bỏ qua nếu lỗi tạm thời
-      }
-      await new Promise(r => setTimeout(r, interval));
-    }
-    return null;
-  }
-  </script>
-</body>
-</html>
+</script>
