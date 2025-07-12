@@ -11,6 +11,9 @@
       background: #70c5ce;
       margin: 0;
       padding: 0;
+      position: relative;
+      height: 100vh;
+      overflow: hidden;
     }
 
     canvas {
@@ -19,6 +22,8 @@
       border: 2px solid #333;
       background: url('https://i.imgur.com/rS0Rk7V.png') repeat-x;
       background-size: cover;
+      position: relative;
+      z-index: 1;
     }
 
     h1 {
@@ -28,6 +33,43 @@
     #scoreBoard {
       font-size: 18px;
       margin-top: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Overlay game over */
+    #gameOverScreen {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.85);
+      color: white;
+      padding: 30px 40px;
+      border-radius: 15px;
+      font-size: 24px;
+      z-index: 10;
+      width: 320px;
+      text-align: center;
+      box-shadow: 0 0 20px #000;
+      user-select: none;
+    }
+
+    #gameOverScreen button {
+      margin-top: 20px;
+      padding: 12px 25px;
+      font-size: 18px;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background-color: #28a745;
+      color: white;
+      transition: background-color 0.3s;
+    }
+
+    #gameOverScreen button:hover {
+      background-color: #218838;
     }
   </style>
 </head>
@@ -42,11 +84,21 @@
     <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
   </audio>
 
+  <!-- Game Over overlay -->
+  <div id="gameOverScreen">
+    <div id="gameOverText">Game Over! Điểm của bạn: 0</div>
+    <button id="restartBtn">Chơi lại</button>
+  </div>
+
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const scoreBoard = document.getElementById('scoreBoard');
     const bgm = document.getElementById('bgm');
+
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const gameOverText = document.getElementById('gameOverText');
+    const restartBtn = document.getElementById('restartBtn');
 
     // Chim (ảnh)
     const birdImg = new Image();
@@ -67,6 +119,8 @@
     let frame = 0;
     let score = 0;
     let highScore = localStorage.getItem("flappyHighScore") || 0;
+
+    let animationId;
 
     function drawBird() {
       ctx.drawImage(birdImg, bird.x - bird.radius, bird.y - bird.radius, 40, 40);
@@ -98,7 +152,8 @@
         pipes.push({ x: canvas.width, top: top });
       }
 
-      pipes.forEach((pipe, i) => {
+      for (let i = 0; i < pipes.length; i++) {
+        let pipe = pipes[i];
         pipe.x -= 1.2;
         drawPipe(pipe);
 
@@ -112,7 +167,7 @@
           return;
         }
 
-        // Ghi điểm
+        // Ghi điểm khi chim bay qua ống
         if (pipe.x + pipeWidth === Math.floor(bird.x)) {
           score++;
           if (score > highScore) {
@@ -120,7 +175,7 @@
             localStorage.setItem("flappyHighScore", highScore);
           }
         }
-      });
+      }
 
       // Xóa ống ra ngoài
       pipes = pipes.filter(pipe => pipe.x + pipeWidth > 0);
@@ -129,29 +184,43 @@
       scoreBoard.innerText = `Điểm: ${score} | Kỷ lục: ${highScore}`;
 
       frame++;
-      requestAnimationFrame(update);
+      animationId = requestAnimationFrame(update);
     }
 
     function gameOver() {
-      alert("🎮 Game Over!\nĐiểm của bạn: " + score);
-      score = 0;
-      bird.y = 150;
-      bird.velocity = 0;
-      pipes = [];
-      frame = 0;
-      update();
+      // Hiện overlay game over, hiện điểm
+      gameOverText.textContent = `🎮 Game Over! Điểm của bạn: ${score}`;
+      gameOverScreen.style.display = 'block';
+      cancelAnimationFrame(animationId);
     }
 
     function flap() {
       bird.velocity = bird.lift;
     }
 
+    restartBtn.addEventListener('click', () => {
+      // Ẩn overlay
+      gameOverScreen.style.display = 'none';
+
+      // Reset game state
+      score = 0;
+      bird.y = 150;
+      bird.velocity = 0;
+      pipes = [];
+      frame = 0;
+
+      // Bắt đầu lại game
+      update();
+    });
+
     document.addEventListener("keydown", e => {
       if (e.code === "Space") flap();
     });
 
     document.addEventListener("touchstart", flap);
+
     bgm.volume = 0.3; // Giảm âm lượng
+
     update(); // Bắt đầu game
   </script>
 </body>
