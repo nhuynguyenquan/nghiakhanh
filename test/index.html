@@ -21,46 +21,52 @@
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzaQ0OIcnqeg_V5wQBi4nWK0Db5pWg5oH9SAjx-jryhf0Y3yRGCAwm9EH4SjOFUyaxvcg/exec';
 
     function generateToken() {
-      return "token_" + Date.now() + "_" + Math.random().toString(36).substring(2, 10);
+    return "token_" + Date.now() + "_" + Math.random().toString(36).substring(2, 10);
+  }
+
+  async function guiDuLieu() {
+    const name = document.getElementById("name").value;
+    const age  = document.getElementById("age").value;
+    const token = generateToken();
+    const statusBox = document.getElementById("status");
+
+    statusBox.textContent = "⏳ Đang gửi...";
+
+    // Gửi dữ liệu (không cần chờ phản hồi)
+    fetch(SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, age, token })
+    });
+
+    // Chờ trạng thái từ status.json
+    const result = await waitForStatus(token);
+    if (result?.status === "success") {
+      statusBox.textContent = "✅ Gửi thành công!";
+    } else if (result?.status === "error") {
+      statusBox.textContent = "❌ Gửi thất bại!";
+    } else {
+      statusBox.textContent = "⚠️ Không có phản hồi từ server sau 10 giây.";
     }
+  }
 
-    async function guiDuLieu() {
-      const name = document.getElementById("name").value;
-      const age  = document.getElementById("age").value;
-      const token = generateToken();
-
-      document.getElementById("status").textContent = "⏳ Đang gửi...";
-
-      // Gửi dữ liệu
-      fetch(SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        body: JSON.stringify({ name, age, token })
-      });
-
-      // Kiểm tra kết quả
-      const result = await waitForStatus(token);
-      if (result?.status === "success") {
-        document.getElementById("status").textContent = "✅ Gửi thành công!";
-      } else if (result?.status === "error") {
-        document.getElementById("status").textContent = "❌ Gửi thất bại!";
-      } else {
-        document.getElementById("status").textContent = "⚠️ Không có phản hồi từ server sau 10 giây.";
-      }
-    }
-
-    async function waitForStatus(token, maxWait = 10000, interval = 1000) {
-      const start = Date.now();
-      while (Date.now() - start < maxWait) {
+  async function waitForStatus(token, maxWait = 10000, interval = 1000) {
+    const start = Date.now();
+    while (Date.now() - start < maxWait) {
+      try {
         const res = await fetch(`${SCRIPT_URL}?action=status&token=${token}`);
         if (res.ok) {
           const json = await res.json();
           if (json.status) return json;
         }
-        await new Promise(r => setTimeout(r, interval));
+      } catch (e) {
+        // Bỏ qua nếu lỗi tạm thời
       }
-      return null;
+      await new Promise(r => setTimeout(r, interval));
     }
+    return null;
+  }
   </script>
 </body>
 </html>
