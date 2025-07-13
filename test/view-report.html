@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>📊 Báo Cáo Sản Xuất</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      padding: 1rem;
+      max-width: 1000px;
+      margin: auto;
+      background: #fdfcfb;
+    }
+
+    h2 {
+      text-align: center;
+      background: #81ecec;
+      color: #2d3436;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      background: white;
+    }
+
+    th, td {
+      padding: 0.7rem;
+      border: 1px solid #dfe6e9;
+      text-align: left;
+    }
+
+    th {
+      background-color: #74b9ff;
+      color: white;
+      position: sticky;
+      top: 0;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f0f0f0;
+    }
+
+    .small {
+      font-size: 0.9em;
+      color: #636e72;
+    }
+
+    .highlight {
+      color: #d63031;
+      font-weight: bold;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      font-size: 1.2rem;
+      color: #6c5ce7;
+    }
+  </style>
+</head>
+<body>
+  <h2>📊 Báo Cáo Đã Gửi</h2>
+  <div id="loading" class="loading">⏳ Đang tải dữ liệu...</div>
+  <table id="reportTable" style="display:none">
+    <thead>
+      <tr>
+        <th>📅 Ngày</th>
+        <th>🕒 Ca</th>
+        <th>🔧 Sản Xuất</th>
+        <th>💰 Bán Hàng</th>
+        <th>💵 Tổng Thu</th>
+        <th>🕓 Gửi Lúc</th>
+      </tr>
+    </thead>
+    <tbody id="reportBody">
+      <!-- Dữ liệu sẽ được thêm vào đây -->
+    </tbody>
+  </table>
+
+  <script>
+    const REPORT_URL = 'https://script.google.com/macros/s/AKfycbxAnTlKC_8KhKPAe-r4hlXbEa5i0Uz98fVyX2FAM5Zxqw2TDXRfD_9SjG_ULAKUkaUy/exec';
+
+    async function loadReports() {
+      try {
+        const res = await fetch(REPORT_URL);
+        const json = await res.json();
+        const data = Array.isArray(json.reports) ? json.reports : [];
+
+        // Sắp xếp giảm dần theo timestamp
+        data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        const tbody = document.getElementById("reportBody");
+        const table = document.getElementById("reportTable");
+        const loading = document.getElementById("loading");
+
+        data.forEach(r => {
+          const tr = document.createElement("tr");
+
+          const formatDate = d => new Date(d).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
+
+          tr.innerHTML = `
+            <td>${r.date || "-"}</td>
+            <td>${r.shift || "-"}</td>
+            <td>${r.production?.san_pham_lam || "-"}</td>
+            <td>${r.sales || "-"}</td>
+            <td class="highlight">${r.total_sales?.toLocaleString('vi-VN')}đ</td>
+            <td class="small">${formatDate(r.timestamp)}</td>
+          `;
+
+          tbody.appendChild(tr);
+        });
+
+        loading.style.display = "none";
+        table.style.display = "table";
+      } catch (err) {
+        document.getElementById("loading").textContent = "❌ Không thể tải dữ liệu.";
+        console.error("Lỗi:", err);
+      }
+    }
+
+    loadReports();
+  </script>
+</body>
+</html>
