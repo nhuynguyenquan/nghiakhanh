@@ -5,30 +5,102 @@
   <title>📤 Gửi Báo Cáo Sản Xuất</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body { font-family: sans-serif; padding: 1rem; max-width: 400px; margin: auto; }
-    input, textarea, button {
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      padding: 1rem;
+      max-width: 500px;
+      margin: auto;
+      background: linear-gradient(to bottom, #ffeaa7, #fab1a0);
+      color: #2d3436;
+    }
+
+    h2 {
+      text-align: center;
+      background: #55efc4;
+      color: #2d3436;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    input, textarea, select, button {
       width: 100%;
       margin: 0.5rem 0;
-      padding: 0.5rem;
+      padding: 0.7rem;
       font-size: 1.1rem;
+      border-radius: 8px;
+      border: 2px solid #dfe6e9;
+      box-shadow: inset 1px 1px 2px rgba(0,0,0,0.05);
     }
-    #status { margin-top: 1rem; font-weight: bold; }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: #6c5ce7;
+      outline: none;
+      box-shadow: 0 0 5px #a29bfe;
+    }
+
+    button {
+      background: linear-gradient(to right, #fd79a8, #e84393);
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: linear-gradient(to right, #e84393, #fd79a8);
+      transform: scale(1.02);
+    }
+
+    #status {
+      margin-top: 1rem;
+      font-weight: bold;
+      text-align: center;
+      padding: 0.8rem;
+      border-radius: 8px;
+      background: #ffeaa7;
+    }
+
+    #status.success {
+      background: #81ecec;
+      color: #0984e3;
+    }
+
+    #status.error {
+      background: #fab1a0;
+      color: #d63031;
+    }
+
+    #status.waiting {
+      background: #ffeaa7;
+      color: #e17055;
+    }
   </style>
 </head>
 <body>
-  <h2>📤 Gửi Báo Cáo</h2>
+  <h2>🎉 Gửi Báo Cáo Sản Xuất</h2>
 
-  <input id="date" type="date" placeholder="Ngày" />
-  <input id="shift" placeholder="Buổi (sáng/chiều)" />
-  <textarea id="sanpham" rows="2" placeholder="Sản phẩm làm (VD: 1kg bột 117 bánh nhân thịt)"></textarea>
-  <textarea id="banhang" rows="2" placeholder="Bán hàng (VD: 3 suất bánh trần nhân thịt 60k...)"></textarea>
+  <input id="date" type="date" />
+  <select id="shift">
+    <option value="sáng">☀️ Sáng</option>
+    <option value="chiều">🌙 Chiều</option>
+  </select>
 
-  <button onclick="guiBaoCao()">Gửi báo cáo</button>
+  <textarea id="sanpham" rows="2" placeholder="🧁 Sản phẩm làm (VD: 1kg bột 117 bánh nhân thịt)"></textarea>
+  <textarea id="banhang" rows="2" placeholder="💰 Bán hàng (VD: 3 suất bánh trần nhân thịt 60k...)"></textarea>
+
+  <button onclick="guiBaoCao()">📨 Gửi báo cáo</button>
   <div id="status">Trạng thái sẽ hiển thị ở đây</div>
 
   <script>
     const POST_URL = 'https://script.google.com/macros/s/AKfycbxAnTlKC_8KhKPAe-r4hlXbEa5i0Uz98fVyX2FAM5Zxqw2TDXRfD_9SjG_ULAKUkaUy/exec';
     const STATUS_URL = 'https://script.google.com/macros/s/AKfycbxvSld6EzY8cypChDLzQOpxzQB2cI9GZe1xcNqT6_uLJ-V5XIb0KcoBCiyiVe6i61D40Q/exec';
+
+    window.onload = () => {
+      const today = new Date().toISOString().split("T")[0];
+      document.getElementById("date").value = today;
+    };
 
     function generateToken() {
       return "token_" + Date.now() + "_" + Math.random().toString(36).substring(2, 10);
@@ -37,13 +109,14 @@
     async function guiBaoCao() {
       const date = document.getElementById("date").value;
       const shift = document.getElementById("shift").value;
-      const sanpham = document.getElementById("sanpham").value;
-      const banhang = document.getElementById("banhang").value;
+      const sanpham = document.getElementById("sanpham").value.trim();
+      const banhang = document.getElementById("banhang").value.trim();
       const token = generateToken();
       const statusBox = document.getElementById("status");
 
       if (!date || !shift || !sanpham) {
         statusBox.textContent = "⚠️ Vui lòng nhập đầy đủ thông tin.";
+        statusBox.className = "error";
         return;
       }
 
@@ -57,8 +130,8 @@
       };
 
       statusBox.textContent = "⏳ Đang gửi báo cáo...";
+      statusBox.className = "waiting";
 
-      // Gửi dữ liệu
       fetch(POST_URL, {
         method: "POST",
         mode: "no-cors",
@@ -66,7 +139,6 @@
         body: JSON.stringify({ token, data })
       });
 
-      // Kiểm tra trạng thái sau 5 giây
       setTimeout(() => checkStatusFromJson(token), 9000);
     }
 
@@ -77,17 +149,21 @@
         const json = await res.json();
 
         const logs = Array.isArray(json.logs) ? json.logs : [];
-        const found = logs.find(log => log.token === token);
+        const found = logs.reverse().find(log => log.token === token);
 
         if (found?.status === "success") {
           statusBox.textContent = "✅ Gửi thành công!";
+          statusBox.className = "success";
         } else if (found?.status === "error") {
           statusBox.textContent = "❌ Gửi thất bại!";
+          statusBox.className = "error";
         } else {
-          statusBox.textContent = "⚠️ Không có trạng thái sau 5 giây.";
+          statusBox.textContent = "⚠️ Không có trạng thái sau 9 giây.";
+          statusBox.className = "error";
         }
       } catch (err) {
         statusBox.textContent = "❌ Lỗi khi tải status.json";
+        statusBox.className = "error";
       }
     }
   </script>
