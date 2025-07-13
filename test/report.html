@@ -2,170 +2,195 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>📤 Gửi Báo Cáo Sản Xuất</title>
+  <title>📤 Gửi Báo Cáo Chi Tiết</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      padding: 1rem;
-      max-width: 500px;
+      max-width: 600px;
       margin: auto;
-      background: linear-gradient(to bottom, #ffeaa7, #fab1a0);
-      color: #2d3436;
+      background: #fefefe;
+      padding: 1rem;
     }
 
     h2 {
       text-align: center;
       background: #55efc4;
-      color: #2d3436;
       padding: 1rem;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-
-    input, textarea, select, button {
-      width: 100%;
-      margin: 0.5rem 0;
-      padding: 0.7rem;
-      font-size: 1.1rem;
       border-radius: 8px;
-      border: 2px solid #dfe6e9;
-      box-shadow: inset 1px 1px 2px rgba(0,0,0,0.05);
     }
 
-    input:focus, textarea:focus, select:focus {
-      border-color: #6c5ce7;
-      outline: none;
-      box-shadow: 0 0 5px #a29bfe;
-    }
-
-    button {
-      background: linear-gradient(to right, #fd79a8, #e84393);
-      color: white;
+    label {
+      display: block;
+      margin-top: 1rem;
       font-weight: bold;
-      border: none;
-      cursor: pointer;
-      transition: 0.3s;
     }
 
-    button:hover {
-      background: linear-gradient(to right, #e84393, #fd79a8);
-      transform: scale(1.02);
+    input, select, button {
+      width: 100%;
+      margin-top: 0.2rem;
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 0.5rem;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 0.3rem;
+      text-align: left;
+    }
+
+    .add-btn {
+      margin-top: 0.5rem;
+      background: #0984e3;
+      color: white;
+      border: none;
+      padding: 0.4rem 0.7rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      border-radius: 4px;
+    }
+
+    .remove-btn {
+      background: #d63031;
+      color: white;
+      border: none;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-left: 0.3rem;
+      border-radius: 4px;
     }
 
     #status {
       margin-top: 1rem;
       font-weight: bold;
-      text-align: center;
-      padding: 0.8rem;
-      border-radius: 8px;
-      background: #ffeaa7;
-    }
-
-    #status.success {
-      background: #81ecec;
-      color: #0984e3;
-    }
-
-    #status.error {
-      background: #fab1a0;
-      color: #d63031;
-    }
-
-    #status.waiting {
-      background: #ffeaa7;
-      color: #e17055;
+      color: #2d3436;
     }
   </style>
 </head>
 <body>
-  <h2>🎉 Gửi Báo Cáo Sản Xuất</h2>
+  <h2>📤 Gửi Báo Cáo Chi Tiết</h2>
 
+  <label for="date">📅 Ngày:</label>
   <input id="date" type="date" />
+
+  <label for="shift">🕒 Ca làm:</label>
   <select id="shift">
-    <option value="sáng">☀️ Sáng</option>
-    <option value="chiều">🌙 Chiều</option>
+    <option value="sáng">Sáng</option>
+    <option value="chiều">Chiều</option>
   </select>
 
-  <textarea id="sanpham" rows="2" placeholder="🧁 Sản phẩm làm (VD: 1kg bột 117 bánh nhân thịt)"></textarea>
-  <textarea id="banhang" rows="2" placeholder="💰 Bán hàng (VD: 3 suất bánh trần nhân thịt 60k...)"></textarea>
+  <label>🔧 Sản xuất:</label>
+  <table id="prodTable">
+    <tbody></tbody>
+  </table>
+  <button class="add-btn" onclick="addProdRow()">➕ Thêm dòng sản xuất</button>
 
-  <button onclick="guiBaoCao()">📨 Gửi báo cáo</button>
+  <label>💰 Bán hàng:</label>
+  <table id="saleTable">
+    <tbody></tbody>
+  </table>
+  <button class="add-btn" onclick="addSaleRow()">➕ Thêm dòng bán hàng</button>
+
+  <button onclick="guiBaoCao()">📤 Gửi báo cáo</button>
   <div id="status">Trạng thái sẽ hiển thị ở đây</div>
 
-  <script>
-    const POST_URL = 'https://script.google.com/macros/s/AKfycbxAnTlKC_8KhKPAe-r4hlXbEa5i0Uz98fVyX2FAM5Zxqw2TDXRfD_9SjG_ULAKUkaUy/exec';
-    const STATUS_URL = 'https://script.google.com/macros/s/AKfycbxvSld6EzY8cypChDLzQOpxzQB2cI9GZe1xcNqT6_uLJ-V5XIb0KcoBCiyiVe6i61D40Q/exec';
+<script>
+  const POST_URL = 'https://script.google.com/macros/s/AKfycbxAnTlKC_8KhKPAe-r4hlXbEa5i0Uz98fVyX2FAM5Zxqw2TDXRfD_9SjG_ULAKUkaUy/exec';
+  const STATUS_URL = 'https://script.google.com/macros/s/AKfycbxvSld6EzY8cypChDLzQOpxzQB2cI9GZe1xcNqT6_uLJ-V5XIb0KcoBCiyiVe6i61D40Q/exec';
 
-    window.onload = () => {
-      const today = new Date().toISOString().split("T")[0];
-      document.getElementById("date").value = today;
-    };
+  document.getElementById("date").valueAsDate = new Date();
+  addProdRow();
+  addSaleRow();
 
-    function generateToken() {
-      return "token_" + Date.now() + "_" + Math.random().toString(36).substring(2, 10);
+  function addProdRow() {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td><input placeholder="Tên" /></td>
+      <td><input type="number" placeholder="Số lượng" /></td>
+      <td><input placeholder="Đơn vị" /></td>
+      <td><button class="remove-btn" onclick="this.closest('tr').remove()">✖</button></td>
+    `;
+    document.querySelector("#prodTable tbody").appendChild(row);
+  }
+
+  function addSaleRow() {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td><input placeholder="Tên" /></td>
+      <td><input type="number" placeholder="Số suất" /></td>
+      <td><input placeholder="Đơn vị" /></td>
+      <td><input type="number" placeholder="Số tiền" /></td>
+      <td><button class="remove-btn" onclick="this.closest('tr').remove()">✖</button></td>
+    `;
+    document.querySelector("#saleTable tbody").appendChild(row);
+  }
+
+  function generateToken() {
+    return "token_" + Date.now() + "_" + Math.random().toString(36).substring(2, 10);
+  }
+
+  function getTableData(tableId, fields) {
+    const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+    return Array.from(rows).map(row => {
+      const inputs = row.querySelectorAll("input");
+      const obj = {};
+      fields.forEach((f, i) => obj[f] = inputs[i]?.value || "");
+      return obj;
+    }).filter(item => item.name || item.quantity);
+  }
+
+  async function guiBaoCao() {
+    const date = document.getElementById("date").value;
+    const shift = document.getElementById("shift").value;
+    const statusBox = document.getElementById("status");
+    const token = generateToken();
+
+    const production = getTableData("prodTable", ["name", "quantity", "unit"]);
+    const sales = getTableData("saleTable", ["name", "quantity", "unit", "amount"]);
+
+    if (!date || !shift || production.length === 0) {
+      statusBox.textContent = "⚠️ Vui lòng nhập đầy đủ thông tin.";
+      return;
     }
 
-    async function guiBaoCao() {
-      const date = document.getElementById("date").value;
-      const shift = document.getElementById("shift").value;
-      const sanpham = document.getElementById("sanpham").value.trim();
-      const banhang = document.getElementById("banhang").value.trim();
-      const token = generateToken();
-      const statusBox = document.getElementById("status");
+    const data = { date, shift, production, sales };
 
-      if (!date || !shift || !sanpham) {
-        statusBox.textContent = "⚠️ Vui lòng nhập đầy đủ thông tin.";
-        statusBox.className = "error";
-        return;
+    statusBox.textContent = "⏳ Đang gửi báo cáo...";
+
+    fetch(POST_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, data })
+    });
+
+    setTimeout(() => checkStatus(token), 9000);
+  }
+
+  async function checkStatus(token) {
+    const statusBox = document.getElementById("status");
+    try {
+      const res = await fetch(STATUS_URL);
+      const json = await res.json();
+      const found = (json.logs || []).find(log => log.token === token);
+
+      if (found?.status === "success") {
+        statusBox.textContent = "✅ Gửi thành công!";
+      } else if (found?.status === "error") {
+        statusBox.textContent = "❌ Gửi thất bại!";
+      } else {
+        statusBox.textContent = "⚠️ Không có trạng thái sau 9 giây.";
       }
-
-      const data = {
-        date,
-        shift,
-        production: {
-          san_pham_lam: sanpham
-        },
-        sales: banhang
-      };
-
-      statusBox.textContent = "⏳ Đang gửi báo cáo...";
-      statusBox.className = "waiting";
-
-      fetch(POST_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, data })
-      });
-
-      setTimeout(() => checkStatusFromJson(token), 9000);
+    } catch {
+      statusBox.textContent = "❌ Lỗi khi kiểm tra trạng thái.";
     }
-
-    async function checkStatusFromJson(token) {
-      const statusBox = document.getElementById("status");
-      try {
-        const res = await fetch(STATUS_URL);
-        const json = await res.json();
-
-        const logs = Array.isArray(json.logs) ? json.logs : [];
-        const found = logs.reverse().find(log => log.token === token);
-
-        if (found?.status === "success") {
-          statusBox.textContent = "✅ Gửi thành công!";
-          statusBox.className = "success";
-        } else if (found?.status === "error") {
-          statusBox.textContent = "❌ Gửi thất bại!";
-          statusBox.className = "error";
-        } else {
-          statusBox.textContent = "⚠️ Không có trạng thái sau 9 giây.";
-          statusBox.className = "error";
-        }
-      } catch (err) {
-        statusBox.textContent = "❌ Lỗi khi tải status.json";
-        statusBox.className = "error";
-      }
-    }
-  </script>
+  }
+</script>
 </body>
 </html>
