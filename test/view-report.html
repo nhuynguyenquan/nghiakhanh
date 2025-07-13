@@ -2,141 +2,176 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>📊 Báo Cáo Sản Xuất Chi Tiết</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>📊 Xem Báo Cáo Sản Xuất</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 1rem;
       max-width: 1000px;
       margin: auto;
-      padding: 1rem;
-      background: #f9f9f9;
+      background: #f1f2f6;
     }
+
     h2 {
       text-align: center;
+      background: #81ecec;
       color: #2d3436;
+      padding: 1rem;
+      border-radius: 10px;
       margin-bottom: 1rem;
     }
+
+    .report {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 0 8px rgba(0,0,0,0.05);
+    }
+
+    .meta {
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 2rem;
-      background: white;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
     }
+
     th, td {
-      border: 1px solid #ccc;
-      padding: 0.6rem;
-      text-align: left;
+      padding: 0.5rem;
+      border: 1px solid #dfe6e9;
     }
+
     th {
-      background-color: #0984e3;
+      background-color: #74b9ff;
       color: white;
-      position: sticky;
-      top: 0;
     }
-    caption {
+
+    tr:nth-child(even) {
+      background-color: #f8f8f8;
+    }
+
+    .highlight {
       font-weight: bold;
-      margin: 0.5rem 0 1rem;
-      font-size: 1.2rem;
-      color: #0984e3;
+      color: #d63031;
     }
+
+    .timestamp {
+      font-size: 0.9em;
+      color: #636e72;
+    }
+
+    .section-title {
+      background: #ffeaa7;
+      padding: 0.4rem 0.6rem;
+      border-radius: 5px;
+      font-weight: bold;
+      margin-top: 0.5rem;
+    }
+
     .loading {
       text-align: center;
+      padding: 2rem;
       font-size: 1.2rem;
-      color: #636e72;
+      color: #6c5ce7;
     }
   </style>
 </head>
 <body>
-  <h2>📊 Báo Cáo Sản Xuất & Bán Hàng Chi Tiết</h2>
+  <h2>📊 Báo Cáo Sản Xuất</h2>
   <div id="loading" class="loading">⏳ Đang tải dữ liệu...</div>
+  <div id="reports"></div>
 
-  <table id="reportTable" style="display:none">
-    <caption>Báo cáo tổng hợp</caption>
-    <thead>
-      <tr>
-        <th>Ngày</th>
-        <th>Ca</th>
-        <th colspan="3">Sản Xuất</th>
-        <th colspan="4">Bán Hàng</th>
-        <th>Thời gian gửi</th>
-      </tr>
-      <tr>
-        <th></th>
-        <th></th>
-        <th>Tên</th>
-        <th>Số lượng</th>
-        <th>Đơn vị</th>
-        <th>Tên</th>
-        <th>Số suất</th>
-        <th>Đơn vị</th>
-        <th>Số tiền (đ)</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody id="reportBody"></tbody>
-  </table>
-
-<script>
+  <script>
     const REPORT_URL = 'https://script.google.com/macros/s/AKfycbwxAaRxUvucCcbkiGC79HTmlOxejWq2bQB1EUl1PddZJRAOBAfG6A8RNKhs9CYjAlIV3g/exec';
 
-    function formatDateTime(datetimeStr) {
-    if (!datetimeStr) return '-';
-    return new Date(datetimeStr).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-  }
-
-  async function loadReports() {
-    try {
-      const res = await fetch(REPORT_URL);
-      const json = await res.json();
-      const data = Array.isArray(json.reports) ? json.reports : [];
-
-      data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-      const tbody = document.getElementById('reportBody');
-      const loading = document.getElementById('loading');
-      const table = document.getElementById('reportTable');
-      tbody.innerHTML = '';
-
-      data.forEach(report => {
-        const maxRows = Math.max(
-          (report.production?.length || 0),
-          (report.sales?.length || 0),
-          1
-        );
-
-        for(let i = 0; i < maxRows; i++) {
-          const prod = report.production && report.production[i] ? report.production[i] : {name:'-', quantity:'-', unit:'-'};
-          const sale = report.sales && report.sales[i] ? report.sales[i] : {name:'-', quantity:'-', unit:'-', amount:'-'};
-
-          const tr = document.createElement('tr');
-
-          tr.innerHTML = `
-            ${i === 0 ? `<td rowspan="${maxRows}">${report.date || '-'}</td>` : ''}
-            ${i === 0 ? `<td rowspan="${maxRows}">${report.shift || '-'}</td>` : ''}
-            <td>${prod.name}</td>
-            <td>${prod.quantity}</td>
-            <td>${prod.unit}</td>
-            <td>${sale.name}</td>
-            <td>${sale.quantity}</td>
-            <td>${sale.unit}</td>
-            <td>${sale.amount !== '-' ? sale.amount.toLocaleString('vi-VN') : '-'}</td>
-            ${i === 0 ? `<td rowspan="${maxRows}">${formatDateTime(report.timestamp)}</td>` : ''}
-          `;
-          tbody.appendChild(tr);
-        }
-      });
-
-      loading.style.display = 'none';
-      table.style.display = 'table';
-    } catch(err) {
-      document.getElementById('loading').textContent = '❌ Không thể tải dữ liệu.';
-      console.error(err);
+    function formatDateTime(ts) {
+      const d = new Date(ts);
+      return d.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
     }
-  }
 
-  loadReports();
-</script>
+    async function loadReports() {
+      try {
+        const res = await fetch(REPORT_URL);
+        const json = await res.json();
+        const data = Array.isArray(json.reports) ? json.reports : [];
+
+        data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        const container = document.getElementById("reports");
+        const loading = document.getElementById("loading");
+
+        data.forEach(r => {
+          const div = document.createElement("div");
+          div.className = "report";
+
+          div.innerHTML = `
+            <div class="meta">📅 ${r.date} | 🕒 ${r.shift}</div>
+
+            <div class="section-title">🔧 Sản Xuất</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Tên bánh</th>
+                  <th>Số lượng</th>
+                  <th>Đơn vị</th>
+                  <th>Nguyên liệu</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${r.production.map(p => `
+                  <tr>
+                    <td>${p.name}</td>
+                    <td>${p.quantity}</td>
+                    <td>${p.unit}</td>
+                    <td>${p.materials}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+
+            <div class="section-title">💰 Bán Hàng</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Tên món</th>
+                  <th>Số lượng</th>
+                  <th>Đơn vị</th>
+                  <th>Số tiền</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${r.sales.map(s => `
+                  <tr>
+                    <td>${s.name}</td>
+                    <td>${s.quantity}</td>
+                    <td>${s.unit}</td>
+                    <td>${Number(s.amount || 0).toLocaleString('vi-VN')}đ</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+
+            <div class="highlight">💵 Tổng thu: ${Number(r.total_sales || 0).toLocaleString('vi-VN')}đ</div>
+            <div class="timestamp">🕓 Gửi lúc: ${formatDateTime(r.timestamp)}</div>
+          `;
+
+          container.appendChild(div);
+        });
+
+        loading.remove();
+      } catch (err) {
+        document.getElementById("loading").textContent = "❌ Không thể tải dữ liệu.";
+        console.error("Lỗi tải báo cáo:", err);
+      }
+    }
+
+    loadReports();
+  </script>
 </body>
 </html>
