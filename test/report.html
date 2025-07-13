@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>📤 Gửi Báo Cáo Bán Hàng</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body { font-family: sans-serif; padding: 1rem; max-width: 500px; margin: auto; }
+    input, textarea, button {
+      width: 100%;
+      margin: 0.5rem 0;
+      padding: 0.6rem;
+      font-size: 1rem;
+    }
+    #status { margin-top: 1rem; font-weight: bold; color: #444; }
+    #status.success { color: green; }
+    #status.error { color: red; }
+    pre { background: #f9f9f9; padding: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h2>📤 Gửi Báo Cáo Sản Xuất / Bán Hàng</h2>
+
+  <input id="date" type="date" placeholder="Ngày" />
+  <input id="shift" placeholder="Buổi (sáng / chiều)" />
+  <textarea id="sanpham" rows="3" placeholder="Sản phẩm làm (VD: 100 bánh lá nhân thịt)"></textarea>
+  <textarea id="banhang" rows="3" placeholder="Bán hàng (VD: 3 bánh lá nhân thịt 20k)"></textarea>
+
+  <button onclick="guiBaoCao()">Gửi báo cáo</button>
+  <div id="status">⏳ Trạng thái sẽ hiển thị tại đây</div>
+
+  <h4>Dữ liệu đã gửi</h4>
+  <pre id="debug"></pre>
+
+  <script>
+    const POST_URL = 'https://script.google.com/macros/s/AKfycbyC6pxr2Z-cJCGnXIH2s70_i5Jb81qrp6ru2z3PHlZC9IrO_nVCt3-__BWAzngcP46AXg/exec'; // ← Thay bằng URL Web App
+    const STATUS_URL = 'https://script.google.com/macros/s/AKfycbxvSld6EzY8cypChDLzQOpxzQB2cI9GZe1xcNqT6_uLJ-V5XIb0KcoBCiyiVe6i61D40Q/exec'; // Nếu dùng cùng URL với doGet()
+
+    function generateToken() {
+      return "token_" + Date.now() + "_" + Math.random().toString(36).substring(2, 10);
+    }
+
+    async function guiBaoCao() {
+      const token = generateToken();
+      const date = document.getElementById("date").value;
+      const shift = document.getElementById("shift").value;
+      const sanpham = document.getElementById("sanpham").value;
+      const banhang = document.getElementById("banhang").value;
+      const statusBox = document.getElementById("status");
+      const debug = document.getElementById("debug");
+
+      if (!date || !shift || !sanpham) {
+        statusBox.textContent = "⚠️ Vui lòng nhập đầy đủ ngày, buổi và sản phẩm làm!";
+        statusBox.className = "error";
+        return;
+      }
+
+      const data = {
+        date,
+        shift,
+        production: { san_pham_lam: sanpham },
+        sales: banhang
+      };
+
+      const payload = { token, data };
+      debug.textContent = JSON.stringify(payload, null, 2);
+      statusBox.textContent = "📤 Đang gửi báo cáo...";
+      statusBox.className = "";
+
+      // Gửi POST
+      fetch(POST_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      // Kiểm tra sau 5 giây
+      setTimeout(() => checkStatus(token), 5000);
+    }
+
+    async function checkStatus(token) {
+      const statusBox = document.getElementById("status");
+
+      try {
+        const res = await fetch(STATUS_URL);
+        const json = await res.json();
+        const found = (json.logs || []).reverse().find(log => log.token === token);
+
+        if (!found) {
+          statusBox.textContent = "⚠️ Không tìm thấy trạng thái báo cáo.";
+          statusBox.className = "error";
+        } else if (found.status === "success") {
+          statusBox.textContent = "✅ Gửi báo cáo thành công!";
+          statusBox.className = "success";
+        } else {
+          statusBox.textContent = "❌ Gửi báo cáo thất bại!";
+          statusBox.className = "error";
+        }
+      } catch (e) {
+        statusBox.textContent = "❌ Không thể kết nối để kiểm tra trạng thái.";
+        statusBox.className = "error";
+      }
+    }
+  </script>
+</body>
+</html>
