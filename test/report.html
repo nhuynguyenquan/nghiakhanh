@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>📤 Gửi Báo Cáo Chi Tiết</title>
+  <title>📤 Gửi Báo Cáo Sản Xuất + Nguyên Liệu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
@@ -15,7 +15,7 @@
 
     h2 {
       text-align: center;
-      background: #55efc4;
+      background: #ffeaa7;
       padding: 1rem;
       border-radius: 8px;
     }
@@ -46,7 +46,7 @@
 
     .add-btn {
       margin-top: 0.5rem;
-      background: #0984e3;
+      background: #00cec9;
       color: white;
       border: none;
       padding: 0.4rem 0.7rem;
@@ -74,7 +74,7 @@
   </style>
 </head>
 <body>
-  <h2>📤 Gửi Báo Cáo Chi Tiết</h2>
+  <h2>📤 Gửi Báo Cáo Sản Xuất + Nguyên Liệu</h2>
 
   <label for="date">📅 Ngày:</label>
   <input id="date" type="date" />
@@ -87,12 +87,22 @@
 
   <label>🔧 Sản xuất:</label>
   <table id="prodTable">
+    <thead>
+      <tr>
+        <th>Sản phẩm</th><th>Số lượng</th><th>Đơn vị</th><th>Nguyên liệu</th><th></th>
+      </tr>
+    </thead>
     <tbody></tbody>
   </table>
   <button class="add-btn" onclick="addProdRow()">➕ Thêm dòng sản xuất</button>
 
   <label>💰 Bán hàng:</label>
   <table id="saleTable">
+    <thead>
+      <tr>
+        <th>Món</th><th>Số suất</th><th>Đơn vị</th><th>Tiền</th><th></th>
+      </tr>
+    </thead>
     <tbody></tbody>
   </table>
   <button class="add-btn" onclick="addSaleRow()">➕ Thêm dòng bán hàng</button>
@@ -111,9 +121,10 @@
   function addProdRow() {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td><input placeholder="Tên" /></td>
+      <td><input placeholder="Tên sản phẩm" /></td>
       <td><input type="number" placeholder="Số lượng" /></td>
       <td><input placeholder="Đơn vị" /></td>
+      <td><input placeholder="Nguyên liệu đã dùng (VD: 1kg bột, 0.5 lít nước)" /></td>
       <td><button class="remove-btn" onclick="this.closest('tr').remove()">✖</button></td>
     `;
     document.querySelector("#prodTable tbody").appendChild(row);
@@ -122,7 +133,7 @@
   function addSaleRow() {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td><input placeholder="Tên" /></td>
+      <td><input placeholder="Tên món" /></td>
       <td><input type="number" placeholder="Số suất" /></td>
       <td><input placeholder="Đơn vị" /></td>
       <td><input type="number" placeholder="Số tiền" /></td>
@@ -151,7 +162,7 @@
     const statusBox = document.getElementById("status");
     const token = generateToken();
 
-    const production = getTableData("prodTable", ["name", "quantity", "unit"]);
+    const production = getTableData("prodTable", ["name", "quantity", "unit", "materials"]);
     const sales = getTableData("saleTable", ["name", "quantity", "unit", "amount"]);
 
     if (!date || !shift || production.length === 0) {
