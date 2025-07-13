@@ -2,14 +2,14 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>📤 Gửi Báo Cáo Sản Xuất + Nguyên Liệu</title>
+  <title>📤 Gửi Báo Cáo Sản Xuất</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       max-width: 600px;
       margin: auto;
-      background: #fefefe;
+      background: #fdfdfd;
       padding: 1rem;
     }
 
@@ -26,9 +26,9 @@
       font-weight: bold;
     }
 
-    input, select, button {
+    input, textarea, button {
       width: 100%;
-      margin-top: 0.2rem;
+      margin-top: 0.3rem;
       padding: 0.5rem;
       font-size: 1rem;
     }
@@ -40,13 +40,13 @@
     }
 
     th, td {
-      padding: 0.3rem;
+      padding: 0.4rem;
       text-align: left;
     }
 
     .add-btn {
       margin-top: 0.5rem;
-      background: #00cec9;
+      background: #0984e3;
       color: white;
       border: none;
       padding: 0.4rem 0.7rem;
@@ -62,7 +62,6 @@
       padding: 0.2rem 0.5rem;
       font-size: 0.8rem;
       cursor: pointer;
-      margin-left: 0.3rem;
       border-radius: 4px;
     }
 
@@ -74,22 +73,19 @@
   </style>
 </head>
 <body>
-  <h2>📤 Gửi Báo Cáo Sản Xuất + Nguyên Liệu</h2>
+  <h2>📤 Gửi Báo Cáo Sản Xuất</h2>
 
   <label for="date">📅 Ngày:</label>
   <input id="date" type="date" />
 
   <label for="shift">🕒 Ca làm:</label>
-  <select id="shift">
-    <option value="sáng">Sáng</option>
-    <option value="chiều">Chiều</option>
-  </select>
+  <input id="shift" placeholder="sáng / chiều" />
 
   <label>🔧 Sản xuất:</label>
   <table id="prodTable">
     <thead>
       <tr>
-        <th>Sản phẩm</th><th>Số lượng</th><th>Đơn vị</th><th>Nguyên liệu</th><th></th>
+        <th>Tên bánh</th><th>Số lượng</th><th>Đơn vị</th><th>Nguyên liệu</th><th></th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -100,7 +96,7 @@
   <table id="saleTable">
     <thead>
       <tr>
-        <th>Món</th><th>Số suất</th><th>Đơn vị</th><th>Tiền</th><th></th>
+        <th>Món</th><th>Số suất</th><th>Đơn vị</th><th>Số tiền</th><th></th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -121,10 +117,10 @@
   function addProdRow() {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td><input placeholder="Tên sản phẩm" /></td>
+      <td><input type="text" placeholder="Tên bánh" /></td>
       <td><input type="number" placeholder="Số lượng" /></td>
-      <td><input placeholder="Đơn vị" /></td>
-      <td><input placeholder="Nguyên liệu đã dùng (VD: 1kg bột, 0.5 lít nước)" /></td>
+      <td><input type="text" placeholder="Đơn vị" /></td>
+      <td><input type="text" placeholder="Nguyên liệu" /></td>
       <td><button class="remove-btn" onclick="this.closest('tr').remove()">✖</button></td>
     `;
     document.querySelector("#prodTable tbody").appendChild(row);
@@ -133,9 +129,9 @@
   function addSaleRow() {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td><input placeholder="Tên món" /></td>
+      <td><input type="text" placeholder="Tên món" /></td>
       <td><input type="number" placeholder="Số suất" /></td>
-      <td><input placeholder="Đơn vị" /></td>
+      <td><input type="text" placeholder="Đơn vị" /></td>
       <td><input type="number" placeholder="Số tiền" /></td>
       <td><button class="remove-btn" onclick="this.closest('tr').remove()">✖</button></td>
     `;
@@ -146,24 +142,38 @@
     return "token_" + Date.now() + "_" + Math.random().toString(36).substring(2, 10);
   }
 
-  function getTableData(tableId, fields) {
-    const rows = document.querySelectorAll(`#${tableId} tbody tr`);
-    return Array.from(rows).map(row => {
+  function getProdData() {
+    return Array.from(document.querySelectorAll("#prodTable tbody tr")).map(row => {
       const inputs = row.querySelectorAll("input");
-      const obj = {};
-      fields.forEach((f, i) => obj[f] = inputs[i]?.value || "");
-      return obj;
-    }).filter(item => item.name || item.quantity);
+      return {
+        name: inputs[0]?.value || "",
+        quantity: inputs[1]?.value || "",
+        unit: inputs[2]?.value || "",
+        materials: inputs[3]?.value || ""
+      };
+    }).filter(r => r.name);
+  }
+
+  function getSaleData() {
+    return Array.from(document.querySelectorAll("#saleTable tbody tr")).map(row => {
+      const inputs = row.querySelectorAll("input");
+      return {
+        name: inputs[0]?.value || "",
+        quantity: inputs[1]?.value || "",
+        unit: inputs[2]?.value || "",
+        amount: parseInt(inputs[3]?.value || "0", 10)
+      };
+    }).filter(r => r.name);
   }
 
   async function guiBaoCao() {
     const date = document.getElementById("date").value;
-    const shift = document.getElementById("shift").value;
+    const shift = document.getElementById("shift").value.trim();
     const statusBox = document.getElementById("status");
     const token = generateToken();
 
-    const production = getTableData("prodTable", ["name", "quantity", "unit", "materials"]);
-    const sales = getTableData("saleTable", ["name", "quantity", "unit", "amount"]);
+    const production = getProdData();
+    const sales = getSaleData();
 
     if (!date || !shift || production.length === 0) {
       statusBox.textContent = "⚠️ Vui lòng nhập đầy đủ thông tin.";
