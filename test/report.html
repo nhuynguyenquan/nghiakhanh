@@ -9,13 +9,13 @@
       font-family: 'Segoe UI', sans-serif;
       max-width: 600px;
       margin: auto;
-      background: #fdfdfd;
+      background: #fefcea;
       padding: 1rem;
     }
 
     h2 {
       text-align: center;
-      background: #ffeaa7;
+      background: #fdcb6e;
       padding: 1rem;
       border-radius: 8px;
     }
@@ -96,7 +96,7 @@
   <table id="saleTable">
     <thead>
       <tr>
-        <th>Món</th><th>Số suất</th><th>Đơn vị</th><th>Số tiền</th><th></th>
+        <th>Tên món</th><th>Số suất</th><th>Đơn vị</th><th>Thành tiền</th><th></th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -119,8 +119,8 @@
     row.innerHTML = `
       <td><input type="text" placeholder="Tên bánh" /></td>
       <td><input type="number" placeholder="Số lượng" /></td>
-      <td><input type="text" placeholder="Đơn vị" /></td>
-      <td><input type="text" placeholder="Nguyên liệu" /></td>
+      <td><input type="text" placeholder="Đơn vị" value="cái" /></td>
+      <td><input type="text" placeholder="Nguyên liệu sử dụng" /></td>
       <td><button class="remove-btn" onclick="this.closest('tr').remove()">✖</button></td>
     `;
     document.querySelector("#prodTable tbody").appendChild(row);
@@ -131,7 +131,7 @@
     row.innerHTML = `
       <td><input type="text" placeholder="Tên món" /></td>
       <td><input type="number" placeholder="Số suất" /></td>
-      <td><input type="text" placeholder="Đơn vị" /></td>
+      <td><input type="text" placeholder="Đơn vị" value="suất" /></td>
       <td><input type="number" placeholder="Số tiền" /></td>
       <td><button class="remove-btn" onclick="this.closest('tr').remove()">✖</button></td>
     `;
