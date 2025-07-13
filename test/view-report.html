@@ -12,7 +12,6 @@
       margin: auto;
       background: #f1f2f6;
     }
-
     h2 {
       text-align: center;
       background: #81ecec;
@@ -21,7 +20,6 @@
       border-radius: 10px;
       margin-bottom: 1rem;
     }
-
     .report {
       background: #ffffff;
       border-radius: 10px;
@@ -29,43 +27,35 @@
       margin-bottom: 1.5rem;
       box-shadow: 0 0 8px rgba(0,0,0,0.05);
     }
-
     .meta {
       margin-bottom: 0.5rem;
       font-weight: bold;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 0.5rem;
       margin-bottom: 1rem;
     }
-
     th, td {
       padding: 0.5rem;
       border: 1px solid #dfe6e9;
     }
-
     th {
       background-color: #74b9ff;
       color: white;
     }
-
     tr:nth-child(even) {
       background-color: #f8f8f8;
     }
-
     .highlight {
       font-weight: bold;
       color: #d63031;
     }
-
     .timestamp {
       font-size: 0.9em;
       color: #636e72;
     }
-
     .section-title {
       background: #ffeaa7;
       padding: 0.4rem 0.6rem;
@@ -73,7 +63,6 @@
       font-weight: bold;
       margin-top: 0.5rem;
     }
-
     .loading {
       text-align: center;
       padding: 2rem;
@@ -101,12 +90,17 @@
         const json = await res.json();
         const data = Array.isArray(json.reports) ? json.reports : [];
 
+        // Sắp xếp mới nhất lên đầu theo timestamp
         data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
         const container = document.getElementById("reports");
         const loading = document.getElementById("loading");
 
         data.forEach(r => {
+          const total = Array.isArray(r.sales)
+            ? r.sales.reduce((sum, s) => sum + Number(s.amount || 0), 0)
+            : 0;
+
           const div = document.createElement("div");
           div.className = "report";
 
@@ -157,7 +151,7 @@
               </tbody>
             </table>
 
-            <div class="highlight">💵 Tổng thu: ${Number(r.total_sales || 0).toLocaleString('vi-VN')}đ</div>
+            <div class="highlight">💵 Tổng thu: ${total.toLocaleString('vi-VN')}đ</div>
             <div class="timestamp">🕓 Gửi lúc: ${formatDateTime(r.timestamp)}</div>
           `;
 
