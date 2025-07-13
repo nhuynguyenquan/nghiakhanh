@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>📤 Gửi Báo Cáo</title>
+  <title>📤 Gửi Báo Cáo Sản Xuất</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body { font-family: sans-serif; padding: 1rem; max-width: 400px; margin: auto; }
@@ -20,15 +20,15 @@
 
   <input id="date" type="date" placeholder="Ngày" />
   <input id="shift" placeholder="Buổi (sáng/chiều)" />
-  <textarea id="sanpham" rows="2" placeholder="Sản phẩm làm (VD: 100 bánh lá nhân thịt)"></textarea>
-  <textarea id="banhang" rows="2" placeholder="Bán hàng (VD: 3 suất bánh lá nhân thịt 60k)"></textarea>
+  <textarea id="sanpham" rows="2" placeholder="Sản phẩm làm (VD: 1kg bột 117 bánh nhân thịt)"></textarea>
+  <textarea id="banhang" rows="2" placeholder="Bán hàng (VD: 3 suất bánh trần nhân thịt 60k...)"></textarea>
 
   <button onclick="guiBaoCao()">Gửi báo cáo</button>
   <div id="status">Trạng thái sẽ hiển thị ở đây</div>
 
   <script>
     const POST_URL = 'https://script.google.com/macros/s/AKfycbxAnTlKC_8KhKPAe-r4hlXbEa5i0Uz98fVyX2FAM5Zxqw2TDXRfD_9SjG_ULAKUkaUy/exec';
-    const STATUS_URL ='https://script.google.com/macros/s/AKfycbxvSld6EzY8cypChDLzQOpxzQB2cI9GZe1xcNqT6_uLJ-V5XIb0KcoBCiyiVe6i61D40Q/exec';
+    const STATUS_URL = 'https://script.google.com/macros/s/AKfycbxvSld6EzY8cypChDLzQOpxzQB2cI9GZe1xcNqT6_uLJ-V5XIb0KcoBCiyiVe6i61D40Q/exec';
 
     function generateToken() {
       return "token_" + Date.now() + "_" + Math.random().toString(36).substring(2, 10);
@@ -50,7 +50,9 @@
       const data = {
         date,
         shift,
-        production: { san_pham_lam: sanpham },
+        production: {
+          san_pham_lam: sanpham
+        },
         sales: banhang
       };
 
@@ -64,7 +66,7 @@
         body: JSON.stringify({ token, data })
       });
 
-      // Kiểm tra sau 5 giây
+      // Kiểm tra trạng thái sau 5 giây
       setTimeout(() => checkStatusFromJson(token), 5000);
     }
 
