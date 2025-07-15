@@ -203,6 +203,7 @@
 
       if (found?.status === "success") {
         statusBox.textContent = "✅ Gửi thành công!";
+         clearForm();
       } else if (found?.status === "error") {
         statusBox.textContent = "❌ Gửi thất bại!";
       } else {
@@ -212,6 +213,13 @@
       statusBox.textContent = "❌ Lỗi khi kiểm tra trạng thái.";
     }
   }
+  function clearForm() {
+  document.getElementById("shift").value = "";
+  document.querySelector("#prodTable tbody").innerHTML = "";
+  document.querySelector("#saleTable tbody").innerHTML = "";
+  addProdRow();
+  addSaleRow();
+}
 </script>
 </body>
 </html>
