@@ -65,14 +65,14 @@
         body: JSON.stringify({ pin, action: "save" })
       });
 
-      // Do không nhận được phản hồi (no-cors), hiển thị kết quả giả định sau 2 giây
+      
       setTimeout(() => {
         status.textContent = "✅ Đã gửi yêu cầu lưu mã PIN.";
       }, 2000);
     }
 
     function goiYPin() {
-      const randomPin = Math.floor(1000 + Math.random() * 9000); // Gợi ý PIN 4 chữ số
+      const randomPin = Math.floor(1000 + Math.random() * 9000); 
       document.getElementById("pin").value = randomPin;
       document.getElementById("status").textContent = "💡 Gợi ý: Bạn có thể dùng mã " + randomPin;
     }
