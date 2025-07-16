@@ -21,16 +21,31 @@
       margin-top: 1rem;
       font-weight: bold;
     }
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .btn-group button {
+      flex: 1;
+    }
   </style>
 </head>
 <body>
   <h2>🔐 Tạo Mã PIN</h2>
+
   <input type="password" id="pin" placeholder="Nhập mã PIN" />
-  <button onclick="taoPin()">Lưu PIN</button>
+
+  <div class="btn-group">
+    <button onclick="taoPin()">💾 Lưu PIN</button>
+    <button onclick="goiYPin()">🔄 Gợi ý PIN</button>
+  </div>
+
   <div id="status"></div>
-<a href="../quan-li-nv/">trở lại</a>
+
+  <a href="../quan-li-nv/">← Trở lại</a>
+
   <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOry6wmWk8JPYtZuF_ThdfqzJGlpjVek1G2r3gb-fpKFScLeB3iPYj7Dk3I3VvDTIUeA/exec'; 
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOry6wmWk8JPYtZuF_ThdfqzJGlpjVek1G2r3gb-fpKFScLeB3iPYj7Dk3I3VvDTIUeA/exec';
 
     function taoPin() {
       const pin = document.getElementById("pin").value;
@@ -45,21 +60,21 @@
 
       fetch(SCRIPT_URL, {
         method: "POST",
-        mode:"no-cors",
+        mode: "no-cors",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pin, action: "save" })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          status.textContent = "✅ Đã lưu mã PIN thành công.";
-        } else {
-          status.textContent = "❌ Lỗi: " + data.message;
-        }
-      })
-      .catch(err => {
-        status.textContent = "❌ Không có phản hồi: " + err;
       });
+
+      // Do không nhận được phản hồi (no-cors), hiển thị kết quả giả định sau 2 giây
+      setTimeout(() => {
+        status.textContent = "✅ Đã gửi yêu cầu lưu mã PIN.";
+      }, 2000);
+    }
+
+    function goiYPin() {
+      const randomPin = Math.floor(1000 + Math.random() * 9000); // Gợi ý PIN 4 chữ số
+      document.getElementById("pin").value = randomPin;
+      document.getElementById("status").textContent = "💡 Gợi ý: Bạn có thể dùng mã " + randomPin;
     }
   </script>
 </body>
