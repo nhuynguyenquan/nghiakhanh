@@ -238,7 +238,7 @@
         await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "update", data: transactions }),
+          body: JSON.stringify({ transaction }),
           mode: "no-cors"
         });
       } catch (err) {
@@ -251,7 +251,7 @@
         await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({action: "update", data: transactions }),
+          body: JSON.stringify({ transactions }),
           mode: "no-cors"
         });
       } catch (err) {
