@@ -234,30 +234,34 @@
     }
 
     async function saveTransaction(transaction) {
-      try {
-        await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ transaction }),
-          mode: "no-cors"
-        });
-      } catch (err) {
-        console.error("❌ Lỗi khi gửi:", err);
-      }
-    }
+  try {
+    await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "update",
+        data: [...transactions, transaction]
+      }),
+    });
+  } catch (err) {
+    console.error("❌ Lỗi khi gửi:", err);
+  }
+}
 
-    async function saveAllTransactions() {
-      try {
-        await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ transactions }),
-          mode: "no-cors"
-        });
-      } catch (err) {
-        console.error("❌ Lỗi khi lưu toàn bộ:", err);
-      }
-    }
+   async function saveAllTransactions() {
+  try {
+    await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "update",
+        data: transactions
+      }),
+    });
+  } catch (err) {
+    console.error("❌ Lỗi khi lưu toàn bộ:", err);
+  }
+}
 
     async function deleteTransaction(index) {
       if (!confirm("Bạn có chắc muốn xoá?")) return;
