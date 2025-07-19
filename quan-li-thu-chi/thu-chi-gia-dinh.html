@@ -293,7 +293,7 @@
     }
 
     function sendToTelegram(t) {
-      const msg = `📌 *Giao dịch mới*:\n💰 *Số tiền:* ${t.amount.toLocaleString("vi-VN")} VND\n📂 *Loại:* ${t.type === "income" ? "Thu nhập" : "Chi tiêu"}\n📝 *Mô tả:* ${t.note}`;
+      const msg = `📌 *Dữ liệu chi tiêu *:\n💰 *Số tiền:* ${t.amount.toLocaleString("vi-VN")} VND\n📂 *Loại:* ${t.type === "income" ? "Thu nhập" : "Chi tiêu"}\n📝 *Mô tả:* ${t.note}`;
       fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
