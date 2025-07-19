@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý thu chi Nhụy Nguyên</title>
+  <style>
+    body {
+      font-family: 'Quicksand', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f6f8;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      background-color: #d9a382;
+      padding: 10px;
+    }
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 15px;
+      font-size: 18px;
+    }
+    h2 {
+      text-align: center;
+      color: #d35400;
+    }
+    label, input, select, button {
+      display: block;
+      width: 90%;
+      margin: 8px auto;
+      padding: 8px;
+      font-size: 1rem;
+    }
+    .summary {
+      margin: 10px auto;
+      text-align: center;
+      font-weight: bold;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    table thead {
+      background-color: #eee;
+    }
+    button {
+      padding: 5px 8px;
+      font-size: 1rem;
+    }
+    .month-box {
+      border: 1px solid #ccc;
+      margin: 10px;
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .month-header {
+      background: #d35400;
+      color: white;
+      padding: 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .month-header strong {
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="../quan-li-thu-chi/">Quản Lí Thu Chi</a>
+    <a href="../quan-li-kho/">Quản Lí Kho</a>
+    <a href="../quan-li-menu/">Quản Lí Menu</a>
+    <a href="../quan-li-nv/">Quản Lí Nhân Viên</a>
+    <a href="../quan-li-sx/">Quản Lí Sản Xuất</a>
+    <a href="../quan-li-chi-nhanh/">Quản Lí Chi Nhánh</a>
+  </nav>
+
+  <h2>Quản lý thu chi Nhụy Nguyên</h2>
+
+  <label for="amount">Số tiền:</label>
+  <input type="number" id="amount" placeholder="VD: 100000">
+  <label for="type">Loại:</label>
+  <select id="type">
+    <option value="income">Thu</option>
+    <option value="expense">Chi</option>
+  </select>
+  <label for="note">Mô tả:</label>
+  <input type="text" id="note" placeholder="VD: Bán hàng">
+  <button id="submit-btn">Thêm</button>
+
+  <div class="summary">
+    Tổng thu: <span id="total-income">0</span> VND | Tổng chi: <span id="total-expense">0</span> VND
+  </div>
+
+  <div id="transaction-container"></div>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbxOjNwPxWgYcZcK7RnhOOgOIjOeU1p3HsaO-Bd4WLylNy7sY1xvtHCqCif1l1t8yhqP/exec";
+    const TELEGRAM_BOT_TOKEN = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";
+    const TELEGRAM_CHAT_ID = "6249154937";
+    let transactions = [];
+
+    async function fetchTransactions() {
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        return data.transactions || [];
+      } catch (err) {
+        console.error("❌ Lỗi lấy dữ liệu:", err);
+        return [];
+      }
+    }
+
+    function updateUI() {
+      const container = document.getElementById("transaction-container");
+      container.innerHTML = "";
+
+      let totalIncome = 0;
+      let totalExpense = 0;
+
+      const grouped = {};
+      transactions.forEach(t => {
+        const month = t.date?.slice(0, 7); // YYYY-MM
+        if (!grouped[month]) grouped[month] = [];
+        grouped[month].push(t);
+      });
+
+      const sortedMonths = Object.keys(grouped).sort().reverse();
+
+      sortedMonths.forEach(month => {
+        const list = grouped[month].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        let income = 0;
+        let expense = 0;
+        list.forEach(t => {
+          if (t.type === "income") income += t.amount;
+          else expense += t.amount;
+        });
+        totalIncome += income;
+        totalExpense += expense;
+
+        const monthBox = document.createElement("div");
+        monthBox.className = "month-box";
+
+        const header = document.createElement("div");
+        header.className = "month-header";
+
+        const title = document.createElement("strong");
+        title.textContent = `📅 Tháng ${month.slice(5, 7)}/${month.slice(0, 4)} - Thu: ${income.toLocaleString("vi-VN")} VND, Chi: ${expense.toLocaleString("vi-VN")} VND`;
+
+        const toggle = document.createElement("span");
+        toggle.textContent = "🔽";
+
+        header.appendChild(title);
+        header.appendChild(toggle);
+
+        const table = document.createElement("table");
+        table.style.display = "none";
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>Số tiền</th>
+              <th>Loại</th>
+              <th>Mô tả</th>
+              <th>Ngày</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        `;
+
+        list.forEach(t => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${t.amount.toLocaleString("vi-VN")} VND</td>
+            <td>${t.type === "income" ? "Thu" : "Chi"}</td>
+            <td>${t.note}</td>
+            <td>${new Date(t.date).toLocaleString("vi-VN")}</td>
+            <td>
+              <button onclick="editTransaction(${transactions.indexOf(t)})">✏️</button>
+              <button onclick="deleteTransaction(${transactions.indexOf(t)})">🗑️</button>
+            </td>
+          `;
+          table.querySelector("tbody").appendChild(row);
+        });
+
+        header.onclick = () => {
+          table.style.display = table.style.display === "none" ? "table" : "none";
+          toggle.textContent = table.style.display === "none" ? "🔽" : "🔼";
+        };
+
+        monthBox.appendChild(header);
+        monthBox.appendChild(table);
+        container.appendChild(monthBox);
+      });
+
+      document.getElementById("total-income").textContent = totalIncome.toLocaleString("vi-VN");
+      document.getElementById("total-expense").textContent = totalExpense.toLocaleString("vi-VN");
+    }
+
+    async function addTransaction() {
+      const amount = parseInt(document.getElementById("amount").value);
+      const type = document.getElementById("type").value;
+      const note = document.getElementById("note").value;
+      if (!amount || isNaN(amount)) {
+        alert("Vui lòng nhập số tiền hợp lệ!");
+        return;
+      }
+
+      const transaction = {
+        amount,
+        type,
+        note,
+        date: new Date().toISOString()
+      };
+
+      await saveTransaction(transaction);
+      transactions = await fetchTransactions();
+      updateUI();
+      sendToTelegram(transaction);
+      resetForm();
+    }
+
+    async function saveTransaction(transaction) {
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ transaction }),
+          mode: "no-cors"
+        });
+      } catch (err) {
+        console.error("❌ Lỗi khi gửi:", err);
+      }
+    }
+
+    async function saveAllTransactions() {
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ transactions }),
+          mode: "no-cors"
+        });
+      } catch (err) {
+        console.error("❌ Lỗi khi lưu toàn bộ:", err);
+      }
+    }
+
+    async function deleteTransaction(index) {
+      if (!confirm("Bạn có chắc muốn xoá?")) return;
+      transactions.splice(index, 1);
+      await saveAllTransactions();
+      updateUI();
+    }
+
+    function editTransaction(index) {
+      const t = transactions[index];
+      document.getElementById("amount").value = t.amount;
+      document.getElementById("type").value = t.type;
+      document.getElementById("note").value = t.note;
+
+      document.getElementById("submit-btn").onclick = async () => {
+        transactions[index] = {
+          amount: parseInt(document.getElementById("amount").value),
+          type: document.getElementById("type").value,
+          note: document.getElementById("note").value,
+          date: new Date().toISOString()
+        };
+        await saveAllTransactions();
+        updateUI();
+        resetForm();
+      };
+    }
+
+    function resetForm() {
+      document.getElementById("amount").value = "";
+      document.getElementById("type").value = "income";
+      document.getElementById("note").value = "";
+      document.getElementById("submit-btn").onclick = addTransaction;
+    }
+
+    function sendToTelegram(t) {
+      const msg = `📌 *Giao dịch mới*:\n💰 *Số tiền:* ${t.amount.toLocaleString("vi-VN")} VND\n📂 *Loại:* ${t.type === "income" ? "Thu nhập" : "Chi tiêu"}\n📝 *Mô tả:* ${t.note}`;
+      fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHAT_ID,
+          text: msg,
+          parse_mode: "Markdown"
+        })
+      }).then(r => r.json())
+        .then(data => {
+          if (!data.ok) alert("❌ Gửi Telegram thất bại!");
+        });
+    }
+
+    window.onload = async () => {
+      transactions = await fetchTransactions();
+      updateUI();
+      document.getElementById("submit-btn").onclick = addTransaction;
+    };
+  </script>
+</body>
+</html>

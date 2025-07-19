@@ -1,16 +1,78 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Đăng Nhập</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>Đăng nhập</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body { font-family: sans-serif; padding: 2rem; max-width: 400px; margin: auto; }
+    input, button { width: 100%; margin-top: 1rem; padding: 0.75rem; font-size: 1rem; }
+    #status { margin-top: 1rem; color: green; font-weight: bold; }
+  </style>
 </head>
 <body>
   <h2>Đăng nhập hệ thống</h2>
-  <input type="text" id="id" placeholder="Tên đăng nhập"><br>
-  <input type="password" id="password" placeholder="Mật khẩu"><br>
+  <input type="text" id="username" placeholder="Tài khoản" />
+  <input type="password" id="password" placeholder="Mật khẩu" />
   <button onclick="login()">Đăng nhập</button>
+  <div id="status"></div>
 
-  <script src="script.js"></script>
+  <script>
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxxxxxxx/exec';
+    const STATUS_JSON_URL = 'https://script.google.com/macros/s/AKfycbxvSld6EzY8cypChDLzQOpxzQB2cI9GZe1xcNqT6_uLJ-V5XIb0KcoBCiyiVe6i61D40Q/exec'; // Hoặc link raw từ JSON hosting
+
+    function generateToken() {
+      return 'client_' + Math.random().toString(36).substring(2, 12);
+    }
+
+    async function login() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const clientToken = generateToken();
+      document.getElementById('status').textContent = 'Đang xử lý...';
+
+      const payload = {
+        action: 'login',
+        id: username,
+        pass: password,
+        clientToken: clientToken
+      };
+
+      // Gửi yêu cầu no-cors
+      fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      // Kiểm tra kết quả từ status.json
+      let checkCount = 0;
+      const checkInterval = setInterval(async () => {
+        try {
+          const res = await fetch(STATUS_JSON_URL + '?t=' + Date.now());
+          const data = await res.json();
+          const result = data[clientToken];
+
+          if (result) {
+            clearInterval(checkInterval);
+            if (result.status === 'success') {
+              document.getElementById('status').textContent = result.message || 'Đăng nhập thành công';
+              // lưu thông tin nếu cần: localStorage.setItem("token", result.data.token);
+            } else {
+              document.getElementById('status').textContent = result.message || 'Đăng nhập thất bại';
+            }
+          }
+        } catch (e) {
+          console.warn('Chưa có phản hồi...');
+        }
+
+        if (++checkCount > 10) {
+          clearInterval(checkInterval);
+          document.getElementById('status').textContent = 'Không có phản hồi từ server.';
+        }
+      }, 1000);
+    }
+  </script>
 </body>
 </html>
