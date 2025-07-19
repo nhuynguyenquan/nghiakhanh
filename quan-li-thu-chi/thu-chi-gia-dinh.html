@@ -107,7 +107,7 @@
   <div id="transaction-container"></div>
 
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzFouKF6m4N__JqpCINgbANPJMw462xfVXsMO1w42t2EinJLet1e0FkixJEdZImWolI/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyJX0yvC6mUm167_0PJjlQWqPykQyTrFlnHaFyC3S2nkr6oiww7k3LDfNq7suKopWN8/exec';
     const TELEGRAM_BOT_TOKEN = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";
     const TELEGRAM_CHAT_ID = "6249154937";
     let transactions = [];
@@ -234,34 +234,30 @@
     }
 
     async function saveTransaction(transaction) {
-  try {
-    await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "update",
-        data: [...transactions, transaction]
-      }),
-    });
-  } catch (err) {
-    console.error("❌ Lỗi khi gửi:", err);
-  }
-}
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ transaction }),
+          mode: "no-cors"
+        });
+      } catch (err) {
+        console.error("❌ Lỗi khi gửi:", err);
+      }
+    }
 
-   async function saveAllTransactions() {
-  try {
-    await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "update",
-        data: transactions
-      }),
-    });
-  } catch (err) {
-    console.error("❌ Lỗi khi lưu toàn bộ:", err);
-  }
-}
+    async function saveAllTransactions() {
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ transactions }),
+          mode: "no-cors"
+        });
+      } catch (err) {
+        console.error("❌ Lỗi khi lưu toàn bộ:", err);
+      }
+    }
 
     async function deleteTransaction(index) {
       if (!confirm("Bạn có chắc muốn xoá?")) return;
