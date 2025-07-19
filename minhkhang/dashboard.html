@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body onload="checkLogin()">
+  <h2>Chào mừng, <span id="username"></span></h2>
+  <div id="adminPanel" style="display:none;">
+    <h3>Khu vực quản trị (Admin Only)</h3>
+    <p>Quản lý người dùng, xem log hệ thống,...</p>
+  </div>
+  <div>
+    <button onclick="logout()">Đăng xuất</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

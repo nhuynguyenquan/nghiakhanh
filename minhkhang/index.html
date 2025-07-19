@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Login Demo</title>
+  <style>
+    body { font-family: sans-serif; max-width: 400px; margin: auto; padding: 1rem; }
+    #dashboard { display: none; }
+  </style>
+</head>
+<body>
+  <h2>Đăng nhập</h2>
+  <div id="login">
+    <input id="username" placeholder="Tên đăng nhập"><br>
+    <input id="password" type="password" placeholder="Mật khẩu"><br>
+    <button onclick="login()">Đăng nhập</button>
+  </div>
+
+  <div id="dashboard">
+    <p>Xin chào <span id="userInfo"></span></p>
+    <button onclick="logout()">Đăng xuất</button>
+  </div>
+
+  <script>
+    const API = 'https://script.google.com/macros/s/AKfycb....../exec'; // Thay bằng URL của bạn
+    let token = localStorage.getItem('token');
+
+    async function login() {
+      const res = await fetch(API, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'login',
+          username: username.value,
+          password: password.value
+        })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('username', data.username);
+        showDashboard(data.username);
+      } else {
+        alert(data.message);
+      }
+    }
+
+    async function logout() {
+      const res = await fetch(API, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'logout',
+          token: localStorage.getItem('token')
+        })
+      });
+      const data = await res.json();
+      alert(data.message);
+      localStorage.clear();
+      location.reload();
+    }
+
+    async function checkStatus() {
+      if (!token) return;
+      const res = await fetch(`${API}?action=status&token=${token}`);
+      const data = await res.json();
+      if (data.status === 'success') {
+        showDashboard(data.username);
+      }
+    }
+
+    function showDashboard(name) {
+      login.style.display = 'none';
+      dashboard.style.display = 'block';
+      userInfo.textContent = name;
+    }
+
+    checkStatus();
+  </script>
+</body>
+</html>
