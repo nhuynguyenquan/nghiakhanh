@@ -95,6 +95,9 @@
       } finally {
         btn.innerText = oldText;
         btn.disabled = false;
+        document.getElementById("itemName").value = "";
+document.getElementById("itemStock").value = "";
+document.getElementById("itemPrice").value = "";
       }
     }
 
@@ -124,6 +127,7 @@
       } finally {
         btn.innerText = oldText;
         btn.disabled = false;
+        document.getElementById("sellQuantity").value = "";
       }
     }
 
