@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nội Quy Công Việc</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: auto;
+      background: #f4f4f4;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .rules {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .signature-box {
+      margin-top: 30px;
+      background: #fff;
+      padding: 15px;
+      border: 1px dashed #aaa;
+      border-radius: 5px;
+    }
+    input, button {
+      font-size: 1rem;
+      padding: 10px;
+      margin-top: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      background: #2c7;
+      border: none;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    button:hover {
+      background: #2a6;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Nội Quy Công Việc</h1>
+
+  <div class="rules">
+    <p><strong>1. Thời gian làm việc:</strong> Tuân thủ đúng giờ vào ca và ra ca, báo trước khi đến muộn hoặc nghỉ.<br>
+    <strong>Giờ nghỉ giải lao:</strong><br> Buổi sáng từ 9:00~9:10<br>Buổi chiều từ 4:00~4:10</p>
+    <p><strong>2. Trang phục:</strong> Gọn gàng sạch sẽ. Giữ gìn vệ sinh cá nhân.</p>
+    <p><strong>3. Tác phong:</strong> Giao tiếp lịch sự, tôn trọng đồng nghiệp và khách hàng.</p>
+    <p><strong>4. Vệ sinh khu vực:</strong> Mỗi người tự chịu trách nhiệm giữ gìn khu vực mình phụ trách.</p>
+    <p><strong>5. Không sử dụng điện thoại:</strong> Trong giờ làm việc chỉ dùng khi có việc cần thiết, tránh ảnh hưởng đến công việc chung.</p>
+    <p><strong>6. Trung thực:</strong> Không gian dối trong bán hàng, báo cáo, hoặc xử lý tiền bạc.</p>
+    <p><strong>7. Bảo mật:</strong> Không được tiết lộ thông tin nội bộ ra bên ngoài.</p>
+    <p><strong>8. Vi phạm:</strong> Tùy mức độ sẽ có hình thức nhắc nhở, trừ lương hoặc chấm dứt hợp đồng.</p>
+
+    <div class="signature-box">
+      <label for="name">Họ và tên nhân viên:</label>
+      <input type="text" id="name" placeholder="Nhập họ tên..." required />
+
+      <label for="note">Ý kiến (nếu có):</label>
+      <input type="text" id="note" placeholder="(Không bắt buộc)" />
+
+      <button onclick="submitForm()">Tôi đã đọc và đồng ý</button>
+      <p id="msg" style="color:green;"></p>
+    </div>
+  </div>
+
+  <script>
+    async function submitForm() {
+      const name = document.getElementById('name').value.trim();
+      const note = document.getElementById('note').value.trim();
+      const msg = document.getElementById('msg');
+
+      if (!name) {
+        msg.style.color = 'red';
+        msg.textContent = '❌ Vui lòng nhập họ tên để xác nhận.';
+        return;
+      }
+
+      try {
+        await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
+          method: "POST",
+          body: JSON.stringify({
+            action: "confirm_rule",
+            name: name,
+            note: note,
+            date: new Date().toISOString()
+          }),
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+        msg.style.color = 'green';
+        msg.textContent = '✅ Xác nhận thành công! Cảm ơn bạn.';
+        document.getElementById('name').value = '';
+        document.getElementById('note').value = '';
+      } catch (err) {
+        msg.style.color = 'red';
+        msg.textContent = '❌ Lỗi khi gửi xác nhận. Vui lòng thử lại.';
+      }
+    }
+  </script>
+
+</body>
+</html>
