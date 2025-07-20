@@ -58,7 +58,6 @@
   const tbody = document.querySelector("#salesTable tbody");
   tbody.innerHTML = "";
 
-  // Nhóm theo tháng/năm
   const salesByMonth = {};
 
   data.sales.forEach(s => {
@@ -68,25 +67,42 @@
     salesByMonth[key].push(s);
   });
 
-  // Hiển thị từng tháng (gần nhất trước)
   const sortedMonths = Object.keys(salesByMonth).sort((a, b) => b.localeCompare(a));
 
-  sortedMonths.forEach(monthKey => {
+  sortedMonths.forEach((monthKey, index) => {
+    const groupId = `group-${index}`;
     const [year, month] = monthKey.split("-");
-    tbody.innerHTML += `<tr><td colspan="4" style="background:#f0f0f0;font-weight:bold">📅 Tháng ${month}/${year}</td></tr>`;
 
+    // Dòng tiêu đề tháng có nút thu gọn
+    tbody.innerHTML += `
+      <tr class="month-header" style="background:#f0f0f0;font-weight:bold;cursor:pointer" onclick="toggleGroup('${groupId}', this)">
+        <td colspan="4">► Tháng ${month}/${year}</td>
+      </tr>
+    `;
+
+    // Dòng chi tiết (ẩn mặc định)
     salesByMonth[monthKey].slice().reverse().forEach(s => {
       const d = new Date(s.date);
-      tbody.innerHTML += `<tr>
-        <td>${d.toLocaleString()}</td>
-        <td>${s.item}</td>
-        <td>${s.quantity}</td>
-        <td>${s.total.toLocaleString()}</td>
-      </tr>`;
+      tbody.innerHTML += `
+        <tr class="${groupId}" style="display: none;">
+          <td>${d.toLocaleString()}</td>
+          <td>${s.item}</td>
+          <td>${s.quantity}</td>
+          <td>${s.total.toLocaleString()}</td>
+        </tr>
+      `;
     });
   });
 }
+    function toggleGroup(groupClass, headerRow) {
+  const rows = document.querySelectorAll("." + groupClass);
+  const isHidden = rows[0].style.display === "none";
+  rows.forEach(row => row.style.display = isHidden ? "" : "none");
 
+  // Đổi biểu tượng ► / ▼
+  const td = headerRow.querySelector("td");
+  td.innerHTML = td.innerHTML.replace(isHidden ? "►" : "▼", isHidden ? "▼" : "►");
+}
     function renderDropdown() {
       const sel = document.getElementById("sellItem");
       sel.innerHTML = "";
