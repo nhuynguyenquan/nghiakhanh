@@ -34,7 +34,7 @@
   <table id="salesTable"><thead><tr><th>Thời gian</th><th>Sản phẩm</th><th>Số lượng</th><th>Tổng</th></tr></thead><tbody></tbody></table>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwtYHiBJ3ShQK7Ypn43vjf7sgF6KpZecdU-7-a5cpFN90smOUODSVMOMxb_dRUBiJQ0/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwuF_gnxMxLctniR-yEw505l3KNQnu1MwHd3cow79IdEegUOuLrzJUi9hfEaHAlubUk/exec";
 
     let data = { items: [], sales: [] };
 
@@ -70,36 +70,39 @@
       });
     }
 
-    async function updateStock() {
-      const name = document.getElementById("itemName").value;
-      const stock = +document.getElementById("itemStock").value;
-      const price = +document.getElementById("itemPrice").value;
-      if (!name || stock <= 0 || price <= 0) return alert("Vui lòng nhập đầy đủ!");
+   async function updateStock() {
+  const name = document.getElementById("itemName").value;
+  const stock = +document.getElementById("itemStock").value;
+  const price = +document.getElementById("itemPrice").value;
+  if (!name || stock <= 0 || price <= 0) return alert("Vui lòng nhập đầy đủ!");
 
-      await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ update: { name, stock, price } }),
-         mode: "no-cors"
-      });
-      await loadData();
-    }
+  await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({ update: { name, stock, price } }),
+    mode: "no-cors",
+    headers: { "Content-Type": "application/json" }
+  });
 
+  alert("✅ Đã thêm / cập nhật sản phẩm!");
+  setTimeout(loadData, 1000);
+}
     async function sellItem() {
-      const item = document.getElementById("sellItem").value;
-      const quantity = +document.getElementById("sellQuantity").value;
-      if (!item || quantity <= 0) return alert("Nhập sản phẩm và số lượng");
+  const item = document.getElementById("sellItem").value;
+  const quantity = +document.getElementById("sellQuantity").value;
+  if (!item || quantity <= 0) return alert("Nhập sản phẩm và số lượng");
 
-      const res = await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ sale: { item, quantity } }),
-         mode: "no-cors"
-      });
-      const result = await res.json();
-      if (result.error) return alert(result.error);
-      await loadData();
-    }
+  const sale = { item, quantity };
 
-    loadData();
+  await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({ sale }),
+    mode: "no-cors",
+    headers: { "Content-Type": "application/json" }
+  });
+
+  alert("✅ Đã gửi đơn hàng (dữ liệu có thể mất 1-2 giây để cập nhật)");
+  setTimeout(loadData, 1000); // delay 1s để đợi server xử lý
+}
   </script>
 </body>
 </html>
