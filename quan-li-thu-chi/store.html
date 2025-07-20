@@ -55,12 +55,37 @@
     }
 
     function renderSales() {
-      const tbody = document.querySelector("#salesTable tbody");
-      tbody.innerHTML = "";
-      data.sales.slice().reverse().forEach(s => {
-        tbody.innerHTML += `<tr><td>${new Date(s.date).toLocaleString()}</td><td>${s.item}</td><td>${s.quantity}</td><td>${s.total.toLocaleString()}</td></tr>`;
-      });
-    }
+  const tbody = document.querySelector("#salesTable tbody");
+  tbody.innerHTML = "";
+
+  // Nhóm theo tháng/năm
+  const salesByMonth = {};
+
+  data.sales.forEach(s => {
+    const d = new Date(s.date);
+    const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+    if (!salesByMonth[key]) salesByMonth[key] = [];
+    salesByMonth[key].push(s);
+  });
+
+  // Hiển thị từng tháng (gần nhất trước)
+  const sortedMonths = Object.keys(salesByMonth).sort((a, b) => b.localeCompare(a));
+
+  sortedMonths.forEach(monthKey => {
+    const [year, month] = monthKey.split("-");
+    tbody.innerHTML += `<tr><td colspan="4" style="background:#f0f0f0;font-weight:bold">📅 Tháng ${month}/${year}</td></tr>`;
+
+    salesByMonth[monthKey].slice().reverse().forEach(s => {
+      const d = new Date(s.date);
+      tbody.innerHTML += `<tr>
+        <td>${d.toLocaleString()}</td>
+        <td>${s.item}</td>
+        <td>${s.quantity}</td>
+        <td>${s.total.toLocaleString()}</td>
+      </tr>`;
+    });
+  });
+}
 
     function renderDropdown() {
       const sel = document.getElementById("sellItem");
