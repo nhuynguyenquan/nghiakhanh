@@ -69,22 +69,25 @@
 
   const sortedMonths = Object.keys(salesByMonth).sort((a, b) => b.localeCompare(a));
 
+  // Lấy tháng hiện tại
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+
   sortedMonths.forEach((monthKey, index) => {
     const groupId = `group-${index}`;
     const [year, month] = monthKey.split("-");
+    const isCurrent = monthKey === currentMonthKey;
 
-    // Dòng tiêu đề tháng có nút thu gọn
     tbody.innerHTML += `
       <tr class="month-header" style="background:#f0f0f0;font-weight:bold;cursor:pointer" onclick="toggleGroup('${groupId}', this)">
-        <td colspan="4">► Tháng ${month}/${year}</td>
+        <td colspan="4">${isCurrent ? "▼" : "►"} Tháng ${month}/${year}</td>
       </tr>
     `;
 
-    // Dòng chi tiết (ẩn mặc định)
     salesByMonth[monthKey].slice().reverse().forEach(s => {
       const d = new Date(s.date);
       tbody.innerHTML += `
-        <tr class="${groupId}" style="display: none;">
+        <tr class="${groupId}" style="display: ${isCurrent ? "" : "none"};">
           <td>${d.toLocaleString()}</td>
           <td>${s.item}</td>
           <td>${s.quantity}</td>
