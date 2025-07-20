@@ -62,14 +62,12 @@
 
   data.sales.forEach(s => {
     const d = new Date(s.date);
-    const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
-    if (!salesByMonth[key]) salesByMonth[key] = [];
-    salesByMonth[key].push(s);
+    const monthKey = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+    if (!salesByMonth[monthKey]) salesByMonth[monthKey] = [];
+    salesByMonth[monthKey].push(s);
   });
 
   const sortedMonths = Object.keys(salesByMonth).sort((a, b) => b.localeCompare(a));
-
-  // Lấy tháng hiện tại
   const now = new Date();
   const currentMonthKey = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
 
@@ -78,22 +76,49 @@
     const [year, month] = monthKey.split("-");
     const isCurrent = monthKey === currentMonthKey;
 
+    // Dòng tiêu đề tháng
     tbody.innerHTML += `
       <tr class="month-header" style="background:#f0f0f0;font-weight:bold;cursor:pointer" onclick="toggleGroup('${groupId}', this)">
         <td colspan="4">${isCurrent ? "▼" : "►"} Tháng ${month}/${year}</td>
       </tr>
     `;
 
-    salesByMonth[monthKey].slice().reverse().forEach(s => {
+    // Nhóm theo ngày trong tháng
+    const salesByDate = {};
+    salesByMonth[monthKey].forEach(s => {
       const d = new Date(s.date);
+      const dateKey = d.toLocaleDateString("vi-VN"); // ví dụ: 19/07/2025
+      if (!salesByDate[dateKey]) salesByDate[dateKey] = [];
+      salesByDate[dateKey].push(s);
+    });
+
+    const sortedDates = Object.keys(salesByDate).sort((a, b) => {
+      const ad = new Date(a.split("/").reverse().join("-"));
+      const bd = new Date(b.split("/").reverse().join("-"));
+      return bd - ad;
+    });
+
+    sortedDates.forEach(dateKey => {
+      const dayLogs = salesByDate[dateKey];
+      const totalDay = dayLogs.reduce((sum, s) => sum + (s.total || 0), 0);
+
       tbody.innerHTML += `
-        <tr class="${groupId}" style="display: ${isCurrent ? "" : "none"};">
-          <td>${d.toLocaleString()}</td>
-          <td>${s.item}</td>
-          <td>${s.quantity}</td>
-          <td>${s.total.toLocaleString()}</td>
+        <tr class="${groupId}" style="display: ${isCurrent ? "" : "none"}; background:#fafafa; font-weight:bold">
+          <td colspan="4">📅 ${dateKey} – 💵 Tổng: ${totalDay.toLocaleString()}đ</td>
         </tr>
       `;
+
+      dayLogs.slice().reverse().forEach(s => {
+        const d = new Date(s.date);
+        tbody.innerHTML += `
+          <tr class="${groupId}" style="display: ${isCurrent ? "" : "none"};">
+            <td>${d.toLocaleString()}</td>
+            <td>${s.item}</td>
+            <td>${s.quantity}</td>
+            <td>${s.total.toLocaleString()}</td>
+          </tr>
+        `;
+      });
     });
   });
 }
