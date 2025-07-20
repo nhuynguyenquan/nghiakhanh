@@ -90,27 +90,23 @@
       }
 
       try {
-        await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
-          method: "POST",
-          body: JSON.stringify({
-            action: "confirm_rule",
-            name: name,
-            note: note,
-            date: new Date().toISOString()
-          }),
-          headers: {
-            "Content-Type": "application/json"
-          }
-        });
-        msg.style.color = 'green';
-        msg.textContent = '✅ Xác nhận thành công! Cảm ơn bạn.';
-        document.getElementById('name').value = '';
-        document.getElementById('note').value = '';
-      } catch (err) {
-        msg.style.color = 'red';
-        msg.textContent = '❌ Lỗi khi gửi xác nhận. Vui lòng thử lại.';
-      }
-    }
+        await fetch("https://script.google.com/macros/s/AKfycbzfcm7BIFTJafz1W05K_fBnaf1ZTa8SQtiCEkzylev_nebVFblVi7M0f_sYoyOsPeTF9A/exec", {
+  method: "POST",
+  mode: "no-cors",
+  body: JSON.stringify({
+    action: "confirm_rule",
+    name: name,
+    note: note,
+    date: new Date().toISOString()
+  }),
+  headers: {
+    "Content-Type": "application/json"
+  }
+});
+msg.style.color = 'green';
+msg.textContent = '✅ Xác nhận đã được gửi. Dữ liệu sẽ được ghi lại sau vài giây.';
+document.getElementById('name').value = '';
+document.getElementById('note').value = '';
   </script>
 
 </body>
