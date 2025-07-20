@@ -1,92 +1,103 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Quản lý bán hàng & kho</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quản lý bán hàng và kho</title>
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; }
-    h2 { color: #2c3e50; }
-    label, select, input { display: block; margin: 10px 0; width: 100%; }
-    button { padding: 10px; background: #27ae60; color: white; border: none; cursor: pointer; }
-    button:hover { background: #219150; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    body { font-family: sans-serif; padding: 20px; }
+    input, button, select { margin: 5px; padding: 5px; }
+    table { border-collapse: collapse; margin-top: 20px; width: 100%; }
+    td, th { border: 1px solid #ccc; padding: 8px; text-align: left; }
   </style>
 </head>
 <body>
+  <h2>📦 Kho hàng</h2>
+  <div>
+    <input id="itemName" placeholder="Tên sản phẩm">
+    <input id="itemStock" type="number" placeholder="Số lượng">
+    <input id="itemPrice" type="number" placeholder="Giá bán">
+    <button onclick="updateStock()">➕ Thêm / Cập nhật</button>
+  </div>
 
-  <h2>Bán hàng</h2>
-  <form id="saleForm">
-    <label for="item">Chọn món:</label>
-    <select id="item" required></select>
+  <h2>🛒 Bán hàng</h2>
+  <div>
+    <select id="sellItem"></select>
+    <input id="sellQuantity" type="number" placeholder="Số lượng">
+    <button onclick="sellItem()">💰 Bán</button>
+  </div>
 
-    <label for="quantity">Số lượng:</label>
-    <input type="number" id="quantity" required min="1">
+  <h2>📋 Danh sách sản phẩm</h2>
+  <table id="itemTable"><thead><tr><th>Tên</th><th>Tồn kho</th><th>Giá</th></tr></thead><tbody></tbody></table>
 
-    <button type="submit">Bán hàng</button>
-  </form>
-
-  <h2>Lịch sử bán hàng</h2>
-  <table id="salesTable">
-    <thead>
-      <tr><th>Thời gian</th><th>Món</th><th>Số lượng</th><th>Thành tiền</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <h2>📈 Lịch sử bán hàng</h2>
+  <table id="salesTable"><thead><tr><th>Thời gian</th><th>Sản phẩm</th><th>Số lượng</th><th>Tổng</th></tr></thead><tbody></tbody></table>
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbwtYHiBJ3ShQK7Ypn43vjf7sgF6KpZecdU-7-a5cpFN90smOUODSVMOMxb_dRUBiJQ0/exec";
 
-    let items = [];
+    let data = { items: [], sales: [] };
 
     async function loadData() {
       const res = await fetch(API_URL);
-      const data = await res.json();
-      items = data.items || [];
-
-      const itemSelect = document.getElementById("item");
-      itemSelect.innerHTML = items.map(i => `<option value="${i.name}">${i.name} (Còn: ${i.stock})</option>`).join("");
-
-      const tbody = document.querySelector("#salesTable tbody");
-      tbody.innerHTML = (data.sales || []).map(s => `
-        <tr>
-          <td>${new Date(s.date).toLocaleString()}</td>
-          <td>${s.item}</td>
-          <td>${s.quantity}</td>
-          <td>${s.total.toLocaleString()}₫</td>
-        </tr>
-      `).join("");
+      data = await res.json();
+      renderItems();
+      renderSales();
+      renderDropdown();
     }
 
-    document.getElementById("saleForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
+    function renderItems() {
+      const tbody = document.querySelector("#itemTable tbody");
+      tbody.innerHTML = "";
+      data.items.forEach(i => {
+        tbody.innerHTML += `<tr><td>${i.name}</td><td>${i.stock}</td><td>${i.price.toLocaleString()}</td></tr>`;
+      });
+    }
 
-      const itemName = document.getElementById("item").value;
-      const quantity = parseInt(document.getElementById("quantity").value);
-      const item = items.find(i => i.name === itemName);
-      if (!item || quantity <= 0) return alert("Dữ liệu không hợp lệ.");
+    function renderSales() {
+      const tbody = document.querySelector("#salesTable tbody");
+      tbody.innerHTML = "";
+      data.sales.slice().reverse().forEach(s => {
+        tbody.innerHTML += `<tr><td>${new Date(s.date).toLocaleString()}</td><td>${s.item}</td><td>${s.quantity}</td><td>${s.total.toLocaleString()}</td></tr>`;
+      });
+    }
 
-      if (quantity > item.stock) {
-        return alert(`❌ Không đủ hàng. Chỉ còn ${item.stock} cái.`);
-      }
+    function renderDropdown() {
+      const sel = document.getElementById("sellItem");
+      sel.innerHTML = "";
+      data.items.forEach(i => {
+        sel.innerHTML += `<option value="${i.name}">${i.name}</option>`;
+      });
+    }
 
-      const transaction = {
-        item: itemName,
-        quantity,
-        total: item.price * quantity
-      };
+    async function updateStock() {
+      const name = document.getElementById("itemName").value;
+      const stock = +document.getElementById("itemStock").value;
+      const price = +document.getElementById("itemPrice").value;
+      if (!name || stock <= 0 || price <= 0) return alert("Vui lòng nhập đầy đủ!");
+
+      await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ update: { name, stock, price } }),
+         mode: "no-cors"
+      });
+      await loadData();
+    }
+
+    async function sellItem() {
+      const item = document.getElementById("sellItem").value;
+      const quantity = +document.getElementById("sellQuantity").value;
+      if (!item || quantity <= 0) return alert("Nhập sản phẩm và số lượng");
 
       const res = await fetch(API_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transaction })
+        body: JSON.stringify({ sale: { item, quantity } }),
+         mode: "no-cors"
       });
-
-      const text = await res.text();
-      alert(text);
-      loadData();
-    });
+      const result = await res.json();
+      if (result.error) return alert(result.error);
+      await loadData();
+    }
 
     loadData();
   </script>
