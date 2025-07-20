@@ -211,27 +211,53 @@
     }
 
     async function addTransaction() {
-      const amount = parseInt(document.getElementById("amount").value);
-      const type = document.getElementById("type").value;
-      const note = document.getElementById("note").value;
-      if (!amount || isNaN(amount)) {
-        alert("Vui lòng nhập số tiền hợp lệ!");
-        return;
-      }
+  const amountInput = document.getElementById("amount");
+  const typeInput = document.getElementById("type");
+  const noteInput = document.getElementById("note");
+  const submitBtn = document.getElementById("submit-btn");
 
-      const transaction = {
-        amount,
-        type,
-        note,
-        date: new Date().toISOString()
-      };
+  const amount = parseInt(amountInput.value);
+  const type = typeInput.value;
+  const note = noteInput.value;
 
-      await saveTransaction(transaction);
-      transactions = await fetchTransactions();
-      updateUI();
-      sendToTelegram(transaction);
-      resetForm();
-    }
+  if (!amount || isNaN(amount)) {
+    alert("Vui lòng nhập số tiền hợp lệ!");
+    return;
+  }
+
+  // Khóa input và nút gửi
+  amountInput.disabled = true;
+  typeInput.disabled = true;
+  noteInput.disabled = true;
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Đang gửi...";
+
+  const transaction = {
+    amount,
+    type,
+    note,
+    date: new Date().toISOString()
+  };
+
+  try {
+    await saveTransaction(transaction);
+    transactions = await fetchTransactions();
+    updateUI();
+    sendToTelegram(transaction);
+  } catch (err) {
+    alert("❌ Có lỗi khi gửi dữ liệu!");
+    console.error(err);
+  }
+
+  // Mở lại input và nút gửi
+  resetForm();
+  amountInput.disabled = false;
+  typeInput.disabled = false;
+  noteInput.disabled = false;
+  submitBtn.disabled = false;
+  submitBtn.textContent = "Thêm";
+}
+
 
     async function saveTransaction(transaction) {
       try {
