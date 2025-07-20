@@ -78,7 +78,8 @@
 
       await fetch(API_URL, {
         method: "POST",
-        body: JSON.stringify({ update: { name, stock, price } })
+        body: JSON.stringify({ update: { name, stock, price } }),
+         mode: "no-cors"
       });
       await loadData();
     }
@@ -90,7 +91,8 @@
 
       const res = await fetch(API_URL, {
         method: "POST",
-        body: JSON.stringify({ sale: { item, quantity } })
+        body: JSON.stringify({ sale: { item, quantity } }),
+         mode: "no-cors"
       });
       const result = await res.json();
       if (result.error) return alert(result.error);
