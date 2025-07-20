@@ -17,14 +17,14 @@
     <input id="itemName" placeholder="Tên sản phẩm">
     <input id="itemStock" type="number" placeholder="Số lượng">
     <input id="itemPrice" type="number" placeholder="Giá bán">
-    <button onclick="updateStock()">➕ Thêm / Cập nhật</button>
+    <button id="btnUpdate" onclick="updateStock()">➕ Thêm / Cập nhật</button>
   </div>
 
   <h2>🛒 Bán hàng</h2>
   <div>
     <select id="sellItem"></select>
     <input id="sellQuantity" type="number" placeholder="Số lượng">
-    <button onclick="sellItem()">💰 Bán</button>
+    <button id="btnSell" onclick="sellItem()">💰 Bán</button>
   </div>
 
   <h2>📋 Danh sách sản phẩm</h2>
@@ -70,39 +70,64 @@
       });
     }
 
-   async function updateStock() {
-  const name = document.getElementById("itemName").value;
-  const stock = +document.getElementById("itemStock").value;
-  const price = +document.getElementById("itemPrice").value;
-  if (!name || stock <= 0 || price <= 0) return alert("Vui lòng nhập đầy đủ!");
+    async function updateStock() {
+      const btn = document.getElementById("btnUpdate");
+      const name = document.getElementById("itemName").value;
+      const stock = +document.getElementById("itemStock").value;
+      const price = +document.getElementById("itemPrice").value;
+      if (!name || stock <= 0 || price <= 0) return alert("Vui lòng nhập đầy đủ!");
 
-  await fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify({ update: { name, stock, price } }),
-    mode: "no-cors",
-    headers: { "Content-Type": "application/json" }
-  });
+      btn.disabled = true;
+      const oldText = btn.innerText;
+      btn.innerText = "Đang gửi...";
 
-  alert("✅ Đã thêm / cập nhật sản phẩm!");
-  setTimeout(loadData, 1000);
-}
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({ update: { name, stock, price } }),
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" }
+        });
+        alert("✅ Đã thêm / cập nhật sản phẩm!");
+        setTimeout(loadData, 1000);
+      } catch (e) {
+        alert("❌ Lỗi gửi dữ liệu: " + e.message);
+      } finally {
+        btn.innerText = oldText;
+        btn.disabled = false;
+      }
+    }
+
     async function sellItem() {
-  const item = document.getElementById("sellItem").value;
-  const quantity = +document.getElementById("sellQuantity").value;
-  if (!item || quantity <= 0) return alert("Nhập sản phẩm và số lượng");
+      const btn = document.getElementById("btnSell");
+      const item = document.getElementById("sellItem").value;
+      const quantity = +document.getElementById("sellQuantity").value;
+      if (!item || quantity <= 0) return alert("Nhập sản phẩm và số lượng");
 
-  const sale = { item, quantity };
+      btn.disabled = true;
+      const oldText = btn.innerText;
+      btn.innerText = "Đang gửi...";
 
-  await fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify({ sale }),
-    mode: "no-cors",
-    headers: { "Content-Type": "application/json" }
-  });
+      const sale = { item, quantity };
 
-  alert("✅ Đã gửi đơn hàng (dữ liệu có thể mất 1-2 giây để cập nhật)");
-  setTimeout(loadData, 1000); // delay 1s để đợi server xử lý
-}
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({ sale }),
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" }
+        });
+        alert("✅ Đã gửi đơn hàng (dữ liệu có thể mất 1-2 giây để cập nhật)");
+        setTimeout(loadData, 1000);
+      } catch (e) {
+        alert("❌ Lỗi gửi dữ liệu: " + e.message);
+      } finally {
+        btn.innerText = oldText;
+        btn.disabled = false;
+      }
+    }
+
+    loadData();
   </script>
 </body>
 </html>
