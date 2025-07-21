@@ -5,7 +5,7 @@ function getCookie(name) {
   const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
   return v ? decodeURIComponent(v[2]) : '';
 }
-function setCookie(name, value, days = 60) {
+function setCookie(name, value, days = 90) {
   const expires = new Date(Date.now() + days*864e5).toUTCString();
   document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
 }
