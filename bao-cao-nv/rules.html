@@ -106,6 +106,7 @@
 
       msg.style.color = 'green';
       msg.textContent = '✅ Xác nhận đã được gửi. Dữ liệu sẽ được ghi lại sau vài giây.';
+      setTimeout(() => { status.textContent = ""; }, 5000);
       document.getElementById('name').value = '';
       document.getElementById('note').value = '';
     } catch (err) {
