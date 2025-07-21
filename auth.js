@@ -6,13 +6,14 @@ function getCookie(name) {
   return v ? decodeURIComponent(v[2]) : '';
 }
 function setCookie(name, value, days = 90) {
-  const expires = new Date(Date.now() + days*864e5).toUTCString();
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
   document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
 }
 function deleteCookie(name) {
   document.cookie = `${name}=; max-age=0; path=/`;
 }
-// Hiển thị trạng thái user
+
+// Trạng thái đăng nhập
 function showStatus(id, role) {
   let el = document.getElementById('status-info');
   if (!el) {
@@ -24,11 +25,7 @@ function showStatus(id, role) {
     document.body.appendChild(el);
   }
   el.textContent = `Xin chào ${id} (${role})`;
-   setTimeout(() => {
-    //el.textContent = '';
-    // Hoặc nếu muốn xóa hẳn:
-    el.remove();
-  }, 10000);
+  setTimeout(() => el.remove(), 10000); // Tự ẩn sau 10s
 }
 function hideStatus() {
   const el = document.getElementById('status-info');
@@ -48,6 +45,7 @@ function showLogoutButton() {
   btn.onclick = () => {
     deleteCookie('token');
     deleteCookie('user_id');
+    localStorage.removeItem('auth');
     hideStatus();
     hideLogoutButton();
     showLoginForm();
@@ -59,7 +57,7 @@ function hideLogoutButton() {
   if (btn) btn.remove();
 }
 
-// Tạo form đăng nhập
+// Form đăng nhập
 function showLoginForm() {
   if (document.getElementById('login-form')) return;
 
@@ -82,17 +80,14 @@ function showLoginForm() {
   `;
 
   document.body.appendChild(form);
-
   form.querySelector('#login-submit').onclick = login;
 }
-
-// Ẩn form đăng nhập
 function hideLoginForm() {
   const form = document.getElementById('login-form');
   if (form) form.remove();
 }
 
-// Xử lý login
+// Xử lý đăng nhập
 async function login() {
   const id = document.getElementById('login-id')?.value.trim();
   const password = document.getElementById('login-password')?.value.trim();
@@ -106,13 +101,23 @@ async function login() {
   try {
     const res = await fetch(AUTH_FILE_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'login', id, password })
+      body: JSON.stringify({ action: 'login', id, password }),
     });
     const result = await res.json();
 
     if (result.success) {
+      // Lưu cookie
       setCookie('token', result.token);
       setCookie('user_id', result.id);
+
+      // Lưu vào localStorage
+      localStorage.setItem('auth', JSON.stringify({
+        id: result.id,
+        token: result.token,
+        role: result.role,
+        timestamp: Date.now()
+      }));
+
       messageEl.style.color = 'green';
       messageEl.textContent = 'Đăng nhập thành công!';
       hideLoginForm();
@@ -128,24 +133,48 @@ async function login() {
   }
 }
 
-// Kiểm tra khi load trang
+// Kiểm tra khi tải trang
 async function checkLogin() {
+  const saved = localStorage.getItem('auth');
+  if (saved) {
+    const { id, token, role, timestamp } = JSON.parse(saved);
+    const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 ngày
+    if (Date.now() - timestamp < maxAge) {
+      // Dữ liệu vẫn còn hiệu lực
+      hideLoginForm();
+      showStatus(id, role);
+      showLogoutButton();
+      return;
+    } else {
+      // Hết hạn
+      localStorage.removeItem('auth');
+    }
+  }
+
   const token = getCookie('token');
- const userId = getCookie('user_id');
+  const userId = getCookie('user_id');
   if (!token || !userId) {
     hideStatus();
     hideLogoutButton();
     showLoginForm();
     return;
   }
-  try {
-    const res = await fetch(`${AUTH_FILE_URL}?action=check_token&id=${getCookie('user_id')}&token=${encodeURIComponent(token)}`);
-    const result = await res.json();
 
+  try {
+    const res = await fetch(`${AUTH_FILE_URL}?action=check_token&id=${userId}&token=${encodeURIComponent(token)}`);
+    const result = await res.json();
     if (result.valid) {
       hideLoginForm();
-      showStatus(result.id, result.role);
+      showStatus(userId, result.role);
       showLogoutButton();
+
+      // Lưu vào localStorage
+      localStorage.setItem('auth', JSON.stringify({
+        id: userId,
+        token,
+        role: result.role,
+        timestamp: Date.now()
+      }));
     } else {
       deleteCookie('token');
       deleteCookie('user_id');
@@ -156,5 +185,5 @@ async function checkLogin() {
     showLoginForm();
   }
 }
-// Khởi động
+
 document.addEventListener('DOMContentLoaded', checkLogin);
