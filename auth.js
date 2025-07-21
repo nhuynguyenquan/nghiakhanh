@@ -134,7 +134,7 @@ async function checkLogin() {
     return;
   }
   try {
-    const res = await fetch(`${AUTH_FILE_URL}?action=verify&token=${encodeURIComponent(token)}`);
+    const res = await fetch(`${AUTH_FILE_URL}?action=check_token&id=${getCookie('user_id')}&token=${encodeURIComponent(token)}`);
     const result = await res.json();
 
     if (result.valid) {
