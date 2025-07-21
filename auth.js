@@ -150,7 +150,10 @@ function showStatus(id, role) {
   statusEl.innerText = `Xin chào ${id} (${role})`;
 }
 
-// Tạo nút đăng xuất
+function deleteCookie(name) {
+  document.cookie = name + '=; Max-Age=0; path=/';
+}
+
 function showLogoutButton() {
   let btn = document.getElementById("logout-btn");
   if (!btn) {
@@ -171,7 +174,8 @@ function showLogoutButton() {
     btn.style.boxShadow = "0 1px 5px rgba(0,0,0,0.3)";
     btn.style.zIndex = "9999";
     btn.onclick = () => {
-      localStorage.removeItem("token");
+      deleteCookie("token");
+      deleteCookie("user_id");
       location.reload();
     };
     document.body.appendChild(btn);
