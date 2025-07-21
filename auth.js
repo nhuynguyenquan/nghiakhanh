@@ -12,7 +12,6 @@ function setCookie(name, value, days = 90) {
 function deleteCookie(name) {
   document.cookie = `${name}=; max-age=0; path=/`;
 }
-
 // Hiển thị trạng thái user
 function showStatus(id, role) {
   let el = document.getElementById('status-info');
