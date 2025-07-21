@@ -23,7 +23,7 @@ function checkLogin(callback) {
   const id = getCookie("user_id");
 
   if (!token || !id) {
-    showLoginForm(); // Nếu chưa có cookie, hiện form login
+    showLoginForm();
     return;
   }
 
@@ -31,10 +31,14 @@ function checkLogin(callback) {
     .then(res => res.json())
     .then(result => {
       if (result.valid) {
-        showLogoutButton(id, result.role); // Hiện nút logout
+        // Ẩn form đăng nhập nếu nó tồn tại
+        const loginForm = document.getElementById("login-form");
+        if (loginForm) loginForm.remove();
+
+        showLogoutButton(id, result.role);
         if (callback) callback({ id, ...result });
       } else {
-        showLoginForm(); // Token sai thì hiện lại form login
+        showLoginForm();
       }
     })
     .catch(() => {
@@ -105,30 +109,15 @@ function showLoginForm() {
 
   document.body.appendChild(form);
 }
-function checkLogin(callback) {
-  const token = getCookie("token");
-  const id = getCookie("user_id");
+checkLogin((user) => {
+  if (user && user.valid) {
+    document.getElementById("status").innerText = `Xin chào ${user.id} (${user.role})`;
+    showLogoutButton(user.id, user.role);
 
-  if (!token || !id) {
+    // ẨN FORM ĐĂNG NHẬP nếu đang tồn tại
+    const loginForm = document.getElementById("login-form");
+    if (loginForm) loginForm.remove();
+  } else {
     showLoginForm();
-    return;
   }
-
-  fetch(`${API_URL}?action=check_token&id=${id}&token=${token}`)
-    .then(res => res.json())
-    .then(result => {
-      if (result.valid) {
-        // Ẩn form đăng nhập nếu nó tồn tại
-        const loginForm = document.getElementById("login-form");
-        if (loginForm) loginForm.remove();
-
-        showLogoutButton(id, result.role);
-        if (callback) callback({ id, ...result });
-      } else {
-        showLoginForm();
-      }
-    })
-    .catch(() => {
-      showLoginForm();
-    });
-}
+});
