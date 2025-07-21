@@ -23,7 +23,7 @@ function checkLogin(callback) {
   const id = getCookie("user_id");
 
   if (!token || !id) {
-    showLoginForm();
+    if (callback) callback(null);
     return;
   }
 
@@ -31,21 +31,15 @@ function checkLogin(callback) {
     .then(res => res.json())
     .then(result => {
       if (result.valid) {
-        // Ẩn form đăng nhập nếu nó tồn tại
-        const loginForm = document.getElementById("login-form");
-        if (loginForm) loginForm.remove();
-
-        showLogoutButton(id, result.role);
         if (callback) callback({ id, ...result });
       } else {
-        showLoginForm();
+        if (callback) callback(null);
       }
     })
     .catch(() => {
-      showLoginForm();
+      if (callback) callback(null);
     });
 }
-
 // Tạo nút đăng xuất ở góc phải trên
 function showLogoutButton(userId, role) {
   const btn = document.createElement("button");
@@ -112,11 +106,13 @@ function showLoginForm() {
 checkLogin((user) => {
   if (user && user.valid) {
     document.getElementById("status").innerText = `Xin chào ${user.id} (${user.role})`;
-    showLogoutButton(user.id, user.role);
 
     // ẨN FORM ĐĂNG NHẬP nếu đang tồn tại
     const loginForm = document.getElementById("login-form");
     if (loginForm) loginForm.remove();
+
+    // Hiện nút logout một lần thôi
+    showLogoutButton(user.id, user.role);
   } else {
     showLoginForm();
   }
