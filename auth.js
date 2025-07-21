@@ -94,5 +94,14 @@ function showLoginForm() {
   document.body.appendChild(form);
 }
 checkLogin((user) => {
+  if (user && user.valid) {
     document.getElementById("status").innerText = `Xin chào ${user.id} (${user.role})`;
-  });
+    showLogoutButton(user.id, user.role);
+
+    // ẨN FORM ĐĂNG NHẬP nếu đang tồn tại
+    const loginForm = document.getElementById("login-form");
+    if (loginForm) loginForm.remove();
+  } else {
+    showLoginForm();
+  }
+});
