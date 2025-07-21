@@ -93,15 +93,30 @@ function showLoginForm() {
   };
   document.body.appendChild(form);
 }
-checkLogin((user) => {
-  if (user && user.valid) {
-    document.getElementById("status").innerText = `Xin chào ${user.id} (${user.role})`;
-    showLogoutButton(user.id, user.role);
+function checkLogin(callback) {
+  const token = getCookie("token");
+  const id = getCookie("user_id");
 
-    // ẨN FORM ĐĂNG NHẬP nếu đang tồn tại
-    const loginForm = document.getElementById("login-form");
-    if (loginForm) loginForm.remove();
-  } else {
+  if (!token || !id) {
     showLoginForm();
+    return;
   }
-});
+
+  fetch(`${API_URL}?action=check_token&id=${id}&token=${token}`)
+    .then(res => res.json())
+    .then(result => {
+      if (result.valid) {
+        // Ẩn form đăng nhập nếu nó tồn tại
+        const loginForm = document.getElementById("login-form");
+        if (loginForm) loginForm.remove();
+
+        showLogoutButton(id, result.role);
+        if (callback) callback({ id, ...result });
+      } else {
+        showLoginForm();
+      }
+    })
+    .catch(() => {
+      showLoginForm();
+    });
+}
