@@ -138,7 +138,7 @@ async function checkLogin() {
   const saved = localStorage.getItem('auth');
   if (saved) {
     const { id, token, role, timestamp } = JSON.parse(saved);
-    const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 ngày
+    const maxAge = 90 * 24 * 60 * 60 * 1000; 
     if (Date.now() - timestamp < maxAge) {
       // Dữ liệu vẫn còn hiệu lực
       hideLoginForm();
