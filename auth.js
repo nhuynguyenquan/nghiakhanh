@@ -26,9 +26,9 @@ function showStatus(id, role) {
   }
   el.textContent = `Xin chào ${id} (${role})`;
    setTimeout(() => {
-    el.textContent = '';
+    //el.textContent = '';
     // Hoặc nếu muốn xóa hẳn:
-    // el.remove();
+    el.remove();
   }, 10000);
 }
 function hideStatus() {
