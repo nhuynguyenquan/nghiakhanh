@@ -3,81 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <title>Bảng điều khiển</title>
-  <style>
-    #loginForm { display: none; margin-top: 20px; }
-    #dashboard { display: none; }
-  </style>
 </head>
 <body>
-  <div id="dashboard">
-    <h2>Chào mừng bạn!</h2>
-    <p id="status">Đang kiểm tra đăng nhập...</p>
-    <button onclick="logout()">Đăng xuất</button>
-  </div>
-
-  <div id="loginForm">
-    <h2>Đăng nhập</h2>
-    <input type="text" id="username" placeholder="Tên đăng nhập"><br>
-    <input type="password" id="password" placeholder="Mật khẩu"><br>
-    <button onclick="login()">Đăng nhập</button>
-    <p id="loginStatus"></p>
-  </div>
-
-  <script src="auth.js"></script>
+  <h2>Chào mừng bạn!</h2>
+  <p id="status">Đang kiểm tra đăng nhập...</p>
+  <button onclick="logout()">Đăng xuất</button>
+<script src="../auth.js"></script>
+<script>
+  checkLogin((user) => {
+    document.getElementById("status").innerText = `Xin chào ${user.id} (${user.role})`;
+  });
+</script>
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbwbb8TxqMBPIVLB_izyJcmImZiMtyoErCYA7mi02Ln633RfWsU8oLSNEAHvLycIHP9UcA/exec';
+
+    function getCookie(name) {
+      return document.cookie.split('; ').find(row => row.startsWith(name + '='))?.split('=')[1];
+    }
 
     function logout() {
       document.cookie = "token=; max-age=0; path=/";
       document.cookie = "user_id=; max-age=0; path=/";
-      location.reload(); // Reload lại trang để quay về login form
+      window.location.href = 'index.html';
     }
 
-    function showLoginForm() {
-      document.getElementById("dashboard").style.display = "none";
-      document.getElementById("loginForm").style.display = "block";
-    }
-
-    function showDashboard(user) {
-      document.getElementById("status").innerText = `Xin chào ${user.id} (${user.role})`;
-      document.getElementById("dashboard").style.display = "block";
-      document.getElementById("loginForm").style.display = "none";
-    }
-
-    function login() {
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value.trim();
-      fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({
-          action: 'login',
-          username,
-          password
-        })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          document.cookie = `token=${data.token}; path=/`;
-          document.cookie = `user_id=${data.id}; path=/`;
-          showDashboard(data);
-        } else {
-          document.getElementById("loginStatus").innerText = "Sai tài khoản hoặc mật khẩu.";
-        }
-      })
-      .catch(() => {
-        document.getElementById("loginStatus").innerText = "Lỗi kết nối!";
-      });
-    }
-
-    // Kiểm tra đăng nhập khi vào trang
-    checkLogin((user) => {
-      if (user && user.valid) {
-        showDashboard(user);
-      } else {
-        showLoginForm();
+    async function checkLogin() {
+      const token = getCookie('token');
+      const id = getCookie('user_id');
+      if (!token || !id) {
+        document.getElementById('status').innerText = "Chưa đăng nhập!";
+        return;
       }
-    });
+
+      const res = await fetch(`${API_URL}?action=check_token&id=${id}&token=${token}`);
+      const result = await res.json();
+      if (result.valid) {
+        document.getElementById('status').innerText = `Xin chào ${id} (${result.role})`;
+      } else {
+        document.getElementById('status').innerText = "Phiên đăng nhập hết hạn!";
+        logout();
+      }
+    }
+
+    checkLogin();
   </script>
 </body>
 </html>
