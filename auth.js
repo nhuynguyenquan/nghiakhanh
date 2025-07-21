@@ -62,7 +62,11 @@ function showLogoutButton(userId, role) {
 
 // Hiện form đăng nhập (nếu cần)
 function showLoginForm() {
+  // Nếu form đã hiện rồi thì không tạo nữa
+  if (document.getElementById("login-form")) return;
+
   const form = document.createElement("form");
+  form.id = "login-form";  // ← THÊM DÒNG NÀY
   form.innerHTML = `
     <div style="position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%);
                 background: white; padding: 20px; border: 1px solid #ccc; border-radius: 10px;">
@@ -72,6 +76,7 @@ function showLoginForm() {
       <button type="submit">Đăng nhập</button>
     </div>
   `;
+
   form.onsubmit = async (e) => {
     e.preventDefault();
     const id = form.querySelector("#user_id").value;
@@ -80,17 +85,24 @@ function showLoginForm() {
     const res = await fetch(API_URL, {
       method: "POST",
       body: JSON.stringify({ action: "login", id, password: pass }),
+      headers: { "Content-Type": "application/json" },
     });
     const result = await res.json();
 
     if (result.success) {
       document.cookie = `token=${result.token}; path=/`;
       document.cookie = `user_id=${id}; path=/`;
-      location.reload();
+
+      // Ẩn form ngay khi đăng nhập thành công
+      form.remove();
+
+      // Reload trang hoặc gọi checkLogin lại để cập nhật UI
+      checkLogin();
     } else {
       alert("Sai tài khoản hoặc mật khẩu!");
     }
   };
+
   document.body.appendChild(form);
 }
 function checkLogin(callback) {
