@@ -85,32 +85,43 @@ function hideLoginForm() {
   if (form) form.remove();
 }
 
-// Gửi yêu cầu đăng nhập
-function login() {
-  const id = document.getElementById("id").value.trim();
-  const pass = document.getElementById("password").value.trim();
+function setCookie(name, value, days = 7) {
+  const expires = new Date(Date.now() + days*864e5).toUTCString();
+  document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
+}
 
-  fetch(AUTH_FILE_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      action: "login",
-      id,
-      pass
-    })
-  })
-    .then(res => res.json())
-    .then(result => {
-      if (result.valid) {
-        localStorage.setItem("token", result.token);
-        hideLoginForm();
-        showStatus(id, result.role);
-        showLogoutButton();
-        if (typeof checkLoginCallback === "function") checkLoginCallback({ id, role: result.role });
-      } else {
-        alert("Sai tài khoản hoặc mật khẩu");
-      }
-    })
-    .catch(() => alert("Lỗi đăng nhập"));
+async function login() {
+  const id = document.getElementById('id').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const messageEl = document.getElementById('message');
+
+  if (!id || !password) {
+    messageEl.innerText = 'Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu';
+    return;
+  }
+
+  messageEl.innerText = 'Đang đăng nhập...';
+
+  try {
+    const payload = { action: 'login', id, password };
+    const res = await fetch(AUTH_FILE_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const result = await res.json();
+
+    if (result.success) {
+      setCookie('token', result.token);
+      setCookie('user_id', id);
+      window.location.href = 'dashboard.html';
+    } else {
+      messageEl.innerText = result.message || 'Đăng nhập thất bại';
+    }
+  } catch (error) {
+    messageEl.innerText = 'Lỗi kết nối. Vui lòng thử lại.';
+    console.error(error);
+  }
 }
 // Hiển thị trạng thái người dùng
 function showStatus(id, role) {
