@@ -1,98 +1,119 @@
-const API_URL = 'https://script.google.com/macros/s/AKfycbwbb8TxqMBPIVLB_izyJcmImZiMtyoErCYA7mi02Ln633RfWsU8oLSNEAHvLycIHP9UcA/exec';
-
-// Lấy cookie
+// Hàm đọc cookie
 function getCookie(name) {
-  return document.cookie.split('; ').find(row => row.startsWith(name + '='))?.split('=')[1];
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
 }
 
-// Xóa cookie
+// Hàm ghi cookie
+function setCookie(name, value, days = 1) {
+  const d = new Date();
+  d.setTime(d.getTime() + days * 86400000);
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; expires=${d.toUTCString()}`;
+}
+
+// Hàm xóa cookie
 function deleteCookie(name) {
-  document.cookie = name + "=; max-age=0; path=/";
+  document.cookie = `${name}=; Max-Age=0; path=/`;
 }
 
-// Đăng xuất và chuyển hướng
-function logout() {
-  deleteCookie("token");
-  deleteCookie("user_id");
-  window.location.href = "index.html";
-}
-
-// Kiểm tra đăng nhập và trả về thông tin qua callback
+// Gửi yêu cầu xác thực
 function checkLogin(callback) {
   const token = getCookie("token");
-  const id = getCookie("user_id");
+  const id = getCookie("id");
 
   if (!token || !id) {
-    showLoginForm(); // Nếu chưa có cookie, hiện form login
+    showLoginForm();
     return;
   }
 
-  fetch(`${API_URL}?action=check_token&id=${id}&token=${token}`)
+  fetch("https://script.google.com/macros/s/AKfycbxxx/exec", {
+    method: "POST",
+    body: JSON.stringify({ action: "check", id, token }),
+    headers: { "Content-Type": "application/json" },
+  })
     .then(res => res.json())
-    .then(result => {
-      if (result.valid) {
-        showLogoutButton(id, result.role); // Hiện nút logout
-        if (callback) callback({ id, ...result });
+    .then(data => {
+      if (data.valid) {
+        renderLoginStatus(data);
+        callback && callback(data);
       } else {
-        showLoginForm(); // Token sai thì hiện lại form login
+        showLoginForm();
       }
     })
-    .catch(() => {
-      showLoginForm();
-    });
+    .catch(() => showLoginForm());
 }
 
-// Tạo nút đăng xuất ở góc phải trên
-function showLogoutButton(userId, role) {
-  const btn = document.createElement("button");
-  btn.innerText = `Đăng xuất (${userId})`;
-  btn.onclick = logout;
-  btn.style.position = "fixed";
-  btn.style.top = "10px";
-  btn.style.right = "10px";
-  btn.style.zIndex = "1000";
-  btn.style.padding = "8px 12px";
-  btn.style.backgroundColor = "#c33";
-  btn.style.color = "white";
-  btn.style.border = "none";
-  btn.style.borderRadius = "5px";
-  btn.style.cursor = "pointer";
-  document.body.appendChild(btn);
-}
-
-// Hiện form đăng nhập (nếu cần)
+// Hiển thị form đăng nhập nếu chưa đăng nhập
 function showLoginForm() {
-  const form = document.createElement("form");
-  form.innerHTML = `
-    <div style="position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%);
-                background: white; padding: 20px; border: 1px solid #ccc; border-radius: 10px;">
-      <h3>Đăng nhập</h3>
-      <input type="text" id="user_id" placeholder="User ID" required style="margin-bottom: 10px; width: 100%; padding: 6px;"><br>
-      <input type="password" id="password" placeholder="Mật khẩu" required style="margin-bottom: 10px; width: 100%; padding: 6px;"><br>
-      <button type="submit">Đăng nhập</button>
+  const html = `
+    <div id="loginOverlay" style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:999;background:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column">
+      <h2>Đăng nhập</h2>
+      <input id="login_id" placeholder="ID" />
+      <input id="login_pw" type="password" placeholder="Password" />
+      <button onclick="submitLogin()">Đăng nhập</button>
     </div>
   `;
-  form.onsubmit = async (e) => {
-    e.preventDefault();
-    const id = form.querySelector("#user_id").value;
-    const pass = form.querySelector("#password").value;
-
-    const res = await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify({ action: "login", id, password: pass }),
-    });
-    const result = await res.json();
-
-    if (result.success) {
-      document.cookie = `token=${result.token}; path=/`;
-      document.cookie = `user_id=${id}; path=/`;
-      location.reload();
-    } else {
-      alert("Sai tài khoản hoặc mật khẩu!");
-    }
-  };
-  document.body.appendChild(form);
+  document.body.insertAdjacentHTML("beforeend", html);
 }
+
+function submitLogin() {
+  const id = document.getElementById("login_id").value.trim();
+  const password = document.getElementById("login_pw").value.trim();
+
+  fetch("https://script.google.com/macros/s/AKfycbxxx/exec", {
+    method: "POST",
+    body: JSON.stringify({ action: "login", id, password }),
+    headers: { "Content-Type": "application/json" },
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.token) {
+        setCookie("token", data.token);
+        setCookie("id", data.id);
+        document.getElementById("loginOverlay")?.remove();
+        renderLoginStatus(data);
+        location.reload(); // Reload để áp dụng role nếu cần
+      } else {
+        alert("Sai ID hoặc mật khẩu");
+      }
+    });
+}
+
+// Render nút đăng xuất & thông tin user
+function renderLoginStatus(user) {
+  // Góc trái trạng thái
+  const status = document.createElement("div");
+  status.style.position = "fixed";
+  status.style.top = "10px";
+  status.style.left = "10px";
+  status.style.background = "#eee";
+  status.style.padding = "5px 10px";
+  status.style.borderRadius = "5px";
+  status.style.zIndex = "1000";
+  status.innerText = `👋 Xin chào ${user.id} (${user.role})`;
+  document.body.appendChild(status);
+
+  // Góc phải nút logout
+  const logoutBtn = document.createElement("button");
+  logoutBtn.innerText = "Đăng xuất";
+  logoutBtn.style.position = "fixed";
+  logoutBtn.style.top = "10px";
+  logoutBtn.style.right = "10px";
+  logoutBtn.style.padding = "5px 10px";
+  logoutBtn.style.zIndex = "1000";
+  logoutBtn.onclick = () => {
+    deleteCookie("token");
+    deleteCookie("id");
+    location.reload();
+  };
+  document.body.appendChild(logoutBtn);
+
+  // Ẩn/hiện menu theo role
+  document.querySelectorAll("[data-role]").forEach(el => {
+    el.style.display = (el.dataset.role === user.role || user.role === "admin") ? "" : "none";
+  });
+}
+
 checkLogin((user) => {
     document.getElementById("status").innerText = `Xin chào ${user.id} (${user.role})`;
   });
