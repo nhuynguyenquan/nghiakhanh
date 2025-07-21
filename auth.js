@@ -1,4 +1,4 @@
-const AUTH_FILE_URL = 'https://script.google.com/macros/s/AKfycbwbb8TxqMBPIVLB_izyJcmImZiMtyoErCYA7mi02Ln633RfWsU8oLSNEAHvLycIHP9UcA/exec';
+const AUTH_FILE_URL = 'https://script.google.com/macros/s/AKfycbxfMK0ZlElfaHal3xL_6pV-_E4MD-GdAaOUTn-6MQD5fmessV-WpT5EP_tB_3HEHIyF-A/exec';
 
 // Cookie Helpers
 function getCookie(name) {
