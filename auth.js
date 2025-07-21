@@ -112,12 +112,15 @@ async function login() {
 
   try {
     const payload = { action: 'login', id, password };
+    console.log('Sending login request:', payload);
     const res = await fetch(AUTH_FILE_URL, {
       method: 'POST',
       body: JSON.stringify(payload),
       headers: { 'Content-Type': 'application/json' }
     });
+    console.log('Response status:', res.status);
     const result = await res.json();
+    console.log('Response data:', result);
 
     if (result.success) {
       setCookie('token', result.token);
@@ -128,7 +131,7 @@ async function login() {
     }
   } catch (error) {
     messageEl.innerText = 'Lỗi kết nối. Vui lòng thử lại.';
-    console.error(error);
+    console.error('Login error:', error);
   }
 }
 // Hiển thị trạng thái người dùng
