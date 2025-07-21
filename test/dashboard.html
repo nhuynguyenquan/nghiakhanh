@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Bảng điều khiển</title>
+</head>
+<body>
+  <h2>Chào mừng bạn!</h2>
+  <p id="status">Đang kiểm tra đăng nhập...</p>
+  <button onclick="logout()">Đăng xuất</button>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwbb8TxqMBPIVLB_izyJcmImZiMtyoErCYA7mi02Ln633RfWsU8oLSNEAHvLycIHP9UcA/exec';
+
+    function getCookie(name) {
+      return document.cookie.split('; ').find(row => row.startsWith(name + '='))?.split('=')[1];
+    }
+
+    function logout() {
+      document.cookie = "token=; max-age=0; path=/";
+      document.cookie = "user_id=; max-age=0; path=/";
+      window.location.href = 'index.html';
+    }
+
+    async function checkLogin() {
+      const token = getCookie('token');
+      const id = getCookie('user_id');
+      if (!token || !id) {
+        document.getElementById('status').innerText = "Chưa đăng nhập!";
+        return;
+      }
+
+      const res = await fetch(`${API_URL}?action=check_token&id=${id}&token=${token}`);
+      const result = await res.json();
+      if (result.valid) {
+        document.getElementById('status').innerText = `Xin chào ${id} (${result.role})`;
+      } else {
+        document.getElementById('status').innerText = "Phiên đăng nhập hết hạn!";
+        logout();
+      }
+    }
+
+    checkLogin();
+  </script>
+</body>
+</html>
