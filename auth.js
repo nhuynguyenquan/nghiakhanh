@@ -124,7 +124,6 @@ function showLoginForm() {
     try {
       const res = await fetch(AUTH_FILE_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'login', id, password })
       });
       const result = await res.json();
