@@ -1,102 +1,98 @@
-const SERVER_URL = 'https://script.google.com/macros/s/AKfycbwbb8TxqMBPIVLB_izyJcmImZiMtyoErCYA7mi02Ln633RfWsU8oLSNEAHvLycIHP9UcA/exec';
-const TOKEN_NAME = 'auth_token';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwbb8TxqMBPIVLB_izyJcmImZiMtyoErCYA7mi02Ln633RfWsU8oLSNEAHvLycIHP9UcA/exec';
 
-// Hiển thị trạng thái và nút đăng xuất ở góc trái
-function showStatus(user) {
-  let statusDiv = document.getElementById('auth-status');
-  if (!statusDiv) {
-    statusDiv = document.createElement('div');
-    statusDiv.id = 'auth-status';
-    statusDiv.style.position = 'fixed';
-    statusDiv.style.top = '10px';
-    statusDiv.style.left = '10px';
-    statusDiv.style.zIndex = 9999;
-    document.body.appendChild(statusDiv);
-  }
-
-  statusDiv.innerHTML = `
-    <span>Xin chào <b>${user.id}</b> (${user.role})</span>
-    <button id="logout-btn" style="margin-left:10px;">Đăng xuất</button>
-  `;
-  document.getElementById("logout-btn").onclick = () => logout();
+// Lấy cookie
+function getCookie(name) {
+  return document.cookie.split('; ').find(row => row.startsWith(name + '='))?.split('=')[1];
 }
 
-// Hiển thị form đăng nhập nếu chưa đăng nhập
-function showLoginForm() {
-  if (document.getElementById("login-form")) return;
-  const form = document.createElement('form');
-  form.id = "login-form";
-  form.innerHTML = `
-    <div style="position:fixed;top:30%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:20px;box-shadow:0 0 10px #ccc;z-index:9999">
-      <h3>Đăng nhập</h3>
-      <input id="user" placeholder="Tài khoản" required style="margin-bottom:10px;width:100%"><br>
-      <input id="pass" type="password" placeholder="Mật khẩu" required style="margin-bottom:10px;width:100%"><br>
-      <button type="submit" style="width:100%">Đăng nhập</button>
-    </div>
-  `;
-  form.onsubmit = async (e) => {
-    e.preventDefault();
-    const username = document.getElementById("user").value;
-    const password = document.getElementById("pass").value;
-    try {
-      const res = await fetch(SERVER_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'login', user: username, pass: password }),
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const data = await res.json();
-      if (data.token) {
-        localStorage.setItem(TOKEN_NAME, data.token);
-        form.remove();
-        checkLogin(onLoginSuccess);
-      } else {
-        alert(data.error || "Đăng nhập thất bại");
-      }
-    } catch (err) {
-      alert("Lỗi kết nối");
-    }
-  };
-  document.body.appendChild(form);
+// Xóa cookie
+function deleteCookie(name) {
+  document.cookie = name + "=; max-age=0; path=/";
 }
 
-// Đăng xuất và reload lại
+// Đăng xuất và chuyển hướng
 function logout() {
-  localStorage.removeItem(TOKEN_NAME);
-  location.reload();
+  deleteCookie("token");
+  deleteCookie("user_id");
+  window.location.href = "index.html";
 }
 
-// Kiểm tra đăng nhập và gọi callback nếu hợp lệ
+// Kiểm tra đăng nhập và trả về thông tin qua callback
 function checkLogin(callback) {
-  const token = localStorage.getItem(TOKEN_NAME);
-  if (!token) {
-    showLoginForm();
+  const token = getCookie("token");
+  const id = getCookie("user_id");
+
+  if (!token || !id) {
+    showLoginForm(); // Nếu chưa có cookie, hiện form login
     return;
   }
 
-  fetch(`${SERVER_URL}?action=verify&token=${token}`)
-    .then(r => r.json())
-    .then(data => {
-      if (data.valid) {
-        showStatus(data);
-        document.querySelectorAll("[class^='role-']").forEach(el => {
-          if (!el.classList.contains(`role-${data.role}`)) el.style.display = 'none';
-        });
-        callback && callback(data);
+  fetch(`${API_URL}?action=check_token&id=${id}&token=${token}`)
+    .then(res => res.json())
+    .then(result => {
+      if (result.valid) {
+        showLogoutButton(id, result.role); // Hiện nút logout
+        if (callback) callback({ id, ...result });
       } else {
-        localStorage.removeItem(TOKEN_NAME);
-        showLoginForm();
+        showLoginForm(); // Token sai thì hiện lại form login
       }
     })
     .catch(() => {
-      localStorage.removeItem(TOKEN_NAME);
       showLoginForm();
     });
 }
 
-// Có thể gọi ở bất kỳ trang nào:
-function onLoginSuccess(user) {
-  console.log("Đăng nhập thành công:", user);
-  // Tuỳ ý xử lý thêm sau khi đăng nhập
+// Tạo nút đăng xuất ở góc phải trên
+function showLogoutButton(userId, role) {
+  const btn = document.createElement("button");
+  btn.innerText = `Đăng xuất (${userId})`;
+  btn.onclick = logout;
+  btn.style.position = "fixed";
+  btn.style.top = "10px";
+  btn.style.right = "10px";
+  btn.style.zIndex = "1000";
+  btn.style.padding = "8px 12px";
+  btn.style.backgroundColor = "#c33";
+  btn.style.color = "white";
+  btn.style.border = "none";
+  btn.style.borderRadius = "5px";
+  btn.style.cursor = "pointer";
+  document.body.appendChild(btn);
 }
 
-window.addEventListener("DOMContentLoaded", () => checkLogin(onLoginSuccess));
+// Hiện form đăng nhập (nếu cần)
+function showLoginForm() {
+  const form = document.createElement("form");
+  form.innerHTML = `
+    <div style="position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%);
+                background: white; padding: 20px; border: 1px solid #ccc; border-radius: 10px;">
+      <h3>Đăng nhập</h3>
+      <input type="text" id="user_id" placeholder="User ID" required style="margin-bottom: 10px; width: 100%; padding: 6px;"><br>
+      <input type="password" id="password" placeholder="Mật khẩu" required style="margin-bottom: 10px; width: 100%; padding: 6px;"><br>
+      <button type="submit">Đăng nhập</button>
+    </div>
+  `;
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const id = form.querySelector("#user_id").value;
+    const pass = form.querySelector("#password").value;
+
+    const res = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "login", id, password: pass }),
+    });
+    const result = await res.json();
+
+    if (result.success) {
+      document.cookie = `token=${result.token}; path=/`;
+      document.cookie = `user_id=${id}; path=/`;
+      location.reload();
+    } else {
+      alert("Sai tài khoản hoặc mật khẩu!");
+    }
+  };
+  document.body.appendChild(form);
+}
+checkLogin((user) => {
+    document.getElementById("status").innerText = `Xin chào ${user.id} (${user.role})`;
+  });
