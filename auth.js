@@ -17,7 +17,7 @@ function logout() {
   window.location.href = "index.html";
 }
 
-// Kiểm tra đăng nhập và trả về thông tin qua callback
+// Kiểm tra đăng nhập và gọi callback với thông tin user hoặc null nếu chưa đăng nhập/không hợp lệ
 function checkLogin(callback) {
   const token = getCookie("token");
   const id = getCookie("user_id");
@@ -40,9 +40,14 @@ function checkLogin(callback) {
       if (callback) callback(null);
     });
 }
+
 // Tạo nút đăng xuất ở góc phải trên
 function showLogoutButton(userId, role) {
+  // Nếu nút đã tồn tại thì không tạo nữa
+  if (document.getElementById("logout-btn")) return;
+
   const btn = document.createElement("button");
+  btn.id = "logout-btn";
   btn.innerText = `Đăng xuất (${userId})`;
   btn.onclick = logout;
   btn.style.position = "fixed";
@@ -64,7 +69,7 @@ function showLoginForm() {
   if (document.getElementById("login-form")) return;
 
   const form = document.createElement("form");
-  form.id = "login-form";  // ← THÊM DÒNG NÀY
+  form.id = "login-form";
   form.innerHTML = `
     <div style="position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%);
                 background: white; padding: 20px; border: 1px solid #ccc; border-radius: 10px;">
@@ -94,8 +99,13 @@ function showLoginForm() {
       // Ẩn form ngay khi đăng nhập thành công
       form.remove();
 
-      // Reload trang hoặc gọi checkLogin lại để cập nhật UI
-      checkLogin();
+      // Gọi lại checkLogin để cập nhật UI
+      checkLogin((user) => {
+        if (user) {
+          document.getElementById("status").innerText = `Xin chào ${user.id} (${user.role})`;
+          showLogoutButton(user.id, user.role);
+        }
+      });
     } else {
       alert("Sai tài khoản hoặc mật khẩu!");
     }
@@ -103,15 +113,15 @@ function showLoginForm() {
 
   document.body.appendChild(form);
 }
-checkLogin((user) => {
-  if (user && user.valid) {
-    document.getElementById("status").innerText = `Xin chào ${user.id} (${user.role})`;
 
-    // ẨN FORM ĐĂNG NHẬP nếu đang tồn tại
+// Gọi checkLogin ngay khi load script để kiểm tra trạng thái đăng nhập
+checkLogin((user) => {
+  if (user) {
+    // Ẩn form đăng nhập nếu đang hiện
     const loginForm = document.getElementById("login-form");
     if (loginForm) loginForm.remove();
 
-    // Hiện nút logout một lần thôi
+    document.getElementById("status")?.innerText = `Xin chào ${user.id} (${user.role})`;
     showLogoutButton(user.id, user.role);
   } else {
     showLoginForm();
