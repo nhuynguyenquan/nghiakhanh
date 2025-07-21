@@ -9,11 +9,6 @@
   <p id="status">Đang kiểm tra đăng nhập...</p>
   <button onclick="logout()">Đăng xuất</button>
 <script src="../auth.js"></script>
-<script>
-  checkLogin((user) => {
-    document.getElementById("status").innerText = `Xin chào ${user.id} (${user.role})`;
-  });
-</script>
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbwbb8TxqMBPIVLB_izyJcmImZiMtyoErCYA7mi02Ln633RfWsU8oLSNEAHvLycIHP9UcA/exec';
 
