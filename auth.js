@@ -157,6 +157,5 @@ async function checkLogin() {
     showLoginForm();
   }
 }
-
 // Khởi động
 document.addEventListener('DOMContentLoaded', checkLogin);
