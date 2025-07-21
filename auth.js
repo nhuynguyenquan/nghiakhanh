@@ -44,11 +44,17 @@ function showLoginForm(callback) {
         box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         font-family: sans-serif;
         border-radius: 8px;
+        width: 220px;
+      }
+      #login-form h2 {
+        margin-top: 0;
+        font-size: 18px;
       }
       #login-form input {
         margin: 5px 0;
         padding: 6px;
-        width: 160px;
+        width: 100%;
+        box-sizing: border-box;
         display: block;
       }
       #login-form button {
@@ -58,14 +64,17 @@ function showLoginForm(callback) {
         border: none;
         border-radius: 4px;
         cursor: pointer;
+        width: 100%;
+        margin-top: 6px;
       }
       #login-form button:hover {
         background: #1a6;
       }
     </style>
-    <input type="text" id="username" placeholder="Tài khoản" autocomplete="username" />
-    <input type="password" id="password" placeholder="Mật khẩu" autocomplete="current-password" />
-    <button onclick="handleLogin()">Đăng nhập</button>
+    <h2>Đăng nhập</h2>
+    <input type="text" id="id" placeholder="Tên đăng nhập" autocomplete="username" required />
+    <input type="password" id="password" placeholder="Mật khẩu" autocomplete="current-password" required />
+    <button onclick="login()">Đăng nhập</button>
   `;
   document.body.appendChild(form);
 }
@@ -77,8 +86,8 @@ function hideLoginForm() {
 }
 
 // Gửi yêu cầu đăng nhập
-function handleLogin() {
-  const id = document.getElementById("username").value.trim();
+function login() {
+  const id = document.getElementById("id").value.trim();
   const pass = document.getElementById("password").value.trim();
 
   fetch(AUTH_FILE_URL, {
@@ -103,7 +112,6 @@ function handleLogin() {
     })
     .catch(() => alert("Lỗi đăng nhập"));
 }
-
 // Hiển thị trạng thái người dùng
 function showStatus(id, role) {
   let statusEl = document.getElementById("status-info");
