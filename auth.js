@@ -71,3 +71,6 @@ function showLoginForm(callbackWhenLoggedIn) {
     }
   }
 }
+checkLogin((user) => {
+    document.getElementById("status").innerText = `Xin chào ${user.id} (${user.role})`;
+  });
