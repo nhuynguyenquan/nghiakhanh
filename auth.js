@@ -70,14 +70,22 @@ function showLoginForm(callback) {
       #login-form button:hover {
         background: #1a6;
       }
+      #login-message {
+        color: red;
+        margin-top: 6px;
+        min-height: 18px;
+        font-size: 14px;
+      }
     </style>
     <h2>Đăng nhập</h2>
     <input type="text" id="id" placeholder="Tên đăng nhập" autocomplete="username" required />
     <input type="password" id="password" placeholder="Mật khẩu" autocomplete="current-password" required />
     <button onclick="login()">Đăng nhập</button>
+    <div id="login-message"></div>
   `;
   document.body.appendChild(form);
 }
+
 
 // Ẩn form nếu đã đăng nhập
 function hideLoginForm() {
@@ -93,7 +101,7 @@ function setCookie(name, value, days = 7) {
 async function login() {
   const id = document.getElementById('id').value.trim();
   const password = document.getElementById('password').value.trim();
-  const messageEl = document.getElementById('message');
+  const messageEl = document.getElementById('login-message');
 
   if (!id || !password) {
     messageEl.innerText = 'Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu';
