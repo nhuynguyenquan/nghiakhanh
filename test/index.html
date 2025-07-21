@@ -26,8 +26,7 @@
   <div id="userList"></div>
 
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxq8NjnU14vGzXw5LOeJHewLkUah3g1awgx33ygSk0ez1JjoNCW6Ks79B6Ov-8duOm6iA/exec'; // thay URL này bằng GAS của bạn
-
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzuVsxRm0IAIHM41EdOQ5f-XOQTTu6YEsCBErPGY1-jLvMgPNO_hYArfnI7BHtXL73z-g/exec'; 
     // Tải danh sách user
     async function loadUsers() {
       const res = await fetch(API_URL + '?action=get_users');
