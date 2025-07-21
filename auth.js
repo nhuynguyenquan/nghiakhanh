@@ -117,13 +117,26 @@ function showLoginForm() {
 // Gọi checkLogin ngay khi load script để kiểm tra trạng thái đăng nhập
 checkLogin((user) => {
   if (user) {
-    // Ẩn form đăng nhập nếu đang hiện
+    // Ẩn form đăng nhập nếu có (nếu dùng form login của auth.js)
     const loginForm = document.getElementById("login-form");
     if (loginForm) loginForm.remove();
 
-    document.getElementById("status")?.innerText = `Xin chào ${user.id} (${user.role})`;
+    // Hiển thị lời chào
+    const statusEl = document.getElementById("status");
+    if (statusEl) {
+      statusEl.innerText = `Xin chào ${user.id} (${user.role})`;
+    } else {
+      // Nếu không có phần tử status thì có thể tạo 1 phần tử hiển thị
+      const p = document.createElement('p');
+      p.id = "status";
+      p.innerText = `Xin chào ${user.id} (${user.role})`;
+      document.body.insertBefore(p, document.body.firstChild);
+    }
+
+    // Hiện nút đăng xuất
     showLogoutButton(user.id, user.role);
   } else {
+    // Nếu chưa đăng nhập, bạn có thể hiện form login hoặc làm gì đó
     showLoginForm();
   }
 });
