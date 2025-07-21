@@ -127,7 +127,8 @@ async function login() {
 // Kiểm tra khi load trang
 async function checkLogin() {
   const token = getCookie('token');
-  if (!token) {
+ const userId = getCookie('user_id');
+  if (!token || !userId) {
     hideStatus();
     hideLogoutButton();
     showLoginForm();
