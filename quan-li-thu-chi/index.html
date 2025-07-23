@@ -103,7 +103,19 @@
   <div class="summary">
     Tổng thu: <span id="total-income">0</span> VND | Tổng chi: <span id="total-expense">0</span> VND
   </div>
-
+<div id="loading-overlay" style="
+  display:none;
+  position:fixed;
+  top:0; left:0; width:100%; height:100%;
+  background:rgba(255,255,255,0.8);
+  z-index:9999;
+  font-size:24px;
+  color:#d35400;
+  text-align:center;
+  padding-top:20%;
+  font-family:sans-serif;">
+  ⏳ Đang tải dữ liệu...
+</div>
   <div id="transaction-container"></div>
   <a href="./thu-chi-gia-dinh.html">TRANG QUẢN LÍ THU CHI GIA ĐÌNH</a>
 <script src="../auth.js"></script>
@@ -232,6 +244,7 @@
   noteInput.disabled = true;
   submitBtn.disabled = true;
   submitBtn.textContent = "Đang gửi...";
+   showLoading("🔄 Đang gửi dữ liệu...");
 
   const transaction = {
     amount,
@@ -257,6 +270,7 @@
   noteInput.disabled = false;
   submitBtn.disabled = false;
   submitBtn.textContent = "Thêm";
+  hideLoading();
 }
 
 
@@ -319,6 +333,16 @@
       document.getElementById("submit-btn").onclick = addTransaction;
     }
 
+    function showLoading(text = "⏳ Đang tải dữ liệu...") {
+  const overlay = document.getElementById("loading-overlay");
+  overlay.textContent = text;
+  overlay.style.display = "block";
+}
+
+function hideLoading() {
+  document.getElementById("loading-overlay").style.display = "none";
+}
+
     function sendToTelegram(t) {
       const msg = `📌 *Giao dịch mới*:\n💰 *Số tiền:* ${t.amount.toLocaleString("vi-VN")} VND\n📂 *Loại:* ${t.type === "income" ? "Thu nhập" : "Chi tiêu"}\n📝 *Mô tả:* ${t.note}`;
       fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -336,10 +360,13 @@
     }
 
     window.onload = async () => {
+      showLoading();
       transactions = await fetchTransactions();
       updateUI();
+      hideLoading();
       document.getElementById("submit-btn").onclick = addTransaction;
     };
+
   </script>
 </body>
 </html>
