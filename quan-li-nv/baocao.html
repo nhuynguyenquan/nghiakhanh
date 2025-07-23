@@ -115,23 +115,24 @@
 
     // Duyệt từng ca trong ngày
     dayRecords.forEach(att => {
-      const isValid = !isNaN(checkIn) && !isNaN(checkOut);
-    const hours = isValid ? (checkOut - checkIn) / 1000 / 3600 : 0;
-    const salary = hours * salaryRate;
-    if (isValid) {
-    totalHours += hours;
-    totalSalary += salary;
-}
+      const checkIn = new Date(att.checkIn);
+      const checkOut = new Date(att.checkOut);
+      const hours = (checkOut - checkIn) / 1000 / 3600;
+      const salary = hours * salaryRate;
+      totalHours += hours;
+      totalSalary += salary;
 
       // Xác định ca sáng hay chiều
       const caLam = checkIn.getHours() < 12 ? 'Sáng' : 'Chiều';
 
       reportTable.innerHTML += `
         <tr>
-          <<td class="border px-2 py-1 text-center">${isValid ? formatTime(att.checkIn) : ''}</td>
-<td class="border px-2 py-1 text-center">${isValid ? formatTime(att.checkOut) : ''}</td>
-<td class="border px-2 py-1 text-center">${isValid ? hours.toFixed(2) : ''}</td>
-<td class="border px-2 py-1 text-center">${isValid ? salary.toLocaleString() : ''}</td>
+          <td class="border px-2 py-1">${date}</td>
+          <td class="border px-2 py-1 text-center">${caLam}</td>
+          <td class="border px-2 py-1 text-center">${formatTime(att.checkIn)}</td>
+          <td class="border px-2 py-1 text-center">${formatTime(att.checkOut)}</td>
+          <td class="border px-2 py-1 text-center">${hours.toFixed(2)}</td>
+          <td class="border px-2 py-1 text-center">${salary.toLocaleString()}</td>
         </tr>
       `;
     });
