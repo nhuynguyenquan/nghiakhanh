@@ -46,105 +46,102 @@
   <a href="../quan-li-nv/">trở lại</a>
   <script src="../auth.js"></script>
   <script>
-  const fileUrl = 'https://script.google.com/macros/s/AKfycbxfSnimiGKE1uDDKdtnU1v5gUBEu7p0B4xQ5mfMFVZWDVa_7xiG_WzqVzOTP7ARdgLMmw/exec';
+    const fileUrl = 'https://script.google.com/macros/s/AKfycbxfSnimiGKE1uDDKdtnU1v5gUBEu7p0B4xQ5mfMFVZWDVa_7xiG_WzqVzOTP7ARdgLMmw/exec'; 
 
-  async function fetchData() {
-    const res = await fetch(fileUrl);
-    return await res.json();
-  }
+    async function fetchData() {
+      const res = await fetch(fileUrl);
+      return await res.json();
+    }
 
-  function formatTime(dateStr) {
-    const d = new Date(dateStr);
-    return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-  }
+    function formatTime(dateStr) {
+      const d = new Date(dateStr);
+      return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    }
 
-  function formatDate(dateStr) {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('vi-VN');
-  }
+    function formatDate(dateStr) {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('vi-VN');
+    }
 
-  async function loadEmployees() {
-    const data = await fetchData();
-    const select = document.getElementById('employeeSelect');
-    data.employees.forEach(emp => {
-      const option = document.createElement('option');
-      option.value = emp.id;
-      option.textContent = emp.name;
-      select.appendChild(option);
-    });
-  }
-
-  async function renderReport() {
-    const empId = document.getElementById('employeeSelect').value;
-    const monthStr = document.getElementById('monthInput').value;
-    if (!empId || !monthStr) return alert('Vui lòng chọn nhân viên và tháng.');
-
-    const data = await fetchData();
-    const emp = data.employees.find(e => e.id === empId);
-    const salaryRate = emp.salaryPerDay || 0;
-
-    const [year, month] = monthStr.split('-');
-    const reportTable = document.getElementById('reportTable');
-    reportTable.innerHTML = '';
-
-    let totalHours = 0;
-    let totalSalary = 0;
-
-    // Lọc dữ liệu attendance của nhân viên theo tháng
-    const records = data.attendance.filter(att => {
-      const checkIn = new Date(att.checkIn);
-      return att.employeeId === empId &&
-        checkIn.getFullYear() === parseInt(year) &&
-        (checkIn.getMonth() + 1) === parseInt(month);
-    });
-
-    // Nhóm theo ngày
-    const groupedByDate = {};
-    records.forEach(att => {
-      const dateStr = new Date(att.checkIn).toLocaleDateString('vi-VN');
-      if (!groupedByDate[dateStr]) groupedByDate[dateStr] = [];
-      groupedByDate[dateStr].push(att);
-    });
-
-    // Duyệt từng ngày
-    for (const date in groupedByDate) {
-      const dayRecords = groupedByDate[date];
-      dayRecords.sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn));
-
-      dayRecords.forEach(att => {
-        const checkIn = new Date(att.checkIn);
-        const checkOut = new Date(att.checkOut);
-        const isValid = !isNaN(checkIn) && !isNaN(checkOut);
-
-        const hours = isValid ? (checkOut - checkIn) / 1000 / 3600 : 0;
-        const salary = hours * salaryRate;
-
-        if (isValid) {
-          totalHours += hours;
-          totalSalary += salary;
-        }
-
-        const caLam = isValid ? (checkIn.getHours() < 12 ? 'Sáng' : 'Chiều') : '';
-
-        reportTable.innerHTML += `
-          <tr class="${isValid ? '' : 'bg-red-100'}">
-            <td class="border px-2 py-1">${date}</td>
-            <td class="border px-2 py-1 text-center">${caLam}</td>
-            <td class="border px-2 py-1 text-center">${isValid ? formatTime(att.checkIn) : ''}</td>
-            <td class="border px-2 py-1 text-center">${isValid ? formatTime(att.checkOut) : ''}</td>
-            <td class="border px-2 py-1 text-center">${isValid ? hours.toFixed(2) : ''}</td>
-            <td class="border px-2 py-1 text-center">${isValid ? salary.toLocaleString() : ''}</td>
-          </tr>
-        `;
+    async function loadEmployees() {
+      const data = await fetchData();
+      const select = document.getElementById('employeeSelect');
+      data.employees.forEach(emp => {
+        const option = document.createElement('option');
+        option.value = emp.id;
+        option.textContent = emp.name;
+        select.appendChild(option);
       });
     }
 
-    document.getElementById('totalHours').textContent = totalHours.toFixed(2);
-    document.getElementById('totalSalary').textContent = totalSalary.toLocaleString();
+    async function renderReport() {
+  const empId = document.getElementById('employeeSelect').value;
+  const monthStr = document.getElementById('monthInput').value;
+  if (!empId || !monthStr) return alert('Vui lòng chọn nhân viên và tháng.');
+
+  const data = await fetchData();
+  const emp = data.employees.find(e => e.id === empId);
+  const salaryRate = emp.salaryPerDay || 0;
+
+  const [year, month] = monthStr.split('-');
+  const reportTable = document.getElementById('reportTable');
+  reportTable.innerHTML = '';
+
+  let totalHours = 0;
+  let totalSalary = 0;
+
+  // Lọc dữ liệu attendance của nhân viên theo tháng
+  const records = data.attendance.filter(att => {
+    const checkIn = new Date(att.checkIn);
+    return att.employeeId === empId &&
+      checkIn.getFullYear() === parseInt(year) &&
+      (checkIn.getMonth() + 1) === parseInt(month);
+  });
+
+  // Nhóm theo ngày (theo ngày checkIn)
+  const groupedByDate = {};
+  records.forEach(att => {
+    const dateStr = new Date(att.checkIn).toLocaleDateString('vi-VN');
+    if (!groupedByDate[dateStr]) groupedByDate[dateStr] = [];
+    groupedByDate[dateStr].push(att);
+  });
+
+  // Duyệt từng ngày
+  for (const date in groupedByDate) {
+    const dayRecords = groupedByDate[date];
+
+    // Nếu có 2 ca thì sắp xếp theo giờ checkIn
+    dayRecords.sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn));
+
+    // Duyệt từng ca trong ngày
+    dayRecords.forEach(att => {
+      const isValid = !isNaN(checkIn) && !isNaN(checkOut);
+    const hours = isValid ? (checkOut - checkIn) / 1000 / 3600 : 0;
+    const salary = hours * salaryRate;
+    if (isValid) {
+    totalHours += hours;
+    totalSalary += salary;
+}
+
+      // Xác định ca sáng hay chiều
+      const caLam = checkIn.getHours() < 12 ? 'Sáng' : 'Chiều';
+
+      reportTable.innerHTML += `
+        <tr>
+          <<td class="border px-2 py-1 text-center">${isValid ? formatTime(att.checkIn) : ''}</td>
+<td class="border px-2 py-1 text-center">${isValid ? formatTime(att.checkOut) : ''}</td>
+<td class="border px-2 py-1 text-center">${isValid ? hours.toFixed(2) : ''}</td>
+<td class="border px-2 py-1 text-center">${isValid ? salary.toLocaleString() : ''}</td>
+        </tr>
+      `;
+    });
   }
 
-  loadEmployees();
-</script>
+  document.getElementById('totalHours').textContent = totalHours.toFixed(2);
+  document.getElementById('totalSalary').textContent = totalSalary.toLocaleString();
+}
 
+    loadEmployees();
+  </script>
 </body>
 </html>
