@@ -302,8 +302,10 @@
     async function deleteTransaction(index) {
       if (!confirm("Bạn có chắc muốn xoá?")) return;
       transactions.splice(index, 1);
+      showLoading("🔄 Đang gửi dữ liệu...");
       await saveAllTransactions();
       updateUI();
+      hideLoading();
     }
 
     function showLoading(text = "⏳ Đang tải dữ liệu...") {
