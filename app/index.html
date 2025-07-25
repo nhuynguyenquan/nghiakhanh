@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản Lý Thu Chi Nhân Viên</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f0f8ff; }
+    header { background: #007BFF; color: white; padding: 1rem; text-align: center; font-size: 1.5rem; }
+    .container { padding: 1rem; max-width: 800px; margin: auto; }
+    .filter, .form, .actions { margin-bottom: 1rem; }
+    select, input, button { padding: 0.5rem; margin-right: 0.5rem; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { padding: 0.5rem; border: 1px solid #ddd; text-align: left; }
+    th { background: #007BFF; color: white; }
+    .income { color: green; }
+    .expense { color: red; }
+  </style>
+</head>
+<body>
+  <header>Quản Lý Thu Chi Cá Nhân</header>
+  <div class="container">
+    <div class="filter">
+      <label for="month">Lọc theo tháng:</label>
+      <select id="month">
+        <option value="">Tất cả</option>
+      </select>
+      <button onclick="syncTransactions()">🔁 Đồng bộ</button>
+    </div>
+
+    <div class="form">
+      <input type="date" id="date" />
+      <select id="type">
+        <option value="thu">Thu</option>
+        <option value="chi">Chi</option>
+      </select>
+      <input type="text" id="category" placeholder="Hạng mục" />
+      <input type="number" id="amount" placeholder="Số tiền" />
+      <input type="text" id="note" placeholder="Ghi chú" />
+      <button onclick="addTransaction()">➕ Thêm</button>
+    </div>
+
+    <div class="actions">
+      <strong>Tổng thu:</strong> <span id="total-income">0</span> | 
+      <strong>Tổng chi:</strong> <span id="total-expense">0</span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Ngày</th>
+          <th>Loại</th>
+          <th>Hạng mục</th>
+          <th>Số tiền</th>
+          <th>Ghi chú</th>
+          <th>Xoá</th>
+        </tr>
+      </thead>
+      <tbody id="transaction-list"></tbody>
+    </table>
+  </div>
+
+  <script src="../auth.js"></script>
+  <script>
+    function getAuth() {
+      try {
+        const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+        if (auth.id && auth.token) {
+          return auth;
+        } else {
+          throw new Error("Chưa đăng nhập");
+        }
+      } catch (e) {
+        alert("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
+        
+        return null;
+      }
+    }
+
+    const auth = getAuth();
+    if (!auth) throw new Error("Chưa đăng nhập");
+
+    const userId = auth.id;
+    const token = auth.token;
+    const STORAGE_KEY = 'finance_' + userId;
+    let transactions = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadTransactions();
+      document.getElementById('month').addEventListener('change', renderTransactions);
+    });
+
+    function addTransaction() {
+      const id = crypto.randomUUID();
+      const date = document.getElementById('date').value;
+      const type = document.getElementById('type').value;
+      const category = document.getElementById('category').value;
+      const amount = parseFloat(document.getElementById('amount').value);
+      const note = document.getElementById('note').value;
+      if (!date || !category || isNaN(amount)) return alert('Vui lòng nhập đầy đủ');
+      const t = { id, date, type, category, amount, note };
+      transactions.push(t);
+      saveTransactions();
+      renderTransactions();
+    }
+
+    function deleteTransaction(id) {
+      transactions = transactions.filter(t => t.id !== id);
+      saveTransactions();
+      renderTransactions();
+    }
+
+    function saveTransactions() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        transactions,
+        lastSync: new Date().toISOString()
+      }));
+    }
+
+    function loadTransactions() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        transactions = JSON.parse(saved).transactions || [];
+        renderTransactions();
+      }
+    }
+
+    function renderTransactions() {
+      const list = document.getElementById('transaction-list');
+      const month = document.getElementById('month').value;
+      list.innerHTML = '';
+      let income = 0, expense = 0;
+      transactions
+        .filter(t => !month || t.date.slice(0, 7) === month)
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .forEach(t => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${t.date}</td>
+            <td class="${t.type === 'thu' ? 'income' : 'expense'}">${t.type}</td>
+            <td>${t.category}</td>
+            <td>${t.amount.toLocaleString()}</td>
+            <td>${t.note}</td>
+            <td><button onclick="deleteTransaction('${t.id}')">🗑️</button></td>
+          `;
+          if (t.type === 'thu') income += t.amount;
+          else expense += t.amount;
+          list.appendChild(tr);
+        });
+      document.getElementById('total-income').textContent = income.toLocaleString();
+      document.getElementById('total-expense').textContent = expense.toLocaleString();
+      updateMonthFilter();
+    }
+
+    function updateMonthFilter() {
+      const monthSelect = document.getElementById('month');
+      const months = [...new Set(transactions.map(t => t.date.slice(0, 7)))].sort((a, b) => b.localeCompare(a));
+      for (let i = monthSelect.options.length - 1; i >= 1; i--) monthSelect.remove(i);
+      months.forEach(m => {
+        const opt = document.createElement('option');
+        const [y, mo] = m.split('-');
+        opt.value = m;
+        opt.textContent = `Tháng ${mo}/${y}`;
+        monthSelect.appendChild(opt);
+      });
+    }
+
+    async function syncTransactions() {
+      const payload = {
+        action: 'sync',
+        userId: userId,
+        token: token,
+        transactions,
+      };
+      try {
+        const res = await fetch('https://script.google.com/macros/s/AKfycbyoxrhWPdig3ILCa4L4oWX-U_O2KvUKaGcOyIspVCY-_474_IbyR3d5WUEL3tS4y7F3/exec', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (result.success) alert('Đồng bộ thành công!');
+        else alert(result.message || 'Lỗi khi đồng bộ');
+      } catch (e) {
+        console.error(e);
+        alert('Lỗi mạng hoặc server');
+      }
+    }
+  </script>
+</body>
+</html>
