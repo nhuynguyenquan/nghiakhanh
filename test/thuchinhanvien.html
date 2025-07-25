@@ -60,149 +60,183 @@
     </table>
   </div>
 
-  <script src="../auth.js"></script>
-  <script>
-    function getAuth() {
-      try {
-        const auth = JSON.parse(localStorage.getItem('auth') || '{}');
-        if (auth.id && auth.token) {
-          return auth;
-        } else {
-          throw new Error("Chưa đăng nhập");
-        }
-      } catch (e) {
-        alert("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
-        
-        return null;
-      }
-    }
+<script src="../auth.js"></script>
+<script>
+  const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+  const userId = auth.id || '';
+  const token = auth.token || '';
+  const STORAGE_KEY = 'finance_' + userId;
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwLUFnKOc2iYad61Y_FXH6Uw1s6sLQEUEDn-UyRwnBmoc6zgzHPARnUO72EEQPdlfx6/exec'; // URL GAS thật
 
-    const auth = getAuth();
-    if (!auth) throw new Error("Chưa đăng nhập");
-
-    const userId = auth.id;
-    const token = auth.token;
-    const STORAGE_KEY = 'finance_' + userId;
-    let transactions = [];
-
-    document.addEventListener('DOMContentLoaded', () => {
-  loadTransactions();
-  if (transactions.length === 0) {
-    syncTransactions(true); // Tải từ server nếu chưa có dữ liệu
+  if (!userId || !token) {
+    alert("⚠️ Chưa đăng nhập. Vui lòng đăng nhập lại.");
+    throw new Error("Chưa đăng nhập");
   }
-  document.getElementById('month').addEventListener('change', renderTransactions);
-});
-    function addTransaction() {
-      const id = crypto.randomUUID();
-      const date = document.getElementById('date').value;
-      const type = document.getElementById('type').value;
-      const category = document.getElementById('category').value;
-      const amount = parseFloat(document.getElementById('amount').value);
-      const note = document.getElementById('note').value;
-      if (!date || !category || isNaN(amount)) return alert('Vui lòng nhập đầy đủ');
-      const t = { id, date, type, category, amount, note };
-      transactions.push(t);
-      saveTransactions();
-      renderTransactions();
-    }
 
-    function deleteTransaction(id) {
-      transactions = transactions.filter(t => t.id !== id);
-      saveTransactions();
-      renderTransactions();
-    }
+  let transactions = [];
 
-    function saveTransactions() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        transactions,
-        lastSync: new Date().toISOString()
-      }));
-    }
+  document.addEventListener('DOMContentLoaded', () => {
+    loadTransactions();
+    if (transactions.length === 0) syncFromServer(); // tự đồng bộ nếu chưa có
+    document.getElementById('month').addEventListener('change', renderTransactions);
+  });
 
-    function loadTransactions() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    transactions = Array.isArray(saved.transactions) ? saved.transactions : [];
-  } catch (e) {
-    console.error('Lỗi khi đọc dữ liệu local:', e);
-    transactions = [];
+  function saveTransactions() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      transactions,
+      lastUpdated: new Date().toISOString()
+    }));
   }
-  renderTransactions();
-}
 
-    function renderTransactions() {
-      const list = document.getElementById('transaction-list');
-      const month = document.getElementById('month').value;
-      list.innerHTML = '';
-      let income = 0, expense = 0;
-      transactions
-        .filter(t => !month || t.date.slice(0, 7) === month)
-        .sort((a, b) => b.date.localeCompare(a.date))
-        .forEach(t => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${t.date}</td>
-            <td class="${t.type === 'thu' ? 'income' : 'expense'}">${t.type}</td>
-            <td>${t.category}</td>
-            <td>${t.amount.toLocaleString()}</td>
-            <td>${t.note}</td>
-            <td><button onclick="deleteTransaction('${t.id}')">🗑️</button></td>
-          `;
-          if (t.type === 'thu') income += t.amount;
-          else expense += t.amount;
-          list.appendChild(tr);
-        });
-      document.getElementById('total-income').textContent = income.toLocaleString();
-      document.getElementById('total-expense').textContent = expense.toLocaleString();
-      updateMonthFilter();
+  function loadTransactions() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      transactions = Array.isArray(saved.transactions) ? saved.transactions : [];
+    } catch (e) {
+      console.error("❌ Lỗi đọc localStorage:", e);
+      transactions = [];
     }
+    renderTransactions();
+  }
 
-    function updateMonthFilter() {
-      const monthSelect = document.getElementById('month');
-      const months = [...new Set(transactions.map(t => t.date.slice(0, 7)))].sort((a, b) => b.localeCompare(a));
-      for (let i = monthSelect.options.length - 1; i >= 1; i--) monthSelect.remove(i);
-      months.forEach(m => {
-        const opt = document.createElement('option');
-        const [y, mo] = m.split('-');
-        opt.value = m;
-        opt.textContent = `Tháng ${mo}/${y}`;
-        monthSelect.appendChild(opt);
+  function renderTransactions() {
+    const list = document.getElementById('transaction-list');
+    const month = document.getElementById('month').value;
+    list.innerHTML = '';
+    let income = 0, expense = 0;
+
+    transactions
+      .filter(t => !month || t.date.slice(0, 7) === month)
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .forEach(t => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${t.date}</td>
+          <td class="${t.type === 'thu' ? 'income' : 'expense'}">${t.type}</td>
+          <td>${t.category}</td>
+          <td>${t.amount.toLocaleString()}</td>
+          <td>${t.note}</td>
+          <td><button onclick="deleteTransaction('${t.id}')">🗑️</button></td>
+        `;
+        if (t.type === 'thu') income += t.amount;
+        else expense += t.amount;
+        list.appendChild(tr);
       });
-    }
 
-    async function syncTransactions(forceDownload = false) {
-  const payload = {
-    action: forceDownload || transactions.length === 0 ? 'pull' : 'sync',
-    userId: userId,
-    token: token,
-    transactions: transactions
-  };
+    document.getElementById('total-income').textContent = income.toLocaleString();
+    document.getElementById('total-expense').textContent = expense.toLocaleString();
+    updateMonthFilter();
+  }
 
-  try {
-    const res = await fetch('https://script.google.com/macros/s/AKfycbwLUFnKOc2iYad61Y_FXH6Uw1s6sLQEUEDn-UyRwnBmoc6zgzHPARnUO72EEQPdlfx6/exec', {
-      method: 'POST',
-      body: JSON.stringify(payload),
+  function updateMonthFilter() {
+    const select = document.getElementById('month');
+    const uniqueMonths = [...new Set(transactions.map(t => t.date.slice(0, 7)))].sort((a, b) => b.localeCompare(a));
+
+    for (let i = select.options.length - 1; i >= 1; i--) select.remove(i);
+
+    uniqueMonths.forEach(m => {
+      const [y, mo] = m.split('-');
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = `Tháng ${mo}/${y}`;
+      select.appendChild(opt);
     });
+  }
 
-    const result = await res.json();
-    if (!result.success) {
-      alert(result.message || 'Lỗi khi đồng bộ dữ liệu');
+  function addTransaction() {
+    const id = crypto.randomUUID();
+    const date = document.getElementById('date').value;
+    const type = document.getElementById('type').value;
+    const category = document.getElementById('category').value;
+    const amount = parseFloat(document.getElementById('amount').value);
+    const note = document.getElementById('note').value;
+
+    if (!date || !category || isNaN(amount)) {
+      alert("⚠️ Vui lòng nhập đầy đủ thông tin!");
       return;
     }
 
-    if (result.data && Array.isArray(result.data)) {
-      transactions = result.data;
-      saveTransactions();
-      renderTransactions();
-      alert('Đã tải dữ liệu từ server!');
-    } else {
-      alert('Đồng bộ thành công!');
-    }
-  } catch (error) {
-    console.error('Lỗi mạng hoặc máy chủ:', error);
-    alert('Không thể kết nối đến server. Kiểm tra mạng hoặc đăng nhập lại.');
+    const transaction = { id, date, type, category, amount, note };
+    transactions.push(transaction);
+    saveTransactions();
+    renderTransactions();
   }
-}
-  </script>
+
+  function deleteTransaction(id) {
+    transactions = transactions.filter(t => t.id !== id);
+    saveTransactions();
+    renderTransactions();
+  }
+
+  async function syncToServer() {
+    try {
+      const payload = {
+        action: 'sync',
+        userId,
+        token,
+        transactions
+      };
+
+      const res = await fetch(GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        alert("✅ Đồng bộ thành công!");
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          transactions,
+          lastSync: new Date().toISOString()
+        }));
+      } else {
+        alert("⚠️ Lỗi từ server: " + (result.message || 'Không rõ nguyên nhân'));
+      }
+    } catch (e) {
+      console.error("❌ Lỗi mạng:", e);
+      alert("Không thể kết nối server!");
+    }
+  }
+
+  async function syncFromServer() {
+    try {
+      const payload = {
+        action: 'pull',
+        userId,
+        token
+      };
+
+      const res = await fetch(GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+
+      if (result.success && Array.isArray(result.data)) {
+        transactions = result.data;
+        saveTransactions();
+        renderTransactions();
+        alert("📥 Đã tải dữ liệu từ server");
+      } else {
+        alert("⚠️ Không có dữ liệu hoặc lỗi xác thực");
+      }
+    } catch (e) {
+      console.error("❌ Lỗi tải dữ liệu:", e);
+      alert("Lỗi khi kết nối đến server.");
+    }
+  }
+
+  function syncTransactions() {
+    if (transactions.length === 0) {
+      syncFromServer();
+    } else {
+      if (confirm("📤 Bạn muốn đồng bộ dữ liệu hiện tại lên server?")) {
+        syncToServer();
+      }
+    }
+  }
+</script>
+
 </body>
 </html>
