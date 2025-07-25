@@ -145,9 +145,11 @@
     document.getElementById('month').addEventListener('change', renderTransactions);
 
     async function syncTransactions() {
-      const userId = localStorage.getItem('user_id'); 
-      const token = localStorage.getItem('token');
-      if (!userId || !token) return alert('Chưa đăng nhập');
+     const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+    const userId = auth.id;
+    const token = auth.token;
+    if (!userId || !token) return alert('Chưa đăng nhập');
+
       const payload = {
         action: 'sync',
         id: userId,
