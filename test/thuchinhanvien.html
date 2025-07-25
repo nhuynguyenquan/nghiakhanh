@@ -171,14 +171,15 @@ const token = auth.token;
     document.getElementById('month').addEventListener('change', renderTransactions);
 
     async function syncTransactions() {
-      if (!userId || !token) return alert('Chưa đăng nhập');
+  const auth = getAuth();
+  if (!auth) return;
 
-      const payload = {
-        action: 'sync',
-        id: userId,
-        token: token,
-        transactions
-      };
+  const payload = {
+    action: 'sync',
+    id: auth.id,
+    token: auth.token,
+    transactions,
+  };
       try {
         const res = await fetch('https://script.google.com/macros/s/AKfycbxKViiN0OpAwQAy3SMnAoyri4SwCXSnWKksLtwdz8Ie6HiT3KWPvZ72LHi714WaqHT1/exec', {
           method: 'POST',
