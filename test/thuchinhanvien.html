@@ -62,9 +62,12 @@
 
   <script src="../auth.js"></script>
   <script>
-    const auth = JSON.parse(localStorage.getItem('auth') || '{}');
-    const userId = auth.id || 'unknown';
-    const token = auth.token;
+    const auth = getAuth();
+if (!auth) return; 
+
+const userId = auth.id;
+const token = auth.token;
+    
     const STORAGE_KEY = 'finance_' + userId;
     let transactions = [];
 
@@ -95,6 +98,20 @@
       saveTransactions();
       renderTransactions();
     }
+    function getAuth() {
+  try {
+    const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+    if (auth.id && auth.token) {
+      return auth;
+    } else {
+      throw new Error("Chưa đăng nhập");
+    }
+  } catch (e) {
+    alert("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
+    window.location.href = "login.html"; // hoặc gọi showLoginForm();
+    return null;
+  }
+}
 
     function saveTransactions() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
