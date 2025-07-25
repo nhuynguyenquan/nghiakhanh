@@ -145,7 +145,7 @@
     document.getElementById('month').addEventListener('change', renderTransactions);
 
     async function syncTransactions() {
-      const user_id = getCookie('user_id');
+      const userId = getCookie('user_id');
       const token = getCookie('token');
       if (!user_id || !token) return alert('Chưa đăng nhập');
       const payload = {
