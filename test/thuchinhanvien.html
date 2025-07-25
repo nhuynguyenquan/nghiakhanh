@@ -88,12 +88,10 @@
     document.addEventListener('DOMContentLoaded', () => {
   loadTransactions();
   if (transactions.length === 0) {
-    syncTransactions(true); 
+    syncTransactions(true); // Tải từ server nếu chưa có dữ liệu
   }
   document.getElementById('month').addEventListener('change', renderTransactions);
 });
-
-
     function addTransaction() {
       const id = crypto.randomUUID();
       const date = document.getElementById('date').value;
@@ -122,12 +120,13 @@
     }
 
     function loadTransactions() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        transactions = JSON.parse(saved).transactions || [];
-        renderTransactions();
-      }
-    }
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    transactions = Array.isArray(parsed.transactions) ? parsed.transactions : [];
+    renderTransactions();
+  }
+}
 
     function renderTransactions() {
       const list = document.getElementById('transaction-list');
@@ -170,37 +169,25 @@
     }
 
     async function syncTransactions(forceDownload = false) {
-  const payload = {
-    action: forceDownload || transactions.length === 0 ? 'pull' : 'sync',
-    userId,
-    token,
-    transactions,
-  };
-
-  try {
-    const res = await fetch('https://script.google.com/macros/s/AKfycbyEy8cmufewpUsicAi9wBOPhHI8-Z508vL_ilmqZvIQ5tkP_8pcP9hoalqLTAzYB3su/exec', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
-    const result = await res.json();
-
-    if (result.success) {
-      if (result.data) {
-        transactions = result.data;
-        saveTransactions();
-        renderTransactions();
-        alert('Tải dữ liệu từ server thành công!');
-      } else {
-        alert('Đồng bộ thành công!');
+      const payload = {
+      action: forceDownload || transactions.length === 0 ? 'pull' : 'sync',
+        userId: userId,
+        token: token,
+        transactions,
+      };
+      try {
+        const res = await fetch('https://script.google.com/macros/s/AKfycbyoxrhWPdig3ILCa4L4oWX-U_O2KvUKaGcOyIspVCY-_474_IbyR3d5WUEL3tS4y7F3/exec', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (result.success) alert('Đồng bộ thành công!');
+        else alert(result.message || 'Lỗi khi đồng bộ');
+      } catch (e) {
+        console.error(e);
+        alert('Lỗi mạng hoặc server');
       }
-    } else {
-      alert(result.message || 'Lỗi khi đồng bộ');
     }
-  } catch (e) {
-    console.error(e);
-    alert('Lỗi mạng hoặc server');
-  }
-}
   </script>
 </body>
 </html>
