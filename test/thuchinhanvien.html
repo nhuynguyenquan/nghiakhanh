@@ -175,7 +175,6 @@
     async function syncToServer() {
       const res = await fetch(SERVER_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'sync',
           userId,
@@ -190,7 +189,6 @@
     async function manualSync() {
       const res = await fetch(SERVER_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'get_transactions',
           id: userId,
