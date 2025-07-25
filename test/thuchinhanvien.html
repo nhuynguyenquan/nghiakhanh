@@ -2,217 +2,171 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Quản lý thu chi</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản Lý Thu Chi Nhân Viên</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: auto; background: #f5f5f5; }
-    h2 { color: #2c3e50; }
-    label, select, input, button {
-      display: block; width: 100%; margin-top: 10px; font-size: 1rem;
-    }
-    input, select {
-      padding: 8px; border-radius: 4px; border: 1px solid #ccc;
-      box-sizing: border-box;
-    }
-    button {
-      background-color: #3498db; color: white; border: none;
-      padding: 10px; margin-top: 15px; cursor: pointer; border-radius: 5px;
-      font-weight: bold;
-    }
-    button:hover {
-      background-color: #2980b9;
-    }
-    table { border-collapse: collapse; background: white; margin-top: 20px; width: 100%; }
-    th { background: #3498db; color: white; padding: 10px; }
-    td, th { border: 1px solid #ddd; padding: 10px; text-align: left; }
-    tr:nth-child(even) { background: #f9f9f9; }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f0f8ff; }
+    header { background: #007BFF; color: white; padding: 1rem; text-align: center; font-size: 1.5rem; }
+    .container { padding: 1rem; max-width: 800px; margin: auto; }
+    .filter, .form, .actions { margin-bottom: 1rem; }
+    select, input, button { padding: 0.5rem; margin-right: 0.5rem; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { padding: 0.5rem; border: 1px solid #ddd; text-align: left; }
+    th { background: #007BFF; color: white; }
     .income { color: green; }
     .expense { color: red; }
-    .totals {
-      margin-top: 20px;
-      background: #eaf2f8;
-      padding: 15px;
-      border-radius: 8px;
-      font-size: 1.1rem;
-    }
-    .delete-btn {
-      background: #e74c3c;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 6px 10px;
-      cursor: pointer;
-    }
-    .delete-btn:hover {
-      background: #c0392b;
-    }
   </style>
 </head>
 <body>
-  <h2>Quản lý thu chi cá nhân</h2>
+  <header>Quản Lý Thu Chi Cá Nhân</header>
+  <div class="container">
+    <div class="filter">
+      <label for="month">Lọc theo tháng:</label>
+      <select id="month">
+        <option value="">Tất cả</option>
+      </select>
+      <button onclick="syncTransactions()">🔁 Đồng bộ</button>
+    </div>
 
-  <form id="transaction-form">
-    <label for="date">Ngày:</label>
-    <input type="date" id="date" required />
+    <div class="form">
+      <input type="date" id="date" />
+      <select id="type">
+        <option value="thu">Thu</option>
+        <option value="chi">Chi</option>
+      </select>
+      <input type="text" id="category" placeholder="Hạng mục" />
+      <input type="number" id="amount" placeholder="Số tiền" />
+      <input type="text" id="note" placeholder="Ghi chú" />
+      <button onclick="addTransaction()">➕ Thêm</button>
+    </div>
 
-    <label for="type">Loại giao dịch:</label>
-    <select id="type">
-      <option value="income">Thu</option>
-      <option value="expense">Chi</option>
-    </select>
+    <div class="actions">
+      <strong>Tổng thu:</strong> <span id="total-income">0</span> | 
+      <strong>Tổng chi:</strong> <span id="total-expense">0</span>
+    </div>
 
-    <label for="amount">Số tiền:</label>
-    <input type="number" id="amount" min="0" required />
-
-    <label for="note">Ghi chú:</label>
-    <input type="text" id="note" placeholder="Ví dụ: Mua đồ ăn, lương..." />
-
-    <button type="submit">➕ Thêm giao dịch</button>
-  </form>
-
-  <label for="month">Lọc theo tháng:</label>
-  <select id="month" onchange="renderFiltered()">
-    <option value="">-- Tất cả --</option>
-  </select>
-
-  <table id="transaction-table">
-    <thead>
-      <tr>
-        <th>Ngày</th>
-        <th>Loại</th>
-        <th>Số tiền</th>
-        <th>Ghi chú</th>
-        <th>Xóa</th>
-      </tr>
-    </thead>
-    <tbody id="transBody"></tbody>
-  </table>
-
-  <div class="totals">
-    Tổng thu: <span id="total-income">0</span> đ | 
-    Tổng chi: <span id="total-expense">0</span> đ | 
-    Số dư: <span id="balance">0</span> đ
+    <table>
+      <thead>
+        <tr>
+          <th>Ngày</th>
+          <th>Loại</th>
+          <th>Hạng mục</th>
+          <th>Số tiền</th>
+          <th>Ghi chú</th>
+          <th>Xoá</th>
+        </tr>
+      </thead>
+      <tbody id="transaction-list"></tbody>
+    </table>
   </div>
-
-  <button onclick="syncData()">⤴ Đồng bộ lên máy chủ</button>
 
   <script src="../auth.js"></script>
   <script>
-    let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+    const STORAGE_KEY = 'finance_' + (getCookie('user_id') || 'unknown');
+    let transactions = [];
 
-    function save() {
-      localStorage.setItem('transactions', JSON.stringify(transactions));
-      updateMonthFilter();
-      renderFiltered();
-    }
+    document.addEventListener('DOMContentLoaded', () => {
+      checkLogin();
+      loadTransactions();
+    });
 
-    // Cập nhật option lọc tháng theo dữ liệu transactions
-    function updateMonthFilter() {
-  const monthSelect = document.getElementById('month');
-
-  // Lọc những transactions có date hợp lệ (chuỗi không rỗng)
-  const months = [...new Set(
-    transactions
-      .filter(t => t.date && typeof t.date === 'string')
-      .map(t => t.date.slice(0, 7))
-  )].sort((a, b) => b.localeCompare(a));
-
-  // Xóa các option cũ trừ option "Tất cả"
-  for (let i = monthSelect.options.length - 1; i >= 1; i--) {
-    monthSelect.remove(i);
-  }
-
-  months.forEach(m => {
-    const option = document.createElement('option');
-    option.value = m;
-    const [year, mon] = m.split('-');
-    option.textContent = `Tháng ${mon}/${year}`;
-    monthSelect.appendChild(option);
-  });
-}
-
-    // Hiển thị giao dịch lọc theo tháng đã chọn
-    function renderFiltered() {
-      const filterMonth = document.getElementById('month').value;
-      const tbody = document.getElementById('transBody');
-      tbody.innerHTML = '';
-      let totalIncome = 0;
-      let totalExpense = 0;
-
-      transactions.forEach((t, i) => {
-        if(filterMonth && !t.date.startsWith(filterMonth)) return;
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${t.date}</td>
-          <td class="${t.type === 'income' ? 'income' : 'expense'}">${t.type === 'income' ? 'Thu' : 'Chi'}</td>
-          <td>${parseInt(t.amount).toLocaleString()} đ</td>
-          <td>${t.note || ''}</td>
-          <td><button class="delete-btn" onclick="remove(${i})">Xóa</button></td>
-        `;
-        tbody.appendChild(tr);
-
-        if (t.type === 'income') totalIncome += +t.amount;
-        else totalExpense += +t.amount;
-      });
-
-      document.getElementById('total-income').textContent = totalIncome.toLocaleString();
-      document.getElementById('total-expense').textContent = totalExpense.toLocaleString();
-      document.getElementById('balance').textContent = (totalIncome - totalExpense).toLocaleString();
-    }
-
-    function remove(index) {
-      if(confirm('Bạn chắc chắn muốn xóa giao dịch này?')) {
-        transactions.splice(index, 1);
-        save();
-      }
-    }
-
-    document.getElementById('transaction-form').onsubmit = function(e) {
-      e.preventDefault();
+    function addTransaction() {
+      const id = crypto.randomUUID();
       const date = document.getElementById('date').value;
       const type = document.getElementById('type').value;
-      const amount = document.getElementById('amount').value;
+      const category = document.getElementById('category').value;
+      const amount = parseFloat(document.getElementById('amount').value);
       const note = document.getElementById('note').value;
-
-      if(!date || !amount) {
-        alert('Vui lòng nhập đầy đủ thông tin!');
-        return;
-      }
-
-      transactions.push({ date, type, amount, note });
-      save();
-
-      this.reset();
-    };
-
-    function syncData() {
-      const auth = JSON.parse(localStorage.getItem('auth') || '{}');
-      if (!auth.token || !auth.id) {
-        alert('Bạn chưa đăng nhập!');
-        return;
-      }
-
-      fetch('https://script.google.com/macros/s/AKfycbwvz2twhYxjftTNe6mWHMVB8QPdKgVCUNjusBJvXmZqH4IMinkQqfnb7rL_Uwu2c7SS/exec', {
-        method: 'POST',
-        body: JSON.stringify({
-          action: 'sync_transactions',
-          id: auth.id,
-          token: auth.token,
-          data: transactions
-        }),
-      })
-      .then(r => r.json())
-      .then(res => {
-        if(res.success) alert('✅ Đồng bộ thành công!');
-        else alert('❌ ' + (res.message || 'Lỗi không xác định'));
-      })
-      .catch(() => alert('⚠ Không kết nối được máy chủ'));
+      if (!date || !category || isNaN(amount)) return alert('Vui lòng nhập đầy đủ');
+      const t = { id, date, type, category, amount, note };
+      transactions.push(t);
+      saveTransactions();
+      renderTransactions();
     }
 
-    // Khởi tạo giao diện
-    updateMonthFilter();
-    renderFiltered();
+    function deleteTransaction(id) {
+      transactions = transactions.filter(t => t.id !== id);
+      saveTransactions();
+      renderTransactions();
+    }
+
+    function saveTransactions() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ transactions, lastSync: new Date().toISOString() }));
+    }
+
+    function loadTransactions() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        transactions = JSON.parse(saved).transactions || [];
+        renderTransactions();
+      }
+    }
+
+    function renderTransactions() {
+      const list = document.getElementById('transaction-list');
+      const month = document.getElementById('month').value;
+      list.innerHTML = '';
+      let income = 0, expense = 0;
+      transactions
+        .filter(t => !month || t.date.slice(0,7) === month)
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .forEach(t => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${t.date}</td>
+            <td class="${t.type === 'thu' ? 'income' : 'expense'}">${t.type}</td>
+            <td>${t.category}</td>
+            <td>${t.amount.toLocaleString()}</td>
+            <td>${t.note}</td>
+            <td><button onclick="deleteTransaction('${t.id}')">🗑️</button></td>
+          `;
+          if (t.type === 'thu') income += t.amount;
+          else expense += t.amount;
+          list.appendChild(tr);
+        });
+      document.getElementById('total-income').textContent = income.toLocaleString();
+      document.getElementById('total-expense').textContent = expense.toLocaleString();
+      updateMonthFilter();
+    }
+
+    function updateMonthFilter() {
+      const monthSelect = document.getElementById('month');
+      const months = [...new Set(transactions.map(t => t.date.slice(0,7)))].sort((a,b) => b.localeCompare(a));
+      for (let i = monthSelect.options.length - 1; i >= 1; i--) monthSelect.remove(i);
+      months.forEach(m => {
+        const opt = document.createElement('option');
+        const [y, mo] = m.split('-');
+        opt.value = m;
+        opt.textContent = `Tháng ${mo}/${y}`;
+        monthSelect.appendChild(opt);
+      });
+    }
+
+    document.getElementById('month').addEventListener('change', renderTransactions);
+
+    async function syncTransactions() {
+      const user_id = getCookie('user_id');
+      const token = getCookie('token');
+      if (!user_id || !token) return alert('Chưa đăng nhập');
+      const payload = {
+        action: 'sync',
+        id: user_id,
+        token: token,
+        transactions
+      };
+      try {
+        const res = await fetch('https://script.google.com/macros/s/AKfycbxfMK0ZlElfaHal3xL_6pV-_E4MD-GdAaOUTn-6MQD5fmessV-WpT5EP_tB_3HEHIyF-A/exec', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (result.success) alert('Đồng bộ thành công!');
+        else alert(result.message || 'Lỗi khi đồng bộ');
+      } catch (e) {
+        console.error(e);
+        alert('Lỗi mạng hoặc server');
+      }
+    }
   </script>
 </body>
 </html>
