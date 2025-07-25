@@ -63,12 +63,16 @@
   <script src="../auth.js"></script>
   <script>
     const auth = JSON.parse(localStorage.getItem('auth') || '{}');
-const userId = auth.id || 'unknown';
-const STORAGE_KEY = 'finance_' + userId;
+    const userId = auth.id || 'unknown';
+    const token = auth.token;
+    const STORAGE_KEY = 'finance_' + userId;
     let transactions = [];
 
     document.addEventListener('DOMContentLoaded', () => {
-      checkLogin();
+      if (!userId || !token) {
+        alert('Chưa đăng nhập hoặc token hết hạn.');
+        return;
+      }
       loadTransactions();
     });
 
@@ -93,7 +97,10 @@ const STORAGE_KEY = 'finance_' + userId;
     }
 
     function saveTransactions() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ transactions, lastSync: new Date().toISOString() }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        transactions,
+        lastSync: new Date().toISOString()
+      }));
     }
 
     function loadTransactions() {
@@ -110,7 +117,7 @@ const STORAGE_KEY = 'finance_' + userId;
       list.innerHTML = '';
       let income = 0, expense = 0;
       transactions
-        .filter(t => !month || t.date.slice(0,7) === month)
+        .filter(t => !month || t.date.slice(0, 7) === month)
         .sort((a, b) => b.date.localeCompare(a.date))
         .forEach(t => {
           const tr = document.createElement('tr');
@@ -133,7 +140,7 @@ const STORAGE_KEY = 'finance_' + userId;
 
     function updateMonthFilter() {
       const monthSelect = document.getElementById('month');
-      const months = [...new Set(transactions.map(t => t.date.slice(0,7)))].sort((a,b) => b.localeCompare(a));
+      const months = [...new Set(transactions.map(t => t.date.slice(0, 7)))].sort((a, b) => b.localeCompare(a));
       for (let i = monthSelect.options.length - 1; i >= 1; i--) monthSelect.remove(i);
       months.forEach(m => {
         const opt = document.createElement('option');
@@ -147,10 +154,7 @@ const STORAGE_KEY = 'finance_' + userId;
     document.getElementById('month').addEventListener('change', renderTransactions);
 
     async function syncTransactions() {
-     const auth = JSON.parse(localStorage.getItem('auth') || '{}');
-    const userId = auth.id;
-    const token = auth.token;
-    if (!userId || !token) return alert('Chưa đăng nhập');
+      if (!userId || !token) return alert('Chưa đăng nhập');
 
       const payload = {
         action: 'sync',
