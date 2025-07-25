@@ -86,10 +86,12 @@
     let transactions = [];
 
     document.addEventListener('DOMContentLoaded', () => {
-      loadTransactions();
-      document.getElementById('month').addEventListener('change', renderTransactions);
-    });
-
+  loadTransactions();
+  if (transactions.length === 0) {
+    syncTransactions(true); // Tải từ server nếu chưa có dữ liệu
+  }
+  document.getElementById('month').addEventListener('change', renderTransactions);
+});
     function addTransaction() {
       const id = crypto.randomUUID();
       const date = document.getElementById('date').value;
@@ -118,12 +120,15 @@
     }
 
     function loadTransactions() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        transactions = JSON.parse(saved).transactions || [];
-        renderTransactions();
-      }
-    }
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    transactions = Array.isArray(saved.transactions) ? saved.transactions : [];
+  } catch (e) {
+    console.error('Lỗi khi đọc dữ liệu local:', e);
+    transactions = [];
+  }
+  renderTransactions();
+}
 
     function renderTransactions() {
       const list = document.getElementById('transaction-list');
@@ -165,26 +170,39 @@
       });
     }
 
-    async function syncTransactions() {
-      const payload = {
-        action: 'sync',
-        userId: userId,
-        token: token,
-        transactions,
-      };
-      try {
-        const res = await fetch('https://script.google.com/macros/s/AKfycbyoxrhWPdig3ILCa4L4oWX-U_O2KvUKaGcOyIspVCY-_474_IbyR3d5WUEL3tS4y7F3/exec', {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-        const result = await res.json();
-        if (result.success) alert('Đồng bộ thành công!');
-        else alert(result.message || 'Lỗi khi đồng bộ');
-      } catch (e) {
-        console.error(e);
-        alert('Lỗi mạng hoặc server');
-      }
+    async function syncTransactions(forceDownload = false) {
+  const payload = {
+    action: forceDownload || transactions.length === 0 ? 'pull' : 'sync',
+    userId: userId,
+    token: token,
+    transactions: transactions
+  };
+
+  try {
+    const res = await fetch('https://script.google.com/macros/s/AKfycbwLUFnKOc2iYad61Y_FXH6Uw1s6sLQEUEDn-UyRwnBmoc6zgzHPARnUO72EEQPdlfx6/exec', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+
+    const result = await res.json();
+    if (!result.success) {
+      alert(result.message || 'Lỗi khi đồng bộ dữ liệu');
+      return;
     }
+
+    if (result.data && Array.isArray(result.data)) {
+      transactions = result.data;
+      saveTransactions();
+      renderTransactions();
+      alert('Đã tải dữ liệu từ server!');
+    } else {
+      alert('Đồng bộ thành công!');
+    }
+  } catch (error) {
+    console.error('Lỗi mạng hoặc máy chủ:', error);
+    alert('Không thể kết nối đến server. Kiểm tra mạng hoặc đăng nhập lại.');
+  }
+}
   </script>
 </body>
 </html>
