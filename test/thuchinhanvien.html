@@ -112,7 +112,12 @@
     // Load dữ liệu từ localStorage
     function loadTransactions() {
       const stored = localStorage.getItem(`finance_${userId}`);
-      transactions = stored ? JSON.parse(stored) : [];
+      try {
+            const parsed = stored ? JSON.parse(stored) : [];
+            transactions = Array.isArray(parsed) ? parsed : [];
+          } catch (e) {
+            transactions = [];
+          }
       updateMonthFilter();
       renderTransactionTable(transactions);
     }
