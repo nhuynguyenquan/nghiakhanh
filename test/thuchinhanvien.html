@@ -2,211 +2,205 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Quản lý Thu Chi Nhân Viên</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản Lý Thu Chi Nhân Viên</title>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #f3f3f3, #dff6ff);
-      padding: 2rem;
-      color: #333;
-    }
-    h2 {
-      color: #005f73;
-    }
-    .section {
-      margin-bottom: 2rem;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      padding: 1rem;
-    }
-    label, select, input {
-      margin: 0.5rem;
-    }
-    button {
-      padding: 0.5rem 1rem;
-      background: #008891;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #005f73;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 0.5rem;
-      text-align: center;
-    }
-    th {
-      background: #008891;
-      color: white;
-    }
-    .income {
-      color: green;
-    }
-    .expense {
-      color: red;
-    }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f0f8ff; }
+    header { background: #007BFF; color: white; padding: 1rem; text-align: center; font-size: 1.5rem; }
+    .container { padding: 1rem; max-width: 800px; margin: auto; }
+    .filter, .form, .actions { margin-bottom: 1rem; }
+    select, input, button { padding: 0.5rem; margin-right: 0.5rem; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { padding: 0.5rem; border: 1px solid #ddd; text-align: left; }
+    th { background: #007BFF; color: white; }
+    .income { color: green; }
+    .expense { color: red; }
   </style>
 </head>
 <body>
-
-  <h2>💰 Quản lý Thu Chi Cá Nhân</h2>
-
-  <div class="section">
-    <label>Tháng:
-      <select id="month" onchange="filterByMonth()">
+  <header>Quản Lý Thu Chi Cá Nhân</header>
+  <div class="container">
+    <div class="filter">
+      <label for="month">Lọc theo tháng:</label>
+      <select id="month">
         <option value="">Tất cả</option>
       </select>
-    </label>
-    <button onclick="manualSync()">🔄 Đồng bộ từ Server</button>
-  </div>
+      <button onclick="syncTransactions()">🔁 Đồng bộ</button>
+    </div>
 
-  <div class="section">
-    <h3>➕ Thêm Giao Dịch</h3>
-    <label>Ngày: <input type="date" id="date"/></label>
-    <label>Loại: 
+    <div class="form">
+      <input type="date" id="date" />
       <select id="type">
         <option value="thu">Thu</option>
         <option value="chi">Chi</option>
       </select>
-    </label>
-    <label>Số tiền: <input type="number" id="amount" min="0"/></label>
-    <label>Ghi chú: <input type="text" id="note"/></label>
-    <button onclick="addTransaction()">Lưu</button>
-  </div>
+      <input type="text" id="category" placeholder="Hạng mục" />
+      <input type="number" id="amount" placeholder="Số tiền" />
+      <input type="text" id="note" placeholder="Ghi chú" />
+      <button onclick="addTransaction()">➕ Thêm</button>
+    </div>
 
-  <div class="section">
-    <h3>📋 Danh sách Giao Dịch</h3>
+    <div class="actions">
+      <strong>Tổng thu:</strong> <span id="total-income">0</span> | 
+      <strong>Tổng chi:</strong> <span id="total-expense">0</span>
+    </div>
+
     <table>
       <thead>
         <tr>
-          <th>Ngày</th><th>Loại</th><th>Số tiền</th><th>Ghi chú</th>
+          <th>Ngày</th>
+          <th>Loại</th>
+          <th>Hạng mục</th>
+          <th>Số tiền</th>
+          <th>Ghi chú</th>
+          <th>Xoá</th>
         </tr>
       </thead>
-      <tbody id="transactionTable"></tbody>
+      <tbody id="transaction-list"></tbody>
     </table>
   </div>
 
   <script src="../auth.js"></script>
   <script>
-    const SERVER_URL = 'https://script.google.com/macros/s/AKfycbyoxrhWPdig3ILCa4L4oWX-U_O2KvUKaGcOyIspVCY-_474_IbyR3d5WUEL3tS4y7F3/exec'; 
-    const auth = JSON.parse(localStorage.getItem('auth') || '{}');
-    const userId = auth.id;
-    const token = auth.token;
-    let transactions = [];
-
-    if (!userId || !token) {
-      alert("Bạn chưa đăng nhập");
-      window.location.href = 'login.html';
+    function getAuth() {
+      try {
+        const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+        if (auth.id && auth.token) {
+          return auth;
+        } else {
+          throw new Error("Chưa đăng nhập");
+        }
+      } catch (e) {
+        alert("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
+        
+        return null;
+      }
     }
 
-    // Load dữ liệu từ localStorage
+    const auth = getAuth();
+    if (!auth) throw new Error("Chưa đăng nhập");
+
+    const userId = auth.id;
+    const token = auth.token;
+    const STORAGE_KEY = 'finance_' + userId;
+    let transactions = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+  loadTransactions();
+  if (transactions.length === 0) {
+    syncTransactions(true); 
+  }
+  document.getElementById('month').addEventListener('change', renderTransactions);
+});
+
+
+    function addTransaction() {
+      const id = crypto.randomUUID();
+      const date = document.getElementById('date').value;
+      const type = document.getElementById('type').value;
+      const category = document.getElementById('category').value;
+      const amount = parseFloat(document.getElementById('amount').value);
+      const note = document.getElementById('note').value;
+      if (!date || !category || isNaN(amount)) return alert('Vui lòng nhập đầy đủ');
+      const t = { id, date, type, category, amount, note };
+      transactions.push(t);
+      saveTransactions();
+      renderTransactions();
+    }
+
+    function deleteTransaction(id) {
+      transactions = transactions.filter(t => t.id !== id);
+      saveTransactions();
+      renderTransactions();
+    }
+
+    function saveTransactions() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        transactions,
+        lastSync: new Date().toISOString()
+      }));
+    }
+
     function loadTransactions() {
-      const stored = localStorage.getItem(`finance_${userId}`);
-      try {
-            const parsed = stored ? JSON.parse(stored) : [];
-            transactions = Array.isArray(parsed) ? parsed : [];
-          } catch (e) {
-            transactions = [];
-          }
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        transactions = JSON.parse(saved).transactions || [];
+        renderTransactions();
+      }
+    }
+
+    function renderTransactions() {
+      const list = document.getElementById('transaction-list');
+      const month = document.getElementById('month').value;
+      list.innerHTML = '';
+      let income = 0, expense = 0;
+      transactions
+        .filter(t => !month || t.date.slice(0, 7) === month)
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .forEach(t => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${t.date}</td>
+            <td class="${t.type === 'thu' ? 'income' : 'expense'}">${t.type}</td>
+            <td>${t.category}</td>
+            <td>${t.amount.toLocaleString()}</td>
+            <td>${t.note}</td>
+            <td><button onclick="deleteTransaction('${t.id}')">🗑️</button></td>
+          `;
+          if (t.type === 'thu') income += t.amount;
+          else expense += t.amount;
+          list.appendChild(tr);
+        });
+      document.getElementById('total-income').textContent = income.toLocaleString();
+      document.getElementById('total-expense').textContent = expense.toLocaleString();
       updateMonthFilter();
-      renderTransactionTable(transactions);
     }
 
     function updateMonthFilter() {
       const monthSelect = document.getElementById('month');
-      const months = [...new Set(transactions.map(t => t.date?.slice(0, 7)))].sort().reverse();
+      const months = [...new Set(transactions.map(t => t.date.slice(0, 7)))].sort((a, b) => b.localeCompare(a));
       for (let i = monthSelect.options.length - 1; i >= 1; i--) monthSelect.remove(i);
       months.forEach(m => {
-        const option = document.createElement('option');
-        option.value = m;
+        const opt = document.createElement('option');
         const [y, mo] = m.split('-');
-        option.textContent = `Tháng ${mo}/${y}`;
-        monthSelect.appendChild(option);
+        opt.value = m;
+        opt.textContent = `Tháng ${mo}/${y}`;
+        monthSelect.appendChild(opt);
       });
     }
 
-    function renderTransactionTable(data) {
-      const tbody = document.getElementById('transactionTable');
-      tbody.innerHTML = '';
-      data.forEach(t => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${t.date}</td>
-          <td class="${t.type === 'thu' ? 'income' : 'expense'}">${t.type}</td>
-          <td>${Number(t.amount).toLocaleString()}</td>
-          <td>${t.note}</td>
-        `;
-        tbody.appendChild(row);
-      });
-    }
+    async function syncTransactions(forceDownload = false) {
+  const payload = {
+    action: forceDownload || transactions.length === 0 ? 'pull' : 'sync',
+    userId,
+    token,
+    transactions,
+  };
 
-    function filterByMonth() {
-      const selectedMonth = document.getElementById('month').value;
-      const filtered = selectedMonth
-        ? transactions.filter(t => t.date?.startsWith(selectedMonth))
-        : transactions;
-      renderTransactionTable(filtered);
-    }
+  try {
+    const res = await fetch('https://script.google.com/macros/s/AKfycbyEy8cmufewpUsicAi9wBOPhHI8-Z508vL_ilmqZvIQ5tkP_8pcP9hoalqLTAzYB3su/exec', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json();
 
-    function addTransaction() {
-      const date = document.getElementById('date').value;
-      const type = document.getElementById('type').value;
-      const amount = parseFloat(document.getElementById('amount').value);
-      const note = document.getElementById('note').value.trim();
-      if (!date || isNaN(amount)) return alert("Điền đầy đủ ngày và số tiền");
-
-      transactions.push({ date, type, amount, note });
-      localStorage.setItem(`finance_${userId}`, JSON.stringify(transactions));
-      renderTransactionTable(transactions);
-      updateMonthFilter();
-      syncToServer(); // tự đồng bộ
-    }
-
-    async function syncToServer() {
-      const res = await fetch(SERVER_URL, {
-        method: 'POST',
-        body: JSON.stringify({
-          action: 'sync',
-          userId,
-          token,
-          transactions
-        })
-      });
-      const result = await res.json();
-      if (!result.success) console.warn("Lỗi đồng bộ:", result.message || result.error);
-    }
-
-    async function manualSync() {
-      const res = await fetch(SERVER_URL, {
-        method: 'POST',
-        body: JSON.stringify({
-          action: 'get_transactions',
-          id: userId,
-          token
-        })
-      });
-      const result = await res.json();
-      if (result.success) {
-        transactions = result.transactions;
-        localStorage.setItem(`finance_${userId}`, JSON.stringify(transactions));
-        renderTransactionTable(transactions);
-        updateMonthFilter();
+    if (result.success) {
+      if (result.data) {
+        transactions = result.data;
+        saveTransactions();
+        renderTransactions();
+        alert('Tải dữ liệu từ server thành công!');
       } else {
-        alert("Không thể đồng bộ: " + result.message);
+        alert('Đồng bộ thành công!');
       }
+    } else {
+      alert(result.message || 'Lỗi khi đồng bộ');
     }
-
-    loadTransactions();
+  } catch (e) {
+    console.error(e);
+    alert('Lỗi mạng hoặc server');
+  }
+}
   </script>
 </body>
 </html>
