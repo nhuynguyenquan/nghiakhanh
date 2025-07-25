@@ -147,7 +147,7 @@
     async function syncTransactions() {
       const userId = getCookie('user_id');
       const token = getCookie('token');
-      if (!user_id || !token) return alert('Chưa đăng nhập');
+      if (!userId || !token) return alert('Chưa đăng nhập');
       const payload = {
         action: 'sync',
         id: userId,
