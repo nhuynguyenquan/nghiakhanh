@@ -215,9 +215,8 @@
     const auth = JSON.parse(localStorage.getItem('auth') || '{}');
     if (!auth.token || !auth.id) return alert('Bạn chưa đăng nhập');
 
-    fetch('https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec', {
+    fetch('https://script.google.com/macros/s/AKfycbytwJTEigvy76zh6fkOHMexRS5nr_UxyWBn1H0tOK_PXUf7nnuWILnOZJ6MIzdSJ8NM/exec', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'sync_transactions',
         id: auth.id,
