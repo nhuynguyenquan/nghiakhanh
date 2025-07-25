@@ -108,20 +108,28 @@
 
     // Cập nhật option lọc tháng theo dữ liệu transactions
     function updateMonthFilter() {
-      const monthSelect = document.getElementById('month');
-      const months = [...new Set(transactions.map(t => t.date.slice(0,7)))].sort((a,b) => b.localeCompare(a));
-      // Xóa các option cũ trừ option "Tất cả"
-      for (let i = monthSelect.options.length - 1; i >= 1; i--) {
-        monthSelect.remove(i);
-      }
-      months.forEach(m => {
-        const option = document.createElement('option');
-        option.value = m;
-        const [year, mon] = m.split('-');
-        option.textContent = `Tháng ${mon}/${year}`;
-        monthSelect.appendChild(option);
-      });
-    }
+  const monthSelect = document.getElementById('month');
+
+  // Lọc những transactions có date hợp lệ (chuỗi không rỗng)
+  const months = [...new Set(
+    transactions
+      .filter(t => t.date && typeof t.date === 'string')
+      .map(t => t.date.slice(0, 7))
+  )].sort((a, b) => b.localeCompare(a));
+
+  // Xóa các option cũ trừ option "Tất cả"
+  for (let i = monthSelect.options.length - 1; i >= 1; i--) {
+    monthSelect.remove(i);
+  }
+
+  months.forEach(m => {
+    const option = document.createElement('option');
+    option.value = m;
+    const [year, mon] = m.split('-');
+    option.textContent = `Tháng ${mon}/${year}`;
+    monthSelect.appendChild(option);
+  });
+}
 
     // Hiển thị giao dịch lọc theo tháng đã chọn
     function renderFiltered() {
