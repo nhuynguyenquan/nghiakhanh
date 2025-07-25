@@ -2,240 +2,118 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Quản lý Thu Chi</title>
+  <title>Quản lý thu chi</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Quicksand', sans-serif;
-      background: linear-gradient(to right, #74ebd5, #acb6e5);
-      margin: 0;
-      padding: 0;
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: auto; background: #f5f5f5; }
+    h2 { color: #2c3e50; }
+    select, table, th, td {
+      width: 100%; padding: 8px; margin-top: 10px; font-size: 1rem;
     }
-    h1 {
-      text-align: center;
-      padding: 1.5rem 0;
-      color: #fff;
-      font-weight: 600;
-      font-size: 2rem;
-    }
-    .container {
-      max-width: 700px;
-      background: #fff;
-      margin: 0 auto;
-      padding: 2rem;
-      border-radius: 15px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    }
-    label {
-      font-weight: bold;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 0.75rem;
-      margin-top: 0.5rem;
-      margin-bottom: 1rem;
-      border: none;
-      border-radius: 8px;
-      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-      font-size: 1rem;
-      box-sizing: border-box;
-    }
-    button {
-      background-color: #6c63ff;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      box-shadow: 0 4px 6px rgba(108,99,255,0.4);
-    }
-    button:hover {
-      background-color: #574b90;
-    }
-    .totals {
-      background: #f8f9fa;
-      padding: 1rem;
-      margin-top: 1.5rem;
-      border-radius: 10px;
-      text-align: center;
-      font-size: 1.1rem;
-    }
-    .income { color: #28a745; font-weight: bold; }
-    .expense { color: #dc3545; font-weight: bold; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-      font-size: 0.95rem;
-    }
-    th, td {
-      padding: 0.75rem;
-      text-align: left;
-    }
-    th {
-      background: #6c63ff;
-      color: white;
-    }
-    tr:nth-child(even) {
-      background: #f2f2f2;
-    }
-    .delete-btn {
-      background: #e74c3c;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      padding: 4px 8px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background-color 0.2s ease;
-    }
-    .delete-btn:hover {
-      background-color: #c0392b;
-    }
-    .sync-btn {
-      background: #00b894;
-      margin-top: 1rem;
-      width: auto;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      font-size: 1rem;
-      box-shadow: 0 4px 6px rgba(0,184,148,0.4);
-    }
-    .sync-btn:hover {
-      background: #019875;
-    }
+    table { border-collapse: collapse; background: white; margin-top: 1rem; }
+    th { background: #3498db; color: white; }
+    td, th { border: 1px solid #ddd; text-align: left; }
+    .income { color: green; }
+    .expense { color: red; }
   </style>
 </head>
 <body>
-  <h1>💰 Quản lý Thu Chi Cá Nhân</h1>
+  <h2>Danh sách thu chi cá nhân</h2>
+  <label for="month">Chọn tháng:</label>
+  <select id="month" onchange="renderFiltered()"></select>
+  <div id="status" style="margin-top:10px; color: gray;"></div>
+  <table id="transTable">
+    <thead>
+      <tr>
+        <th>Ngày</th>
+        <th>Loại</th>
+        <th>Số tiền</th>
+        <th>Ghi chú</th>
+      </tr>
+    </thead>
+    <tbody id="transBody"></tbody>
+  </table>
 
-  <div class="container">
-    <form id="transaction-form">
-      <label for="date">Ngày:</label>
-      <input type="date" id="date" required />
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbytwJTEigvy76zh6fkOHMexRS5nr_UxyWBn1H0tOK_PXUf7nnuWILnOZJ6MIzdSJ8NM/exec";
 
-      <label for="type">Loại giao dịch:</label>
-      <select id="type">
-        <option value="income">💵 Thu</option>
-        <option value="expense">💸 Chi</option>
-      </select>
+    let allTransactions = [];
 
-      <label for="amount">Số tiền:</label>
-      <input type="number" id="amount" min="1" step="1" required />
+    async function getTransactions() {
+      const id = localStorage.getItem("id");
+      const token = localStorage.getItem("token");
 
-      <label for="note">Ghi chú:</label>
-      <input type="text" id="note" placeholder="Ví dụ: Mua đồ ăn, lương, thưởng..." />
+      if (!id || !token) {
+        document.getElementById("status").textContent = "Vui lòng đăng nhập lại.";
+        return;
+      }
 
-      <button type="submit">➕ Thêm giao dịch</button>
-    </form>
+      document.getElementById("status").textContent = "Đang tải dữ liệu...";
 
-    <div class="totals">
-      <p>Tổng thu: <span class="income" id="total-income">0</span> đ</p>
-      <p>Tổng chi: <span class="expense" id="total-expense">0</span> đ</p>
-      <p>Số dư: <strong id="balance">0</strong> đ</p>
-      <button class="sync-btn" onclick="syncData()">⤴ Đồng bộ lên máy chủ</button>
-    </div>
+      const payload = {
+        action: "get_transactions",
+        id,
+        token
+      };
 
-    <table id="transaction-table" aria-label="Danh sách giao dịch">
-      <thead>
-        <tr>
-          <th>Ngày</th>
-          <th>Loại</th>
-          <th>Số tiền</th>
-          <th>Ghi chú</th>
-          <th>Xóa</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+      try {
+        const res = await fetch(GAS_URL, {
+          method: "POST",
+          
+          body: JSON.stringify(payload)
+        });
 
-<script src="../auth.js"></script>
-<script>
-  let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
-
-  function render() {
-    const tbody = document.querySelector('#transaction-table tbody');
-    tbody.innerHTML = '';
-
-    let totalIncome = 0, totalExpense = 0;
-
-    transactions.forEach((t, index) => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${t.date}</td>
-        <td>${t.type === 'income' ? 'Thu' : 'Chi'}</td>
-        <td>${Number(t.amount).toLocaleString()} đ</td>
-        <td>${t.note || ''}</td>
-        <td><button class="delete-btn" onclick="remove(${index})" aria-label="Xóa giao dịch ngày ${t.date}">${'X'}</button></td>
-      `;
-      tbody.appendChild(row);
-
-      if (t.type === 'income') totalIncome += Number(t.amount);
-      else totalExpense += Number(t.amount);
-    });
-
-    document.getElementById('total-income').textContent = totalIncome.toLocaleString();
-    document.getElementById('total-expense').textContent = totalExpense.toLocaleString();
-    document.getElementById('balance').textContent = (totalIncome - totalExpense).toLocaleString();
-  }
-
-  function remove(index) {
-    if (confirm('Xóa giao dịch này?')) {
-      transactions.splice(index, 1);
-      save();
-    }
-  }
-
-  function save() {
-    localStorage.setItem('transactions', JSON.stringify(transactions));
-    render();
-  }
-
-  document.getElementById('transaction-form').onsubmit = function (e) {
-    e.preventDefault();
-    const date = document.getElementById('date').value;
-    const type = document.getElementById('type').value;
-    const amount = Number(document.getElementById('amount').value);
-    const note = document.getElementById('note').value;
-
-    if (!date || !amount || amount <= 0) {
-      alert('Vui lòng nhập đầy đủ và chính xác thông tin (số tiền > 0)');
-      return;
+        const result = await res.json();
+        if (result.success) {
+          allTransactions = result.data || [];
+          renderMonthOptions();
+          renderFiltered();
+          document.getElementById("status").textContent = "Tải dữ liệu thành công.";
+        } else {
+          document.getElementById("status").textContent = "Không thể tải dữ liệu: " + result.message;
+        }
+      } catch (e) {
+        document.getElementById("status").textContent = "Lỗi khi kết nối server.";
+      }
     }
 
-    transactions.push({ date, type, amount, note });
-    save();
+    function renderMonthOptions() {
+      const months = [...new Set(allTransactions.map(t => t.date.slice(0, 7)))];
+      const monthSelect = document.getElementById("month");
+      monthSelect.innerHTML = "";
+      months.sort().reverse().forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m;
+        opt.textContent = m;
+        monthSelect.appendChild(opt);
+      });
+    }
 
-    this.reset();
-    document.getElementById('date').focus();
-  }
+    function renderFiltered() {
+      const selectedMonth = document.getElementById("month").value;
+      const body = document.getElementById("transBody");
+      body.innerHTML = "";
 
-  function syncData() {
-    const auth = JSON.parse(localStorage.getItem('auth') || '{}');
-    if (!auth.token || !auth.id) return alert('Bạn chưa đăng nhập');
+      const filtered = allTransactions.filter(t => t.date.startsWith(selectedMonth));
 
-    fetch('https://script.google.com/macros/s/AKfycbytwJTEigvy76zh6fkOHMexRS5nr_UxyWBn1H0tOK_PXUf7nnuWILnOZJ6MIzdSJ8NM/exec', {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'sync_transactions',
-        id: auth.id,
-        token: auth.token,
-        data: transactions
-      }),
-    })
-    .then(res => res.json())
-    .then(json => {
-      if (json.success) alert('✅ Đồng bộ thành công!');
-      else alert('❌ Lỗi: ' + (json.message || 'Không rõ nguyên nhân'));
-    })
-    .catch(err => {
-      console.error(err);
-      alert('⚠ Không kết nối được máy chủ');
-    });
-  }
+      filtered.forEach(t => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${t.date}</td>
+          <td class="${t.type}">${t.type === 'income' ? 'Thu' : 'Chi'}</td>
+          <td>${parseInt(t.amount).toLocaleString()} đ</td>
+          <td>${t.note || ''}</td>
+        `;
+        body.appendChild(row);
+      });
 
-  render();
-</script>
+      if (filtered.length === 0) {
+        body.innerHTML = `<tr><td colspan="4" style="text-align:center">Không có dữ liệu cho tháng này.</td></tr>`;
+      }
+    }
+
+    // Tự động tải dữ liệu khi trang mở
+    getTransactions();
+  </script>
 </body>
 </html>
