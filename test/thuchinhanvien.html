@@ -169,25 +169,38 @@
     }
 
     async function syncTransactions(forceDownload = false) {
-      const payload = {
-      action: forceDownload || transactions.length === 0 ? 'pull' : 'sync',
-        userId: userId,
-        token: token,
-        transactions,
-      };
-      try {
-        const res = await fetch('https://script.google.com/macros/s/AKfycbwhQOZPPVPCUtW5eaT4PN0L1xyhtTx2VdyG9jVgVDiOf0Ycw_a4WO5R-XOGLeogC4ch/exec', {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-        const result = await res.json();
-        if (result.success) alert('Đồng bộ thành công!');
-        else alert(result.message || 'Lỗi khi đồng bộ');
-      } catch (e) {
-        console.error(e);
-        alert('Lỗi mạng hoặc server');
-      }
+  const payload = {
+    action: forceDownload || transactions.length === 0 ? 'pull' : 'sync',
+    userId: userId,
+    token: token,
+    transactions: transactions
+  };
+
+  try {
+    const res = await fetch('https://script.google.com/macros/s/AKfycbzXrdzghG4mPY7TjC1OvT2Gi_8MBUvs0u3L7xdd1qEjkU9EDZR5LgxTU6QEsG4ZhnFV/exec', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+
+    const result = await res.json();
+    if (!result.success) {
+      alert(result.message || 'Lỗi khi đồng bộ dữ liệu');
+      return;
     }
+
+    if (result.data && Array.isArray(result.data)) {
+      transactions = result.data;
+      saveTransactions();
+      renderTransactions();
+      alert('Đã tải dữ liệu từ server!');
+    } else {
+      alert('Đồng bộ thành công!');
+    }
+  } catch (error) {
+    console.error('Lỗi mạng hoặc máy chủ:', error);
+    alert('Không thể kết nối đến server. Kiểm tra mạng hoặc đăng nhập lại.');
+  }
+}
   </script>
 </body>
 </html>
