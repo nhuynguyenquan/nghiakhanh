@@ -62,7 +62,9 @@
 
   <script src="../auth.js"></script>
   <script>
-    const STORAGE_KEY = 'finance_' + (getCookie('user_id') || 'unknown');
+    const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+const userId = auth.id || 'unknown';
+const STORAGE_KEY = 'finance_' + userId;
     let transactions = [];
 
     document.addEventListener('DOMContentLoaded', () => {
