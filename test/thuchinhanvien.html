@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Quản lý Thu Chi</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet" />
   <style>
     body {
       font-family: 'Quicksand', sans-serif;
@@ -12,7 +12,6 @@
       margin: 0;
       padding: 0;
     }
-
     h1 {
       text-align: center;
       padding: 1.5rem 0;
@@ -20,219 +19,296 @@
       font-weight: 600;
       font-size: 2rem;
     }
-
     .container {
-      max-width: 700px;
+      max-width: 720px;
       background: #fff;
       margin: 0 auto;
-      padding: 2rem;
+      padding: 1.5rem;
       border-radius: 15px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
     }
-
-    label {
-      font-weight: bold;
+    form label {
+      font-weight: 600;
+      display: block;
+      margin-top: 1rem;
     }
-
-    input, select, button {
+    form input, form select, form button {
       width: 100%;
-      padding: 0.75rem;
-      margin-top: 0.5rem;
-      margin-bottom: 1rem;
-      border: none;
+      padding: 0.6rem;
+      margin-top: 0.3rem;
       border-radius: 8px;
-      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+      border: 1px solid #ccc;
       font-size: 1rem;
+      box-sizing: border-box;
     }
-
-    button {
-      background-color: #6c63ff;
+    form button {
+      margin-top: 1rem;
+      background: #6c63ff;
       color: white;
-      font-weight: bold;
+      border: none;
+      font-weight: 600;
       cursor: pointer;
-      transition: background 0.3s ease;
+      transition: background-color 0.3s;
     }
-
-    button:hover {
-      background-color: #574b90;
+    form button:hover {
+      background: #574b90;
     }
-
-    .totals {
-      background: #f8f9fa;
-      padding: 1rem;
-      margin-top: 1.5rem;
-      border-radius: 10px;
+    #filter-month {
+      margin: 1rem 0;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #6c63ff;
+      color: #6c63ff;
+      width: 100%;
+      max-width: 320px;
+    }
+    .summary {
       text-align: center;
+      margin: 1rem 0;
       font-size: 1.1rem;
     }
-
-    .income { color: #28a745; font-weight: bold; }
-    .expense { color: #dc3545; font-weight: bold; }
-
+    .summary span.income {
+      color: #28a745;
+      font-weight: 700;
+    }
+    .summary span.expense {
+      color: #dc3545;
+      font-weight: 700;
+    }
+    .summary span.balance {
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+    .month-box {
+      margin-bottom: 1rem;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+      border: 1px solid #ddd;
+    }
+    .month-header {
+      background-color: #6c63ff;
+      color: white;
+      padding: 0.8rem 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+    .month-header span.toggle-icon {
+      font-size: 1.2rem;
+      transition: transform 0.3s ease;
+    }
+    .month-header.active span.toggle-icon {
+      transform: rotate(180deg);
+    }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 1rem;
-      font-size: 0.95rem;
+      display: none;
     }
-
+    table.show {
+      display: table;
+    }
     th, td {
-      padding: 0.75rem;
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid #ddd;
       text-align: left;
     }
-
     th {
-      background: #6c63ff;
-      color: white;
+      background-color: #f3f3ff;
+      font-weight: 700;
+      color: #444;
     }
-
-    tr:nth-child(even) {
-      background: #f2f2f2;
+    tbody tr:nth-child(even) {
+      background-color: #fafafa;
     }
-
-    .delete-btn {
-      background: #e74c3c;
-      color: white;
+    button.delete-btn {
       border: none;
-      border-radius: 5px;
+      background-color: #e74c3c;
+      color: white;
       padding: 4px 8px;
+      border-radius: 5px;
       cursor: pointer;
+      font-weight: 700;
     }
-
-    .sync-btn {
-      background: #00b894;
-      margin-top: 1rem;
-      width: auto;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      font-size: 1rem;
+    button.delete-btn:hover {
+      background-color: #c0392b;
     }
   </style>
 </head>
 <body>
   <h1>💰 Quản lý Thu Chi Cá Nhân</h1>
-
   <div class="container">
     <form id="transaction-form">
-      <label>Ngày:</label>
+      <label for="date">Ngày:</label>
       <input type="date" id="date" required />
-
-      <label>Loại giao dịch:</label>
+      <label for="type">Loại giao dịch:</label>
       <select id="type">
         <option value="income">💵 Thu</option>
         <option value="expense">💸 Chi</option>
       </select>
-
-      <label>Số tiền:</label>
+      <label for="amount">Số tiền:</label>
       <input type="number" id="amount" min="0" required />
-
-      <label>Ghi chú:</label>
+      <label for="note">Ghi chú:</label>
       <input type="text" id="note" placeholder="Ví dụ: Mua đồ ăn, lương, thưởng..." />
-
       <button type="submit">➕ Thêm giao dịch</button>
     </form>
 
-    <div class="totals">
-      <p>Tổng thu: <span class="income" id="total-income">0</span> đ</p>
-      <p>Tổng chi: <span class="expense" id="total-expense">0</span> đ</p>
-      <p>Số dư: <strong id="balance">0</strong> đ</p>
-      <button class="sync-btn" onclick="syncData()">⤴ Đồng bộ lên máy chủ</button>
+    <select id="filter-month">
+      <option value="">-- Tất cả các tháng --</option>
+    </select>
+
+    <div class="summary">
+      Tổng thu: <span class="income" id="total-income">0</span> đ | 
+      Tổng chi: <span class="expense" id="total-expense">0</span> đ | 
+      Số dư: <span class="balance" id="balance">0</span> đ
     </div>
 
-    <table id="transaction-table">
-      <thead>
-        <tr>
-          <th>Ngày</th>
-          <th>Loại</th>
-          <th>Số tiền</th>
-          <th>Ghi chú</th>
-          <th>Xóa</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div id="transaction-container"></div>
   </div>
-<script src="../auth.js"></script>
+
   <script>
     let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
 
-    function render() {
-      const tbody = document.querySelector('#transaction-table tbody');
-      tbody.innerHTML = '';
+    // Cập nhật danh sách tháng lọc
+    function updateMonthFilter() {
+      const filter = document.getElementById('filter-month');
+      const months = Array.from(new Set(transactions.map(t => t.date.slice(0, 7)))).sort((a,b) => b.localeCompare(a));
+      const currentVal = filter.value;
 
-      let totalIncome = 0, totalExpense = 0;
-
-      transactions.forEach((t, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${t.date}</td>
-          <td>${t.type === 'income' ? 'Thu' : 'Chi'}</td>
-          <td>${parseInt(t.amount).toLocaleString()} đ</td>
-          <td>${t.note || ''}</td>
-          <td><button class="delete-btn" onclick="remove(${index})">X</button></td>
-        `;
-        tbody.appendChild(row);
-
-        if (t.type === 'income') totalIncome += parseInt(t.amount);
-        else totalExpense += parseInt(t.amount);
+      // Xóa option cũ (ngoại trừ Tất cả)
+      [...filter.options].forEach((opt, i) => {
+        if (i > 0) filter.remove(i);
       });
 
+      months.forEach(month => {
+        const option = document.createElement('option');
+        option.value = month;
+        const [year, mon] = month.split('-');
+        option.textContent = `Tháng ${mon}/${year}`;
+        filter.appendChild(option);
+      });
+
+      filter.value = currentVal || new Date().toISOString().slice(0,7);
+    }
+
+    function render() {
+      const container = document.getElementById('transaction-container');
+      container.innerHTML = '';
+
+      let totalIncome = 0, totalExpense = 0;
+      const filterMonth = document.getElementById('filter-month').value;
+
+      // Nhóm giao dịch theo tháng
+      const grouped = {};
+       transactions.forEach(t => {
+        if (filterMonth && !t.date.startsWith(filterMonth)) return;
+        const month = t.date.slice(0, 7);
+        if (!grouped[month]) grouped[month] = [];
+        grouped[month].push(t);
+        if (t.type === 'income') totalIncome += Number(t.amount);
+        else totalExpense += Number(t.amount);
+      });
+
+      const monthsSorted = Object.keys(grouped).sort((a,b) => b.localeCompare(a));
+
+      monthsSorted.forEach(month => {
+        const list = grouped[month];
+        const monthBox = document.createElement('div');
+        monthBox.className = 'month-box';
+
+        const header = document.createElement('div');
+        header.className = 'month-header';
+        header.innerHTML = `<span>📅 Tháng ${month.slice(5,7)}/${month.slice(0,4)} - Thu: ${list.filter(t => t.type==='income').reduce((acc,t) => acc + Number(t.amount),0).toLocaleString()} đ, Chi: ${list.filter(t => t.type==='expense').reduce((acc,t) => acc + Number(t.amount),0).toLocaleString()} đ</span><span class="toggle-icon">▼</span>`;
+
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        thead.innerHTML = `<tr><th>Ngày</th><th>Loại</th><th>Số tiền</th><th>Ghi chú</th><th>Xóa</th></tr>`;
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        list.sort((a,b) => b.date.localeCompare(a.date)).forEach((t, idx) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${t.date}</td>
+            <td>${t.type === 'income' ? 'Thu' : 'Chi'}</td>
+            <td>${Number(t.amount).toLocaleString()} đ</td>
+            <td>${t.note || ''}</td>
+            <td><button class="delete-btn" onclick="deleteTransaction('${month}', ${idx})">X</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+
+        monthBox.appendChild(header);
+        monthBox.appendChild(table);
+
+        header.addEventListener('click', () => {
+          const showing = table.classList.toggle('show');
+          header.classList.toggle('active', showing);
+        });
+
+        container.appendChild(monthBox);
+      });
+      if (monthsSorted.length > 0) {
+    setTimeout(() => {
+      const firstHeader = document.querySelector('.month-header');
+      const firstTable = firstHeader.nextElementSibling;
+      firstTable.classList.add('show');
+      firstHeader.classList.add('active');
+    }, 0);
+  }
       document.getElementById('total-income').textContent = totalIncome.toLocaleString();
       document.getElementById('total-expense').textContent = totalExpense.toLocaleString();
       document.getElementById('balance').textContent = (totalIncome - totalExpense).toLocaleString();
     }
 
-    function remove(index) {
-      if (confirm('Xóa giao dịch này?')) {
-        transactions.splice(index, 1);
-        save();
-      }
+    // Xóa giao dịch
+    function deleteTransaction(month, indexInMonth) {
+      if (!confirm('Bạn có chắc chắn muốn xóa giao dịch này?')) return;
+
+      // Lấy danh sách giao dịch của tháng đó
+      const list = transactions.filter(t => t.date.startsWith(month));
+      const targetTransaction = list[indexInMonth];
+
+      // Xóa giao dịch trong mảng transactions (dựa vào ngày + amount + note + type để chính xác)
+      transactions = transactions.filter(t => !(t.date === targetTransaction.date && t.amount == targetTransaction.amount && t.note === targetTransaction.note && t.type === targetTransaction.type));
+
+      saveAndRender();
     }
 
-    function save() {
+    function saveAndRender() {
       localStorage.setItem('transactions', JSON.stringify(transactions));
+      updateMonthFilter();
       render();
     }
 
-    document.getElementById('transaction-form').onsubmit = function (e) {
+    document.getElementById('transaction-form').addEventListener('submit', e => {
       e.preventDefault();
       const date = document.getElementById('date').value;
       const type = document.getElementById('type').value;
-      const amount = document.getElementById('amount').value;
+      const amount = Number(document.getElementById('amount').value);
       const note = document.getElementById('note').value;
 
-      if (!date || !amount) return alert('Vui lòng nhập đầy đủ thông tin');
+      if (!date || !amount) return alert('Vui lòng nhập đầy đủ thông tin hợp lệ');
 
       transactions.push({ date, type, amount, note });
-      save();
+      saveAndRender();
 
-      this.reset();
-    }
+      e.target.reset();
+    });
 
-    function syncData() {
-      const auth = JSON.parse(localStorage.getItem('auth') || '{}');
-      if (!auth.token || !auth.id) return alert('Bạn chưa đăng nhập');
+    document.getElementById('filter-month').addEventListener('change', () => {
+      render();
+    });
 
-      fetch('https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec', {
-        method: 'POST',
-        body: JSON.stringify({
-          action: 'sync_transactions',
-          id: auth.id,
-          token: auth.token,
-          data: transactions
-        }),
-      })
-      .then(res => res.json())
-      .then(json => {
-        if (json.success) alert('✅ Đồng bộ thành công!');
-        else alert('❌ Lỗi: ' + (json.message || 'Không rõ nguyên nhân'));
-      })
-      .catch(err => {
-        console.error(err);
-        alert('⚠ Không kết nối được máy chủ');
-      });
-    }
-
+    // Khởi tạo
+    updateMonthFilter();
     render();
   </script>
 </body>
