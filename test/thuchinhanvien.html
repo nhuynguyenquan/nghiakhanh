@@ -62,21 +62,32 @@
 
   <script src="../auth.js"></script>
   <script>
-    const auth = getAuth();
-if (!auth) return; 
+    function getAuth() {
+      try {
+        const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+        if (auth.id && auth.token) {
+          return auth;
+        } else {
+          throw new Error("Chưa đăng nhập");
+        }
+      } catch (e) {
+        alert("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
+        
+        return null;
+      }
+    }
 
-const userId = auth.id;
-const token = auth.token;
-    
+    const auth = getAuth();
+    if (!auth) throw new Error("Chưa đăng nhập");
+
+    const userId = auth.id;
+    const token = auth.token;
     const STORAGE_KEY = 'finance_' + userId;
     let transactions = [];
 
     document.addEventListener('DOMContentLoaded', () => {
-      if (!userId || !token) {
-        alert('Chưa đăng nhập hoặc token hết hạn.');
-        return;
-      }
       loadTransactions();
+      document.getElementById('month').addEventListener('change', renderTransactions);
     });
 
     function addTransaction() {
@@ -98,20 +109,6 @@ const token = auth.token;
       saveTransactions();
       renderTransactions();
     }
-    function getAuth() {
-  try {
-    const auth = JSON.parse(localStorage.getItem('auth') || '{}');
-    if (auth.id && auth.token) {
-      return auth;
-    } else {
-      throw new Error("Chưa đăng nhập");
-    }
-  } catch (e) {
-    alert("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
-    window.location.href = "login.html"; // hoặc gọi showLoginForm();
-    return null;
-  }
-}
 
     function saveTransactions() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -168,18 +165,13 @@ const token = auth.token;
       });
     }
 
-    document.getElementById('month').addEventListener('change', renderTransactions);
-
     async function syncTransactions() {
-  const auth = getAuth();
-  if (!auth) return;
-
-  const payload = {
-    action: 'sync',
-    id: auth.id,
-    token: auth.token,
-    transactions,
-  };
+      const payload = {
+        action: 'sync',
+        id: userId,
+        token: token,
+        transactions,
+      };
       try {
         const res = await fetch('https://script.google.com/macros/s/AKfycbxKViiN0OpAwQAy3SMnAoyri4SwCXSnWKksLtwdz8Ie6HiT3KWPvZ72LHi714WaqHT1/exec', {
           method: 'POST',
