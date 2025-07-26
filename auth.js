@@ -132,7 +132,20 @@ async function login() {
     messageEl.textContent = 'Lỗi kết nối. Vui lòng thử lại.';
   }
 }
+ function requireRole(allowedRoles) {
+    const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+    const role = auth?.role;
 
+    if (!allowedRoles.includes(role)) {
+      document.body.innerHTML = `
+        <div style="font-family:sans-serif;padding:40px;text-align:center;color:#b00">
+          <h1>🚫 Không có quyền truy cập</h1>
+          <p>Trang này chỉ dành cho: <strong>${allowedRoles.join(', ')}</strong></p>
+          <p>Liên hệ quản trị viên nếu bạn cần cấp quyền.</p>
+        </div>
+      `;
+    }
+  }
 // Kiểm tra khi tải trang
 async function checkLogin() {
   const saved = localStorage.getItem('auth');
