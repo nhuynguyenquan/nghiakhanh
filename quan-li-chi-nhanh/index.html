@@ -29,6 +29,12 @@
             margin: 0 15px;
             font-size: 18px;
         }
+        .month-section { border: 1px solid #ccc; border-radius: 6px; margin: 1rem 0; background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        .month-header { padding: 10px; background: #d9a382; color: white; cursor: pointer; font-weight: bold; }
+        .month-content { display: none; padding: 10px; }
+        .month-content table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .month-content th, .month-content td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        .month-content th { background: #f9f9f9; }
   </style>
   <nav>
     <a href="../quan-li-thu-chi/">Quản Lí Thu Chi</a>
@@ -137,12 +143,12 @@ function renderBranches() {
 
 function renderReport() {
   const report = document.getElementById('report');
+  const grouped = {};
 
-  const grouped = {}; // { 'yyyy-mm': { 'yyyy-mm-dd': [logs...] } }
-
+  // Nhóm log theo tháng > ngày
   salesData.logs.forEach(log => {
-    const date = log.time.slice(0, 10);    // yyyy-mm-dd
-    const month = log.time.slice(0, 7);    // yyyy-mm
+    const date = log.time.slice(0, 10); // yyyy-mm-dd
+    const month = log.time.slice(0, 7); // yyyy-mm
 
     if (!grouped[month]) grouped[month] = {};
     if (!grouped[month][date]) grouped[month][date] = [];
@@ -151,32 +157,58 @@ function renderReport() {
 
   let html = '';
 
-  const months = Object.keys(grouped).sort((a, b) => b.localeCompare(a)); // Descending: mới trước
+  const months = Object.keys(grouped).sort((a, b) => b.localeCompare(a)); // mới trước
   if (months.length === 0) {
     report.innerText = 'Không có dữ liệu để hiển thị.';
     return;
   }
 
-  months.forEach(month => {
-    html += `<h3>🗓 Tháng ${month}</h3>`;
+  months.forEach((month, index) => {
+    const monthId = `month-${index}`;
     let monthTotal = 0;
+    let monthTable = '';
 
-    const days = Object.keys(grouped[month]).sort((a, b) => b.localeCompare(a)); // mới trước
+    const days = Object.keys(grouped[month]).sort((a, b) => b.localeCompare(a));
     days.forEach(date => {
-      html += `<h4>📅 Ngày ${date}</h4><ul>`;
       let dayTotal = 0;
+      let dayRows = '';
 
       grouped[month][date].forEach(log => {
         const amount = log.price * log.quantity;
         dayTotal += amount;
-        html += `<li>- Bán ${log.quantity} ${log.item} tại ${log.branch} (${amount.toLocaleString()}₫)</li>`;
+        monthTotal += amount;
+        dayRows += `
+          <tr>
+            <td>${date}</td>
+            <td>${log.branch}</td>
+            <td>${log.item}</td>
+            <td>${log.quantity}</td>
+            <td>${log.price.toLocaleString()}₫</td>
+            <td>${amount.toLocaleString()}₫</td>
+          </tr>
+        `;
       });
 
-      html += `</ul><strong>Tổng ngày: ${dayTotal.toLocaleString()}₫</strong><hr>`;
-      monthTotal += dayTotal;
+      monthTable += dayRows;
     });
 
-    html += `<p><strong>📌 Tổng tháng ${month}: ${monthTotal.toLocaleString()}₫</strong></p><hr>`;
+    html += `
+      <div class="month-section">
+        <div class="month-header" onclick="toggleMonth('${monthId}')">🗓 Tháng ${month} — Tổng: ${monthTotal.toLocaleString()}₫</div>
+        <div id="${monthId}" class="month-content">
+          <table>
+            <thead>
+              <tr>
+                <th>Ngày</th><th>Chi nhánh</th><th>Món</th><th>Số lượng</th><th>Giá</th><th>Thành tiền</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${monthTable}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
   });
 
   report.innerHTML = html;
