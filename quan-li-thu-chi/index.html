@@ -278,9 +278,9 @@
       try {
         await fetch(API_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          
           body: JSON.stringify({ transaction }),
-          mode: "no-cors"
+          
         });
       } catch (err) {
         console.error("❌ Lỗi khi gửi:", err);
@@ -291,9 +291,7 @@
       try {
         await fetch(API_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ transactions }),
-          mode: "no-cors"
         });
       } catch (err) {
         console.error("❌ Lỗi khi lưu toàn bộ:", err);
