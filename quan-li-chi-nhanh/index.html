@@ -269,30 +269,10 @@ async function sendTelegram(msg) {
     body: JSON.stringify({ chat_id: CHAT_ID, text: msg })
   });
 }
-function editPin(newPin) {
-  const branchName = currentBranchName; // tên chi nhánh đang đăng nhập
-  const branch = salesData.branches.find(b => b.name === branchName);
-  
-  if (!branch) return;
-
-  // Gỡ pin cũ khỏi salesData.pins
-  for (const [oldPin, name] of Object.entries(salesData.pins)) {
-    if (name === branchName) {
-      delete salesData.pins[oldPin];
-      break;
-    }
-  }
-
-  // Gán pin mới cho chi nhánh
-  branch.pin = newPin;
-
-  // Cập nhật vào object `pins`
-  salesData.pins[newPin] = branchName;
-
-  saveData(); // Ghi lại toàn bộ file
-  alert("Đã thay đổi mã PIN thành công");
+function editPin(bIndex, newPin) {
+  salesData.branches[bIndex].pin = newPin;
+  saveData(false);
 }
-
 function togglePin(bIndex) {
   const input = document.getElementById(`pin-${bIndex}`);
   input.type = input.type === 'password' ? 'text' : 'password';
