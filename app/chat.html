@@ -42,9 +42,14 @@
   <div id="chat-box"></div>
   <div id="chat-input">
     <input type="text" id="message-input" placeholder="Nhập tin nhắn..." />
+    <button onclick="toggleEmoji()">😊</button>
     <button onclick="sendMessage()">Gửi</button>
-  </div>
 
+  </div>
+<div id="emoji-box" style="display:none;position:absolute;bottom:60px;right:20px;
+  background:#fff;padding:10px;border:1px solid #ccc;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.2);">
+  😀 😁 😂 🤣 😍 😎 😢 😡 👍 👎 ❤️ 🙌 🎉 🐱‍👤
+</div>
   <script>
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbwe4DkIb0GliPuL32aHWXiW_E9mvbmDubjIXBGAretzmh3QZookm55gB1Qfgw3c-ZJC/exec';
     let auth = JSON.parse(localStorage.getItem('auth') || '{}');
@@ -63,6 +68,18 @@
       const date = new Date(iso);
       return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
     }
+
+    function toggleEmoji() {
+            const box = document.getElementById('emoji-box');
+            box.style.display = box.style.display === 'none' ? 'block' : 'none';
+            }
+            document.getElementById('emoji-box')?.addEventListener('click', (e) => {
+            if (e.target.textContent.trim()) {
+                const input = document.getElementById('message-input');
+                input.value += e.target.textContent.trim();
+                input.focus();
+            }
+            });
 
     function renderChat() {
       chatBox.innerHTML = '';
