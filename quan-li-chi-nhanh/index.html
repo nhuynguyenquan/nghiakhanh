@@ -270,7 +270,23 @@ async function sendTelegram(msg) {
   });
 }
 function editPin(bIndex, newPin) {
+  const oldPin = salesData.branches[bIndex].pin;
+  const branchName = salesData.branches[bIndex].name;
+
+  // Cập nhật PIN trong chi nhánh
   salesData.branches[bIndex].pin = newPin;
+
+  // Cập nhật mapping trong salesData.pins
+  // Xoá PIN cũ
+  for (const pin in salesData.pins) {
+    if (salesData.pins[pin] === branchName) {
+      delete salesData.pins[pin];
+    }
+  }
+
+  // Thêm PIN mới
+  salesData.pins[newPin] = branchName;
+
   saveData(false);
 }
 function togglePin(bIndex) {
