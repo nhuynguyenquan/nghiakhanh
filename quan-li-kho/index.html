@@ -112,6 +112,12 @@
     </div>
   </div>
   <script src="../auth.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    await checkLogin();
+    requireRole([ 'admin']); 
+  });
+</script>
   <script src="script.js"></script>
 </body>
 </html>
