@@ -137,17 +137,12 @@ function renderBranches() {
 
 function renderReport() {
   const report = document.getElementById('report');
-  const monthFilter = getFilterMonth(); // yyyy-mm
-  const dateFilter = getFilterDate();   // yyyy-mm-dd
 
   const grouped = {}; // { 'yyyy-mm': { 'yyyy-mm-dd': [logs...] } }
 
   salesData.logs.forEach(log => {
-    const date = log.time.slice(0, 10);
-    const month = log.time.slice(0, 7);
-
-    if (dateFilter && date !== dateFilter) return;
-    if (!dateFilter && monthFilter && month !== monthFilter) return;
+    const date = log.time.slice(0, 10);    // yyyy-mm-dd
+    const month = log.time.slice(0, 7);    // yyyy-mm
 
     if (!grouped[month]) grouped[month] = {};
     if (!grouped[month][date]) grouped[month][date] = [];
@@ -156,7 +151,7 @@ function renderReport() {
 
   let html = '';
 
-  const months = Object.keys(grouped).sort(); // yyyy-mm
+  const months = Object.keys(grouped).sort((a, b) => b.localeCompare(a)); // Descending: mới trước
   if (months.length === 0) {
     report.innerText = 'Không có dữ liệu để hiển thị.';
     return;
@@ -166,7 +161,7 @@ function renderReport() {
     html += `<h3>🗓 Tháng ${month}</h3>`;
     let monthTotal = 0;
 
-    const days = Object.keys(grouped[month]).sort(); // yyyy-mm-dd
+    const days = Object.keys(grouped[month]).sort((a, b) => b.localeCompare(a)); // mới trước
     days.forEach(date => {
       html += `<h4>📅 Ngày ${date}</h4><ul>`;
       let dayTotal = 0;
@@ -174,14 +169,14 @@ function renderReport() {
       grouped[month][date].forEach(log => {
         const amount = log.price * log.quantity;
         dayTotal += amount;
-        html += `<li>- Bán ${log.quantity} ${log.item} (${amount.toLocaleString()}₫)</li>`;
+        html += `<li>- Bán ${log.quantity} ${log.item} tại ${log.branch} (${amount.toLocaleString()}₫)</li>`;
       });
 
-      html += `</ul><strong>Tổng: ${dayTotal.toLocaleString()}₫</strong><hr>`;
+      html += `</ul><strong>Tổng ngày: ${dayTotal.toLocaleString()}₫</strong><hr>`;
       monthTotal += dayTotal;
     });
 
-    html += `<p><strong>Tổng tháng ${month}: ${monthTotal.toLocaleString()}₫</strong></p>`;
+    html += `<p><strong>📌 Tổng tháng ${month}: ${monthTotal.toLocaleString()}₫</strong></p><hr>`;
   });
 
   report.innerHTML = html;
