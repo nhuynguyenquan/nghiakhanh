@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Mô hình 3D Bếp đun + Tủ sấy</title>
+  <title>Mô hình 3D Bếp đun + Tủ sấy (Không module)</title>
   <style>
     body { margin: 0; overflow: hidden; background: #f0e7d8; }
     #container { width: 100vw; height: 100vh; }
@@ -11,10 +11,13 @@
 <body>
   <div id="container"></div>
 
-  <script type="module">
-    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
-    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/controls/OrbitControls.js';
+  <!-- Three.js (non-module) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
+  <!-- OrbitControls non-module (phiên bản phù hợp) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/controls/OrbitControls.js"></script>
 
+  <script>
+    // scene setup
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf0e7d8);
 
@@ -25,10 +28,11 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('container').appendChild(renderer.domElement);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
 
+    // lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
 
@@ -36,36 +40,37 @@
     directionalLight.position.set(100, 200, 100);
     scene.add(directionalLight);
 
+    // materials
     const metalMaterial = new THREE.MeshStandardMaterial({color: 0x8a6c31, metalness: 0.7, roughness: 0.4});
     const darkMetalMaterial = new THREE.MeshStandardMaterial({color: 0x3b220a, metalness: 0.6, roughness: 0.7});
     const clothMaterial = new THREE.MeshStandardMaterial({color: 0x4a3e16, roughness: 0.9, opacity: 0.9, transparent: true});
 
+    // firebox
     const fireboxGeometry = new THREE.BoxGeometry(200, 60, 150);
     const firebox = new THREE.Mesh(fireboxGeometry, darkMetalMaterial);
     firebox.position.set(0, 30, 0);
-    firebox.castShadow = true;
-    firebox.receiveShadow = true;
     scene.add(firebox);
 
+    // cabinet
     const cabinetGeometry = new THREE.BoxGeometry(200, 100, 150);
     const cabinet = new THREE.Mesh(cabinetGeometry, metalMaterial);
-    cabinet.position.set(0, 90 + 50, 0);
-    cabinet.castShadow = true;
-    cabinet.receiveShadow = true;
+    cabinet.position.set(0, 140, 0);
     scene.add(cabinet);
 
+    // door (fabric)
     const doorGeometry = new THREE.PlaneGeometry(180, 90);
     const door = new THREE.Mesh(doorGeometry, clothMaterial);
-    door.position.set(0, 90 + 50, 76);
-    door.rotation.y = 0;
+    door.position.set(0, 140, 76);
     scene.add(door);
 
+    // chimney
     const chimneyGeometry = new THREE.BoxGeometry(40, 130, 40);
     const chimneyMaterial = new THREE.MeshStandardMaterial({color: 0x444444, metalness: 0.7, roughness: 0.3});
     const chimney = new THREE.Mesh(chimneyGeometry, chimneyMaterial);
-    chimney.position.set(0, 130 / 2, -75);
+    chimney.position.set(0, 65, -75);
     scene.add(chimney);
 
+    // legs + wheels
     const legGeometry = new THREE.CylinderGeometry(8, 8, 70, 16);
     const legMaterial = new THREE.MeshStandardMaterial({color: 0x3d2f11, metalness: 0.6, roughness: 0.7});
     const wheelGeometry = new THREE.TorusGeometry(12, 4, 16, 100);
@@ -89,6 +94,7 @@
       scene.add(wheel);
     });
 
+    // floor
     const floorGeometry = new THREE.PlaneGeometry(1000, 1000);
     const floorMaterial = new THREE.MeshStandardMaterial({color: 0xddd4bb});
     const floor = new THREE.Mesh(floorGeometry, floorMaterial);
@@ -96,10 +102,12 @@
     floor.position.y = 0;
     scene.add(floor);
 
+    // flame light
     const flameLight = new THREE.PointLight(0xff6600, 1, 200);
     flameLight.position.set(0, 45, 20);
     scene.add(flameLight);
 
+    // animate
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
@@ -108,12 +116,12 @@
     }
     animate();
 
+    // responsive
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth/window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
-
   </script>
 </body>
 </html>
