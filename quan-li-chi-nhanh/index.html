@@ -48,7 +48,10 @@
 <body>
 
 <h1>📊 Quản lý bán hàng - Nhụy Nguyên</h1>
-
+<div>
+  <h2>📈 Báo cáo tổng hợp</h2>
+  <div id="report"></div>
+</div>
 <div>
   <h2>➕ Thêm chi nhánh mới</h2>
   <input id="newBranchName" placeholder="Tên chi nhánh">
@@ -65,14 +68,7 @@
 
 <div id="branches"></div>
 
-<div>
-  <h2>📈 Báo cáo tổng hợp</h2>
-  <div id="report"></div>
-</div>
-<div>
-  <label>Lọc theo ngày: <input type="date" id="filterDate" onchange="renderReport();"></label>
-  <label>Lọc theo tháng: <input type="month" id="filterMonth" onchange="renderReport();"></label>
-</div>
+
 <script src="../auth.js"></script>
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfd_pHMmc9qGXJ4iT2LYXg78-WSxXVTHr5O0EeGcs5pa4RlZMB2Gs1xETul4XI-hPFTw/exec';
