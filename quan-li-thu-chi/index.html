@@ -120,7 +120,7 @@
   <a href="./thu-chi-gia-dinh.html">TRANG QUẢN LÍ THU CHI GIA ĐÌNH</a>
 <script src="../auth.js"></script>
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbz-xzcJbG--hZtEybt_Wdm1Odd-tZe_F7XN6jnm71Uq5rHm6mtWUUe5dzzHDZYw_ip5/exec';
+    const API_URL = "https://script.google.com/macros/s/AKfycbzaaylyRMuHUrx4UkBS30bGKfQXozCwSaNhJBlKYkDx5tHl-oBghK-kokxMSfTLyJPL/exec";
     const TELEGRAM_BOT_TOKEN = "7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY";
     const TELEGRAM_CHAT_ID = "6249154937";
     let transactions = [];
@@ -299,76 +299,32 @@
     }
 
     async function deleteTransaction(index) {
-  if (!confirm("Bạn có chắc muốn xoá?")) return;
-
-  const transaction = transactions[index];
-  showLoading("🔄 Đang gửi dữ liệu...");
-
-  try {
-    // Gửi yêu cầu xóa với action và id
-    await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "delete", id: transaction.id }),
-    });
-
-    // Xóa local
-    transactions.splice(index, 1);
-    updateUI();
-  } catch (err) {
-    alert("❌ Lỗi khi xóa dữ liệu!");
-    console.error(err);
-  }
-
-  hideLoading();
-}
-
-function editTransaction(index) {
-  const t = transactions[index];
-  document.getElementById("amount").value = t.amount;
-  document.getElementById("type").value = t.type;
-  document.getElementById("note").value = t.note;
-
-  document.getElementById("submit-btn").onclick = async () => {
-    const amount = parseInt(document.getElementById("amount").value);
-    const type = document.getElementById("type").value;
-    const note = document.getElementById("note").value;
-
-    if (!amount || isNaN(amount)) {
-      alert("Vui lòng nhập số tiền hợp lệ!");
-      return;
-    }
-
-    const updatedTransaction = {
-      id: t.id,              // giữ nguyên id cũ để cập nhật
-      amount,
-      type,
-      note,
-      date: new Date().toISOString(),
-    };
-
-    showLoading("🔄 Đang gửi dữ liệu...");
-
-    try {
-      // Gửi cập nhật từng giao dịch
-      await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transaction: updatedTransaction }),
-      });
-
-      // Cập nhật local
-      transactions[index] = updatedTransaction;
+      if (!confirm("Bạn có chắc muốn xoá?")) return;
+      transactions.splice(index, 1);
+      showLoading("🔄 Đang gửi dữ liệu...");
+      await saveAllTransactions();
       updateUI();
-      resetForm();
-    } catch (err) {
-      alert("❌ Lỗi khi cập nhật dữ liệu!");
-      console.error(err);
+      hideLoading();
     }
 
-    hideLoading();
-  };
-}
+    function editTransaction(index) {
+      const t = transactions[index];
+      document.getElementById("amount").value = t.amount;
+      document.getElementById("type").value = t.type;
+      document.getElementById("note").value = t.note;
+
+      document.getElementById("submit-btn").onclick = async () => {
+        transactions[index] = {
+          amount: parseInt(document.getElementById("amount").value),
+          type: document.getElementById("type").value,
+          note: document.getElementById("note").value,
+          date: new Date().toISOString()
+        };
+        await saveAllTransactions();
+        updateUI();
+        resetForm();
+      };
+    }
 
     function resetForm() {
       document.getElementById("amount").value = "";
