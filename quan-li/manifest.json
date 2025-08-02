@@ -1,7 +1,7 @@
 {
   "name": "Ứng dụng Quản Lí Nghĩa Khánh",
   "short_name": "Quản Lí NK",
-  "start_url": "./quan-li-thu-chi/index.html",
+  "start_url": "../quan-li-thu-chi/index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4CAF50",
