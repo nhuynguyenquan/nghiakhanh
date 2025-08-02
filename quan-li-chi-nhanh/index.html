@@ -44,6 +44,14 @@
     <a href="../quan-li-sx">Quản lí sản xuất</a>
     <a href="../quan-li-chi-nhanh/">Quản Lí Chi Nhánh</a>
   </nav>
+  <link rel="manifest" href="../quan-li/manifest.json">
+  <meta name="theme-color" content="#4CAF50">
+  <script>if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('../quan-li/service-worker.js')
+    .then(() => console.log('Service Worker registered'))
+    .catch(err => console.error('Service Worker registration failed:', err));
+}
+</script>
 </head>
 <body>
 
