@@ -40,3 +40,11 @@ self.addEventListener('fetch', event => {
     caches.match(event.request).then(response => response || fetch(event.request))
   );
 });
+self.clients.claim().then(() => {
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({ type: 'NEW_VERSION' });
+      });
+    });
+  });
+});
