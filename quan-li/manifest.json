@@ -1,7 +1,8 @@
 {
-  "name": "Ứng dụng Quản Lí Nghĩa Khánh",
-  "short_name": "Quản Lí NK",
+  "name": "Ứng dụng Quản Lí Nhụy Nguyên",
+  "short_name": "Quản Lí NN",
   "start_url": "../quan-li-thu-chi/index.html",
+  "scope": "/nghiakhanh/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4CAF50",
