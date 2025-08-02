@@ -59,6 +59,45 @@
       padding: 8px;
     }
   }
+  @media (max-width: 600px) {
+  .month-content table,
+  .month-content thead,
+  .month-content tbody,
+  .month-content th,
+  .month-content td,
+  .month-content tr {
+    display: block;
+  }
+
+  .month-content thead {
+    display: none;
+  }
+
+  .month-content tr {
+    margin-bottom: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    background: #fff;
+  }
+
+  .month-content td {
+    position: relative;
+    padding-left: 50%;
+    border: none;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+  }
+
+  .month-content td::before {
+    position: absolute;
+    left: 10px;
+    width: 45%;
+    white-space: nowrap;
+    font-weight: bold;
+    content: attr(data-label);
+  }
+}
   </style>
   <nav>
     <a href="../quan-li-thu-chi/">Quản Lí Thu Chi</a>
@@ -206,15 +245,15 @@ function renderReport() {
         dayTotal += amount;
         monthTotal += amount;
         dayRows += `
-          <tr>
-            <td>${date}</td>
-            <td>${log.branch}</td>
-            <td>${log.item}</td>
-            <td>${log.quantity}</td>
-            <td>${log.price.toLocaleString()}₫</td>
-            <td>${amount.toLocaleString()}₫</td>
-          </tr>
-        `;
+  <tr>
+    <td data-label="Ngày">${date}</td>
+    <td data-label="Chi nhánh">${log.branch}</td>
+    <td data-label="Món">${log.item}</td>
+    <td data-label="Số lượng">${log.quantity}</td>
+    <td data-label="Giá">${log.price.toLocaleString()}₫</td>
+    <td data-label="Thành tiền">${amount.toLocaleString()}₫</td>
+  </tr>
+`;
       });
 
       monthTable += dayRows;
