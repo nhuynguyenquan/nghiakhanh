@@ -245,17 +245,22 @@ function renderReport() {
         dayTotal += amount;
         monthTotal += amount;
         dayRows += `
-  <tr>
-    <td data-label="Ngày">${date}</td>
-    <td data-label="Chi nhánh">${log.branch}</td>
-    <td data-label="Món">${log.item}</td>
-    <td data-label="Số lượng">${log.quantity}</td>
-    <td data-label="Giá">${log.price.toLocaleString()}₫</td>
-    <td data-label="Thành tiền">${amount.toLocaleString()}₫</td>
-  </tr>
-`;
+          <tr>
+            <td data-label="Ngày">${date}</td>
+            <td data-label="Chi nhánh">${log.branch}</td>
+            <td data-label="Món">${log.item}</td>
+            <td data-label="Số lượng">${log.quantity}</td>
+            <td data-label="Giá">${log.price.toLocaleString()}₫</td>
+            <td data-label="Thành tiền">${amount.toLocaleString()}₫</td>
+          </tr>
+        `;
       });
-
+      dayRows += `
+        <tr style="background: #f1f1f1; font-weight: bold;">
+          <td colspan="5" style="text-align:right;">Tổng ngày ${date}:</td>
+          <td>${dayTotal.toLocaleString()}₫</td>
+        </tr>
+      `;
       monthTable += dayRows;
     });
 
