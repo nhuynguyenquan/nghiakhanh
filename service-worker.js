@@ -10,12 +10,19 @@ const urlsToCache = [
   // Các trang quản lý
   "/nghiakhanh/quan-li-thu-chi/",
   "/nghiakhanh/quan-li-thu-chi/index.html",
+  "/nghiakhanh/quan-li-thu-chi/thu-chi-gia-dinh.html",
 
   "/nghiakhanh/quan-li-kho/",
   "/nghiakhanh/quan-li-kho/index.html",
 
   "/nghiakhanh/quan-li-nv/",
-  "/nghiakhanh/quan-li-nv/index.html"
+  "/nghiakhanh/quan-li-nv/index.html",
+
+  "/nghiakhanh/quan-li-menu/",
+  "/nghiakhanh/quan-li-menu/index.html",
+
+  "/nghiakhanh/quan-li-chi-nhanh/",
+  "/nghiakhanh/quan-li-chi-nhanh/index.html",
 ];
 
 self.addEventListener("install", event => {
