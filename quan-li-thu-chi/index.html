@@ -78,11 +78,20 @@
   </style>
   <link rel="manifest" href="../quan-li/manifest.json">
   <meta name="theme-color" content="#4CAF50">
-  <script>if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('../quan-li/service-worker.js')
-    .then(() => console.log('Service Worker registered'))
-    .catch(err => console.error('Service Worker registration failed:', err));
-}
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js').then(registration => {
+      console.log('Service Worker đã được đăng ký:', registration);
+    });
+
+    navigator.serviceWorker.addEventListener('message', event => {
+      if (event.data && event.data.type === 'NEW_VERSION_AVAILABLE') {
+        if (confirm("Có phiên bản mới của ứng dụng. Bạn có muốn tải lại để cập nhật?")) {
+          window.location.reload();
+        }
+      }
+    });
+  }
 </script>
 </head>
 <body>
