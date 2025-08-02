@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đặt Đơn Cafe Cốc</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#ffffff" />
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f7f7f7; }
+    form { display: flex; flex-direction: column; gap: 10px; }
+    input, button { padding: 10px; font-size: 16px; }
+    button { background: #007bff; color: white; border: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h2>Gửi đơn Cafe</h2>
+  <form id="order-form">
+    <input name="name" placeholder="Tên khách" required />
+    <input name="location" placeholder="Địa điểm" required />
+    <input name="item" placeholder="Món" required />
+    <input name="quantity" type="number" placeholder="Số lượng" required />
+    <input name="note" placeholder="Ghi chú" />
+    <button type="submit">Gửi đơn</button>
+  </form>
+
+  <script>
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycb....../exec'; // Thay bằng URL script Apps Script của bạn
+
+    document.getElementById('order-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const form = new FormData(e.target);
+      const data = Object.fromEntries(form.entries());
+
+      fetch(scriptUrl, {
+        method: 'POST',
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(r => alert(r.message || 'Gửi thành công!'))
+      .catch(() => alert('Lỗi khi gửi đơn'));
+    });
+
+    // Đăng ký service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
+</body>
+</html>
