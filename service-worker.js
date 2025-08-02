@@ -2,6 +2,7 @@ const CACHE_NAME = "nghiakhanh-cache-v1";
 const urlsToCache = [
   "/nghiakhanh/",
   "/nghiakhanh/index.html",
+  "/nghiakhanh/banhang.html",
   "/nghiakhanh/manifest.json",
   "/nghiakhanh/service-worker.js",
   "/nghiakhanh/icons/icon-192.png",
