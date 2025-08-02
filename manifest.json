@@ -1,7 +1,7 @@
 {
   "name": "Nhụy Nguyên",
   "short_name": "Nhụy Nguyên",
-  "start_url": "banhang.html",
+  "start_url": "/nghiakhanh/banhang",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#007bff",
