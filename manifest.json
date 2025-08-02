@@ -1,14 +1,20 @@
 {
-  "name": "Nhụy Nguyên",
-  "short_name": "Nhụy Nguyên",
+  "name": "Quản lý Nghĩa Khánh - Bán Hàng",
+  "short_name": "NK Bán Hàng",
   "start_url": "./banhang.html",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#007bff",
+  "theme_color": "#4CAF50",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/561/561127.png",
+      "src": "./icons/icon-192.png",
       "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
       "type": "image/png"
     }
   ]
