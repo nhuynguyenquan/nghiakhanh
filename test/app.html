@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Ứng dụng Nhụy Nguyên</title>
+  <style>
+    :root {
+      --primary-color: #2196F3;
+      --text-color: #333;
+      --bg-color: #f2f2f2;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body, html {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg-color);
+      height: 100vh;
+    }
+
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      max-width: 480px;
+      height: 100vh;
+      margin: 0 auto;
+      background: #fff;
+      border: 1px solid #ddd;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+    }
+
+    header {
+      background: var(--primary-color);
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-around;
+      background: #fafafa;
+      border-top: 1px solid #ddd;
+      padding: 0.5rem 0;
+    }
+
+    nav button {
+      flex: 1;
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      color: #666;
+      padding: 0.5rem 0;
+    }
+
+    nav button:hover {
+      color: var(--primary-color);
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.8rem;
+      padding: 0.5rem;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header>Ứng dụng Nhụy Nguyên</header>
+
+    <main>
+      <div class="card">
+        <h2>Xin chào</h2>
+        <p>Đây là giao diện mẫu để bạn phát triển ứng dụng quản lý như bán hàng, thu chi, kho, v.v.</p>
+      </div>
+
+      <div class="card">
+        <h2>Thông báo</h2>
+        <p>Không có thông báo mới.</p>
+      </div>
+    </main>
+
+    <nav>
+      <button title="Trang chủ">🏠</button>
+      <button title="Tìm kiếm">🔍</button>
+      <button title="Cài đặt">⚙️</button>
+    </nav>
+
+    <footer>© 2025 Nhụy Nguyên</footer>
+  </div>
+</body>
+</html>
