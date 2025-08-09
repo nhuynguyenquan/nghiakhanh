@@ -164,7 +164,7 @@
 </head>
 <body>
   <div class="container">
-    <button id="themeToggle">🌙 Dark / ☀️ Light</button>
+    <button id="themeToggle">🌙 TỐI / ☀️ SÁNG</button>
 
     <!-- Đăng nhập PIN -->
     <div id="loginSection">
@@ -230,6 +230,7 @@
         document.getElementById("loginError").textContent = "⚠️ Lỗi khi tải dữ liệu.";
         console.error(err);
       }
+      renderTodayStats();
     }
 
     function renderMenu() {
