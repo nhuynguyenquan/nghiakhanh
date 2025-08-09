@@ -35,13 +35,47 @@
   .month-content table { width: 100%; border-collapse: collapse; min-width: 600px; }
   .month-content th, .month-content td { padding: 6px 8px; text-align: left; white-space: nowrap; border: 1px solid #ddd; }
   @media (max-width: 600px) {
-    .month-header { font-size: 16px; padding: 8px; }
-    .month-content table, .month-content thead, .month-content tbody, .month-content th, .month-content td, .month-content tr { display: block; }
-    .month-content thead { display: none; }
-    .month-content tr { margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 6px; padding: 10px; background: #fff; }
-    .month-content td { position: relative; padding-left: 50%; border: none; border-bottom: 1px solid #eee; text-align: left; }
-    .month-content td::before { position: absolute; left: 10px; width: 45%; white-space: nowrap; font-weight: bold; content: attr(data-label); }
+  /* Bảng chuyển sang dạng block card */
+  table, thead, tbody, th, td, tr {
+    display: block;
   }
+  thead {
+    display: none;
+  }
+  tr {
+    margin-bottom: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    background: white;
+  }
+  td {
+    position: relative;
+    padding-left: 50%;
+    border: none;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+    white-space: normal;
+  }
+  td::before {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    width: 45%;
+    white-space: nowrap;
+    font-weight: bold;
+    content: attr(data-label);
+  }
+  input, button, select {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 4px 0;
+    font-size: 1rem;
+  }
+  .form-group {
+    margin-top: 8px;
+  }
+}
 </style>
 <nav>
   <a href="../quan-li-thu-chi/">Quản Lí Thu Chi</a>
