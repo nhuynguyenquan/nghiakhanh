@@ -36,24 +36,44 @@
     color: var(--primary-dark);
   }
 
+  /* Lưới menu */
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
   .menu-item {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 10px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #eee;
+    flex-direction: column;
+    align-items: stretch;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: transform 0.1s ease;
+  }
+
+  .menu-item:hover {
+    transform: scale(1.03);
   }
 
   .menu-item span {
     font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 6px;
+    text-align: center;
   }
 
   .menu-item input {
-    width: 70px;
+    width: 100%;
     padding: 6px;
     border: 1px solid #ccc;
     border-radius: 8px;
     text-align: center;
+    font-size: 14px;
   }
 
   button {
@@ -67,6 +87,7 @@
     font-weight: bold;
     cursor: pointer;
     transition: background 0.2s;
+    margin-top: 12px;
   }
 
   button:hover {
@@ -140,13 +161,13 @@
       <h2>🔐 Nhập mã PIN</h2>
       <input type="password" id="pinInput" placeholder="Mã PIN" />
       <button onclick="handleLogin()">Đăng nhập</button>
-      <p id="loginError" style="color: red;"></p>
+      <p id="loginError"></p>
     </div>
 
     <!-- Giao diện bán hàng -->
     <div id="salesSection" class="hidden">
       <h2 id="branchTitle"></h2>
-      <div id="menuList"></div>
+      <div id="menuList" class="menu-grid"></div>
       <button id="submitOrderBtn" onclick="sendOrder()">🧾 Gửi đơn hàng</button>
       <div id="statsToday" class="today-stats"></div>
     </div>
@@ -182,7 +203,7 @@ async function handleLogin() {
 
     document.getElementById("branchTitle").textContent = "🍽 " + branchName;
     renderMenu();
-    renderTodayStats(); // Hiển thị thống kê ngay khi đăng nhập
+    renderTodayStats();
     document.getElementById("loginSection").classList.add("hidden");
     document.getElementById("salesSection").classList.remove("hidden");
 
@@ -204,7 +225,7 @@ function renderMenu() {
     div.dataset.price = item.price || 0;
 
     div.innerHTML = `
-      <span>${item.name} (${item.stock} ${item.unit || ''}) - ${item.price.toLocaleString()}đ</span>
+      <span>${item.name} (${item.stock} ${item.unit || ''})<br>${item.price.toLocaleString()}đ</span>
       <input type="number" min="0" value="0"/>
     `;
     menuList.appendChild(div);
