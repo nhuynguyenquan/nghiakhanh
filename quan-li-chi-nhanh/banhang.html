@@ -6,33 +6,43 @@
   <title>Bán hàng - Nhụy Nguyên</title>
   <style>
   :root {
-  /* Light mode */
-  --primary: #ff914d;
-  --primary-dark: #cc6e30;
-  --bg: #fefefe;
-  --text: #333;
-  --accent: #f5f5f5;
-}
+    /* Light mode */
+    --primary: #ff914d;
+    --primary-dark: #cc6e30;
+    --bg: #fefefe;
+    --text: #333;
+    --accent: #f5f5f5;
+    --box-bg: #fff;
+  }
 
-/* Dark mode */
-body.dark {
-  --primary: #ffb36d;
-  --primary-dark: #e07f3f;
-  --bg: #1e1e1e;
-  --text: #f1f1f1;
-  --accent: #2a2a2a;
-}
+  /* Dark mode */
+  body.dark {
+    --primary: #ffb36d;
+    --primary-dark: #e07f3f;
+    --bg: #1e1e1e;
+    --text: #f1f1f1;
+    --accent: #2a2a2a;
+    --box-bg: #2d2d2d;
+  }
 
-body {
-  background: var(--accent);
-  color: var(--text);
-  transition: background 0.3s, color 0.3s;
-}
+  body {
+    font-family: "Segoe UI", sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: var(--accent);
+    color: var(--text);
+    transition: background 0.3s, color 0.3s;
+  }
 
-.container {
-  background: var(--bg);
-  transition: background 0.3s;
-}
+  .container {
+    max-width: 500px;
+    margin: auto;
+    background: var(--box-bg);
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: background 0.3s;
+  }
 
   h2 {
     text-align: center;
@@ -40,44 +50,24 @@ body {
     color: var(--primary-dark);
   }
 
-  /* Lưới menu */
-  .menu-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
-  }
-
   .menu-item {
-    background: #fff;
-    border: 1px solid #eee;
-    border-radius: 10px;
-    padding: 10px;
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    cursor: pointer;
-    transition: transform 0.1s ease;
-  }
-
-  .menu-item:hover {
-    transform: scale(1.03);
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
   }
 
   .menu-item span {
     font-weight: 600;
-    font-size: 14px;
-    margin-bottom: 6px;
-    text-align: center;
   }
 
   .menu-item input {
-    width: 100%;
+    width: 70px;
     padding: 6px;
     border: 1px solid #ccc;
     border-radius: 8px;
     text-align: center;
-    font-size: 14px;
   }
 
   button {
@@ -91,7 +81,6 @@ body {
     font-weight: bold;
     cursor: pointer;
     transition: background 0.2s;
-    margin-top: 12px;
   }
 
   button:hover {
@@ -130,9 +119,14 @@ body {
     box-shadow: inset 0 0 4px rgba(0,0,0,0.05);
   }
 
+  body.dark .today-stats {
+    background: #2d2d2d;
+    border-color: #555;
+  }
+
   .today-stats h3 {
     margin-top: 0;
-    color: #444;
+    color: var(--text);
     font-size: 18px;
     margin-bottom: 10px;
   }
@@ -145,206 +139,206 @@ body {
 
   .today-stats li {
     margin-bottom: 6px;
-    color: #333;
+    color: var(--text);
   }
 
   .today-stats strong {
     display: block;
     margin-top: 10px;
     font-size: 16px;
-    color: #000;
+    color: var(--text);
     border-top: 1px solid #eee;
     padding-top: 10px;
+  }
+
+  /* Nút đổi theme */
+  #themeToggle {
+    width: auto;
+    padding: 8px 14px;
+    background: var(--primary-dark);
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 16px;
   }
 </style>
 </head>
 <body>
   <div class="container">
     <button id="themeToggle">🌙 Dark / ☀️ Light</button>
+
     <!-- Đăng nhập PIN -->
     <div id="loginSection">
       <h2>🔐 Nhập mã PIN</h2>
       <input type="password" id="pinInput" placeholder="Mã PIN" />
       <button onclick="handleLogin()">Đăng nhập</button>
-      <p id="loginError"></p>
+      <p id="loginError" style="color: red;"></p>
     </div>
 
     <!-- Giao diện bán hàng -->
     <div id="salesSection" class="hidden">
       <h2 id="branchTitle"></h2>
-      <div id="menuList" class="menu-grid"></div>
+      <div id="menuList"></div>
       <button id="submitOrderBtn" onclick="sendOrder()">🧾 Gửi đơn hàng</button>
       <div id="statsToday" class="today-stats"></div>
     </div>
   </div>
 
   <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfd_pHMmc9qGXJ4iT2LYXg78-WSxXVTHr5O0EeGcs5pa4RlZMB2Gs1xETul4XI-hPFTw/exec';
-let salesData = {};
-let branchName = "";
-let branchData = null;
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfd_pHMmc9qGXJ4iT2LYXg78-WSxXVTHr5O0EeGcs5pa4RlZMB2Gs1xETul4XI-hPFTw/exec';
+    let salesData = {};
+    let branchName = "";
+    let branchData = null;
 
-async function handleLogin() {
-  const pin = document.getElementById("pinInput").value.trim();
-  document.getElementById("loginError").textContent = "";
-
-  try {
-    const res = await fetch(SCRIPT_URL);
-    salesData = await res.json();
-
-    const pinMap = salesData.pins || {};
-    branchName = pinMap[pin];
-
-    if (!branchName) {
-      document.getElementById("loginError").textContent = "❌ Mã PIN không hợp lệ.";
-      return;
+    // Đổi theme Dark / Light
+    const themeToggle = document.getElementById("themeToggle");
+    if (localStorage.getItem("theme") === "dark") {
+      document.body.classList.add("dark");
     }
-
-    branchData = salesData.branches.find(b => b.name === branchName);
-    if (!branchData) {
-      document.getElementById("loginError").textContent = "❌ Không tìm thấy chi nhánh.";
-      return;
-    }
-
-    document.getElementById("branchTitle").textContent = "🍽 " + branchName;
-    renderMenu();
-    renderTodayStats();
-    document.getElementById("loginSection").classList.add("hidden");
-    document.getElementById("salesSection").classList.remove("hidden");
-
-  } catch (err) {
-    document.getElementById("loginError").textContent = "⚠️ Lỗi khi tải dữ liệu.";
-    console.error(err);
-  }
-}
-
-function renderMenu() {
-  const menuList = document.getElementById("menuList");
-  menuList.innerHTML = "";
-
-  branchData.menu.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "menu-item";
-    div.dataset.name = item.name;
-    div.dataset.unit = item.unit || "";
-    div.dataset.price = item.price || 0;
-
-    div.innerHTML = `
-      <span>${item.name} (${item.stock} ${item.unit || ''})<br>${item.price.toLocaleString()}đ</span>
-      <input type="number" min="0" value="0"/>
-    `;
-    menuList.appendChild(div);
-  });
-}
-
-async function sendOrder() {
-  const btn = document.getElementById("submitOrderBtn");
-  btn.disabled = true;
-  btn.innerText = "Đang gửi...";
-
-  const items = [];
-  const rows = document.querySelectorAll(".menu-item");
-
-  rows.forEach(row => {
-    const name = row.dataset.name;
-    const unit = row.dataset.unit;
-    const price = parseInt(row.dataset.price);
-    const qty = parseInt(row.querySelector("input").value);
-    if (qty > 0) items.push({ name, unit, quantity: qty, price });
-  });
-
-  if (items.length === 0) {
-    alert("⚠️ Vui lòng chọn ít nhất 1 món.");
-    btn.disabled = false;
-    btn.innerText = "🧾 Gửi đơn hàng";
-    return;
-  }
-
-  const now = new Date().toISOString();
-
-  items.forEach(order => {
-    const menuItem = branchData.menu.find(m => m.name === order.name);
-    salesData.logs.push({
-      branch: branchName,
-      item: order.name,
-      unit: order.unit,
-      quantity: order.quantity,
-      price: order.price,
-      time: now
+    themeToggle.addEventListener("click", () => {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
     });
 
-    if (menuItem) {
-      menuItem.stock -= order.quantity;
-      if (menuItem.stock < 0) menuItem.stock = 0;
+    async function handleLogin() {
+      const pin = document.getElementById("pinInput").value.trim();
+      document.getElementById("loginError").textContent = "";
+
+      try {
+        const res = await fetch(SCRIPT_URL);
+        salesData = await res.json();
+
+        const pinMap = salesData.pins || {};
+        branchName = pinMap[pin];
+
+        if (!branchName) {
+          document.getElementById("loginError").textContent = "❌ Mã PIN không hợp lệ.";
+          return;
+        }
+
+        branchData = salesData.branches.find(b => b.name === branchName);
+        if (!branchData) {
+          document.getElementById("loginError").textContent = "❌ Không tìm thấy chi nhánh.";
+          return;
+        }
+
+        document.getElementById("branchTitle").textContent = "🍽 " + branchName;
+        renderMenu();
+        document.getElementById("loginSection").classList.add("hidden");
+        document.getElementById("salesSection").classList.remove("hidden");
+
+      } catch (err) {
+        document.getElementById("loginError").textContent = "⚠️ Lỗi khi tải dữ liệu.";
+        console.error(err);
+      }
     }
-  });
 
-  try {
-    await fetch(SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      mode: "no-cors",
-      body: JSON.stringify(salesData)
-    });
+    function renderMenu() {
+      const menuList = document.getElementById("menuList");
+      menuList.innerHTML = "";
 
-    alert("✅ Gửi đơn thành công!");
-    renderMenu();
-    renderTodayStats();
+      branchData.menu.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "menu-item";
+        div.dataset.name = item.name;
 
-  } catch (err) {
-    console.error(err);
-    alert("⚠️ Đã có lỗi xảy ra khi gửi dữ liệu....Tải lại trang.");
-  }
+        div.innerHTML = `
+          <span>${item.name} (${item.stock})</span>
+          <input type="number" min="0" value="0"/>
+        `;
+        menuList.appendChild(div);
+      });
+    }
 
-  btn.disabled = false;
-  btn.innerText = "🧾 Gửi đơn hàng";
-}
+    async function sendOrder() {
+      const btn = document.getElementById("submitOrderBtn");
+      btn.disabled = true;
+      btn.innerText = "Đang gửi...";
 
-function renderTodayStats() {
-  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-  const logsToday = salesData.logs.filter(log =>
-    log.time?.startsWith(today) && log.branch === branchName
-  );
+      const items = [];
+      const rows = document.querySelectorAll(".menu-item");
 
-  const summary = {};
-  let total = 0;
+      rows.forEach(row => {
+        const name = row.dataset.name;
+        const qty = parseInt(row.querySelector("input").value);
+        if (qty > 0) items.push({ name, quantity: qty });
+      });
 
-  logsToday.forEach(log => {
-    if (!summary[log.item]) summary[log.item] = { quantity: 0, total: 0 };
-    summary[log.item].quantity += log.quantity;
-    summary[log.item].total += log.quantity * log.price;
-    total += log.quantity * log.price;
-  });
+      if (items.length === 0) {
+        alert("⚠️ Vui lòng chọn ít nhất 1 món.");
+        btn.disabled = false;
+        btn.innerText = "🧾 Gửi đơn hàng";
+        return;
+      }
 
-  const statsDiv = document.getElementById("statsToday");
-  statsDiv.innerHTML = `<h3>📊 Đơn hàng hôm nay:</h3><ul>
-    ${Object.entries(summary)
-      .map(([name, s]) => {
-        // Tìm đơn vị tương ứng trong menu
-        const menuItem = branchData.menu.find(item => item.name === name);
-        const unit = menuItem?.unit || 'cái'; 
-        return `<li>${name}: ${s.quantity} ${unit} ~ ${s.total.toLocaleString()}đ</li>`;
-      })
-      .join("")}
-  </ul><strong>💰 Tổng tiền: ${total.toLocaleString()}đ</strong>`;
-}
-const themeToggle = document.getElementById("themeToggle");
+      const now = new Date().toISOString();
 
-// Khi tải trang, kiểm tra localStorage
-if (localStorage.getItem("theme") === "dark") {
-  document.body.classList.add("dark");
-}
+      items.forEach(order => {
+        const menuItem = branchData.menu.find(m => m.name === order.name);
+        const price = menuItem ? menuItem.price : 0;
 
-themeToggle.addEventListener("click", () => {
-  document.body.classList.toggle("dark");
+        salesData.logs.push({
+          branch: branchName,
+          item: order.name,
+          quantity: order.quantity,
+          price,
+          time: now
+        });
 
-  // Lưu vào localStorage
-  if (document.body.classList.contains("dark")) {
-    localStorage.setItem("theme", "dark");
-  } else {
-    localStorage.setItem("theme", "light");
-  }
-});
-</script>
+        if (menuItem) {
+          menuItem.stock -= order.quantity;
+          if (menuItem.stock < 0) menuItem.stock = 0;
+        }
+      });
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          mode: "no-cors", 
+          body: JSON.stringify(salesData)
+        });
+
+        alert("✅ Gửi đơn thành công!");
+        renderMenu(); 
+        renderTodayStats();
+      } catch (err) {
+        console.error(err);
+        alert("⚠️ Đã có lỗi xảy ra khi gửi dữ liệu....Tải lại trang.");
+        renderMenu();
+        renderTodayStats();
+      }
+
+      btn.disabled = false;
+      btn.innerText = "🧾 Gửi đơn hàng";
+    }
+
+    function renderTodayStats() {
+      const today = new Date().toISOString().slice(0, 10);
+      const logsToday = salesData.logs.filter(log =>
+        log.time?.startsWith(today) && log.branch === branchName
+      );
+
+      const summary = {};
+      let total = 0;
+
+      logsToday.forEach(log => {
+        if (!summary[log.item]) summary[log.item] = { quantity: 0, total: 0 };
+        summary[log.item].quantity += log.quantity;
+        summary[log.item].total += log.quantity * log.price;
+        total += log.quantity * log.price;
+      });
+
+      const statsDiv = document.getElementById("statsToday");
+      statsDiv.innerHTML = `<h3>📊 Đơn hàng hôm nay:</h3><ul>
+        ${Object.entries(summary)
+          .map(([name, s]) => {
+            const menuItem = branchData.menu.find(item => item.name === name);
+            const unit = menuItem?.unit || 'cái';
+            return `<li>${name}: ${s.quantity} ${unit} ~ ${s.total.toLocaleString()}đ</li>`;
+          })
+          .join("")}
+      </ul><strong>💰 Tổng tiền: ${total.toLocaleString()}đ</strong>`;
+    }
+  </script>
 </body>
 </html>
