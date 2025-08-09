@@ -6,29 +6,33 @@
   <title>Bán hàng - Nhụy Nguyên</title>
   <style>
   :root {
-    --primary: #ff914d;
-    --primary-dark: #cc6e30;
-    --bg: #fefefe;
-    --text: #333;
-    --accent: #f5f5f5;
-  }
+  /* Light mode */
+  --primary: #ff914d;
+  --primary-dark: #cc6e30;
+  --bg: #fefefe;
+  --text: #333;
+  --accent: #f5f5f5;
+}
 
-  body {
-    font-family: "Segoe UI", sans-serif;
-    margin: 0;
-    padding: 20px;
-    background: var(--accent);
-    color: var(--text);
-  }
+/* Dark mode */
+body.dark {
+  --primary: #ffb36d;
+  --primary-dark: #e07f3f;
+  --bg: #1e1e1e;
+  --text: #f1f1f1;
+  --accent: #2a2a2a;
+}
 
-  .container {
-    max-width: 500px;
-    margin: auto;
-    background: var(--bg);
-    padding: 24px;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  }
+body {
+  background: var(--accent);
+  color: var(--text);
+  transition: background 0.3s, color 0.3s;
+}
+
+.container {
+  background: var(--bg);
+  transition: background 0.3s;
+}
 
   h2 {
     text-align: center;
@@ -156,6 +160,7 @@
 </head>
 <body>
   <div class="container">
+    <button id="themeToggle">🌙 Dark / ☀️ Light</button>
     <!-- Đăng nhập PIN -->
     <div id="loginSection">
       <h2>🔐 Nhập mã PIN</h2>
@@ -323,6 +328,23 @@ function renderTodayStats() {
       .join("")}
   </ul><strong>💰 Tổng tiền: ${total.toLocaleString()}đ</strong>`;
 }
+const themeToggle = document.getElementById("themeToggle");
+
+// Khi tải trang, kiểm tra localStorage
+if (localStorage.getItem("theme") === "dark") {
+  document.body.classList.add("dark");
+}
+
+themeToggle.addEventListener("click", () => {
+  document.body.classList.toggle("dark");
+
+  // Lưu vào localStorage
+  if (document.body.classList.contains("dark")) {
+    localStorage.setItem("theme", "dark");
+  } else {
+    localStorage.setItem("theme", "light");
+  }
+});
 </script>
 </body>
 </html>
