@@ -135,8 +135,10 @@ function renderBranches() {
         <td><input type="number" value="${item.price}" onchange="editItem(${bIndex}, ${iIndex}, 'price', this.value)"></td>
         <td><input type="number" id="sell-${bIndex}-${iIndex}" min="1" max="${item.stock}"></td>
         <td>
-          <button onclick="sell(${bIndex}, ${iIndex})">Bán</button>
-          <button onclick="deleteItem(${bIndex}, ${iIndex})">🗑</button>
+        <button onclick="sell(${bIndex}, ${iIndex})">Bán</button>
+        <button onclick="deleteItem(${bIndex}, ${iIndex})">🗑</button>
+        <button onclick="moveItem(${bIndex}, ${iIndex}, -1)">⬆️</button>
+        <button onclick="moveItem(${bIndex}, ${iIndex}, 1)">⬇️</button>
         </td>
       </tr>`;
     });
@@ -254,6 +256,22 @@ function addItem(bIndex) {
   salesData.branches[bIndex].menu.push({ name, unit, stock, price });
   saveData();
 }
+function moveItem(bIndex, iIndex, direction) {
+  const menu = salesData.branches[bIndex].menu;
+  const newIndex = iIndex + direction;
+
+  // Kiểm tra giới hạn
+  if (newIndex < 0 || newIndex >= menu.length) return;
+
+  // Đổi vị trí
+  const temp = menu[iIndex];
+  menu[iIndex] = menu[newIndex];
+  menu[newIndex] = temp;
+
+  saveData(false); // Lưu nhưng không reload dữ liệu từ server
+  renderBranches(); // Vẽ lại giao diện
+}
+
 
 function editItem(bIndex, iIndex, field, value) {
   if (field === 'stock' || field === 'price') value = parseInt(value);
