@@ -296,13 +296,16 @@ function renderTodayStats() {
   const statsDiv = document.getElementById("statsToday");
   statsDiv.innerHTML = `<h3>📊 Đơn hàng hôm nay:</h3><ul>
     ${Object.entries(summary)
-      .map(
-        ([name, s]) =>
-          `<li>${name}: ${s.quantity} cái ~ ${s.total.toLocaleString()}đ</li>`
-      )
+      .map(([name, s]) => {
+        // Tìm đơn vị tương ứng trong menu
+        const menuItem = branchData.menu.find(item => item.name === name);
+        const unit = menuItem?.unit || 'cái'; // Nếu không có đơn vị, mặc định là "cái"
+        return `<li>${name}: ${s.quantity} ${unit} ~ ${s.total.toLocaleString()}đ</li>`;
+      })
       .join("")}
   </ul><strong>💰 Tổng tiền: ${total.toLocaleString()}đ</strong>`;
 }
+
   </script>
 </body>
 </html>
