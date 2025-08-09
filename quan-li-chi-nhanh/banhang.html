@@ -314,7 +314,7 @@
     }
 
     function renderTodayStats() {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' });
       const logsToday = salesData.logs.filter(log =>
         log.time?.startsWith(today) && log.branch === branchName
       );
