@@ -296,7 +296,7 @@ async function sendOrder() {
 }
 
 function renderTodayStats() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
   const logsToday = salesData.logs.filter(log =>
     log.time?.startsWith(today) && log.branch === branchName
   );
@@ -314,10 +314,12 @@ function renderTodayStats() {
   const statsDiv = document.getElementById("statsToday");
   statsDiv.innerHTML = `<h3>📊 Đơn hàng hôm nay:</h3><ul>
     ${Object.entries(summary)
-      .map(
-        ([name, s]) =>
-          `<li>${name}: ${s.quantity} ~ ${s.total.toLocaleString()}đ</li>`
-      )
+      .map(([name, s]) => {
+        // Tìm đơn vị tương ứng trong menu
+        const menuItem = branchData.menu.find(item => item.name === name);
+        const unit = menuItem?.unit || 'cái'; 
+        return `<li>${name}: ${s.quantity} ${unit} ~ ${s.total.toLocaleString()}đ</li>`;
+      })
       .join("")}
   </ul><strong>💰 Tổng tiền: ${total.toLocaleString()}đ</strong>`;
 }
