@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>App Quản Lý Thu Chi có OTP</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 1rem; }
+  #app, #register-form, #otp-form, #login-form { max-width: 400px; margin: 2rem auto; background: white; padding: 1rem 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  h2 { margin-top: 0; }
+  input, button { width: 100%; padding: 0.6rem; margin: 0.5rem 0; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem; box-sizing: border-box; }
+  button { background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
+  button:hover { background: #218838; }
+  p { margin: 0.5rem 0; }
+  .link { color: #007bff; cursor: pointer; text-decoration: underline; }
+  #message { color: red; min-height: 18px; }
+</style>
+</head>
+<body>
+
+<div id="login-form">
+  <h2>Đăng nhập</h2>
+  <input type="email" id="login-email" placeholder="Email" autocomplete="username" />
+  <input type="password" id="login-password" placeholder="Mật khẩu" autocomplete="current-password" />
+  <button id="login-btn">Đăng nhập</button>
+  <p>Chưa có tài khoản? <span class="link" id="go-register">Đăng ký</span></p>
+  <p id="login-message"></p>
+</div>
+
+<div id="register-form" style="display:none;">
+  <h2>Đăng ký</h2>
+  <input type="email" id="reg-email" placeholder="Email" autocomplete="email" />
+  <input type="password" id="reg-password" placeholder="Mật khẩu" />
+  <input type="password" id="reg-password-confirm" placeholder="Nhập lại mật khẩu" />
+  <button id="reg-send-otp-btn">Gửi mã xác nhận</button>
+  <p id="reg-message"></p>
+  <p>Đã có tài khoản? <span class="link" id="go-login-1">Đăng nhập</span></p>
+</div>
+
+<div id="otp-form" style="display:none;">
+  <h2>Nhập mã OTP</h2>
+  <input type="text" id="otp-code" placeholder="Mã xác nhận (6 số)" maxlength="6" />
+  <button id="verify-otp-btn">Xác nhận</button>
+  <p id="otp-message"></p>
+  <p><span class="link" id="go-login-2">Quay lại đăng nhập</span></p>
+</div>
+
+<div id="app" style="display:none;">
+  <h2>Xin chào, <span id="user-email"></span></h2>
+  <button id="logout-btn">Đăng xuất</button>
+
+  <h3>Quản lý thu chi (demo đơn giản)</h3>
+  <form id="transaction-form">
+    <input type="text" id="trans-desc" placeholder="Mô tả" required />
+    <input type="number" id="trans-amount" placeholder="Số tiền" required />
+    <select id="trans-type" required>
+      <option value="" disabled selected>Loại giao dịch</option>
+      <option value="income">Thu</option>
+      <option value="expense">Chi</option>
+    </select>
+    <button type="submit">Thêm giao dịch</button>
+  </form>
+
+  <h3>Danh sách giao dịch</h3>
+  <ul id="transaction-list"></ul>
+
+  <h3>Tổng kết</h3>
+  <p>Thu: <span id="income-sum">0</span> | Chi: <span id="expense-sum">0</span> | Số dư: <span id="balance">0</span></p>
+</div>
+
+<script>
+const AUTH_FILE_URL = 'https://script.google.com/macros/s/AKfycbw2t63e5FbsjyR6O3oMRBAcWqt4uuzoA7NU66y-gL7TGGfxflTLB2ORYJ4u9wND8MXJ5Q/exec'; // Thay YOUR_WEB_APP_ID thành URL GAS của bạn
+
+// --- Biến trạng thái ---
+let currentUser = null;
+let currentToken = null;
+let currentTransactions = [];
+
+// --- DOM elements ---
+const loginForm = document.getElementById('login-form');
+const registerForm = document.getElementById('register-form');
+const otpForm = document.getElementById('otp-form');
+const appDiv = document.getElementById('app');
+
+const loginEmailInput = document.getElementById('login-email');
+const loginPasswordInput = document.getElementById('login-password');
+const loginBtn = document.getElementById('login-btn');
+const loginMessage = document.getElementById('login-message');
+
+const regEmailInput = document.getElementById('reg-email');
+const regPasswordInput = document.getElementById('reg-password');
+const regPasswordConfirmInput = document.getElementById('reg-password-confirm');
+const regSendOtpBtn = document.getElementById('reg-send-otp-btn');
+const regMessage = document.getElementById('reg-message');
+
+const otpCodeInput = document.getElementById('otp-code');
+const verifyOtpBtn = document.getElementById('verify-otp-btn');
+const otpMessage = document.getElementById('otp-message');
+
+const userEmailSpan = document.getElementById('user-email');
+const logoutBtn = document.getElementById('logout-btn');
+
+const transactionForm = document.getElementById('transaction-form');
+const transDescInput = document.getElementById('trans-desc');
+const transAmountInput = document.getElementById('trans-amount');
+const transTypeSelect = document.getElementById('trans-type');
+const transactionList = document.getElementById('transaction-list');
+const incomeSumSpan = document.getElementById('income-sum');
+const expenseSumSpan = document.getElementById('expense-sum');
+const balanceSpan = document.getElementById('balance');
+
+// --- Hàm gọi API GAS ---
+async function callAPI(data) {
+  const res = await fetch(AUTH_FILE_URL, {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: { 'Content-Type': 'application/json' }
+  });
+  return res.json();
+}
+
+// --- Xử lý đăng ký gửi OTP ---
+regSendOtpBtn.onclick = async () => {
+  const email = regEmailInput.value.trim();
+  const pass = regPasswordInput.value;
+  const passConfirm = regPasswordConfirmInput.value;
+
+  regMessage.style.color = 'red';
+  regMessage.textContent = '';
+
+  if (!email || !pass || !passConfirm) {
+    regMessage.textContent = 'Vui lòng nhập đủ thông tin.';
+    return;
+  }
+  if (pass !== passConfirm) {
+    regMessage.textContent = 'Mật khẩu nhập lại không khớp.';
+    return;
+  }
+
+  regMessage.style.color = 'black';
+  regMessage.textContent = 'Đang gửi mã xác nhận...';
+
+  const result = await callAPI({ action: 'request_otp', email });
+  if (result.success) {
+    regMessage.style.color = 'green';
+    regMessage.textContent = 'Mã xác nhận đã được gửi tới email.';
+    // Chuyển sang form OTP
+    showOtpForm(email, pass);
+  } else {
+    regMessage.textContent = result.message || 'Gửi mã thất bại.';
+  }
+};
+
+// Hiển thị form OTP
+function showOtpForm(email, password) {
+  registerForm.style.display = 'none';
+  otpForm.style.display = 'block';
+  otpMessage.textContent = '';
+  otpCodeInput.value = '';
+
+  // Lưu tạm email, password để xác thực sau
+  otpForm.dataset.email = email;
+  otpForm.dataset.password = password;
+}
+
+// Xác thực OTP
+verifyOtpBtn.onclick = async () => {
+  const email = otpForm.dataset.email;
+  const password = otpForm.dataset.password;
+  const otp = otpCodeInput.value.trim();
+
+  otpMessage.style.color = 'red';
+  otpMessage.textContent = '';
+
+  if (!otp || otp.length !== 6) {
+    otpMessage.textContent = 'Vui lòng nhập mã OTP 6 số.';
+    return;
+  }
+
+  otpMessage.style.color = 'black';
+  otpMessage.textContent = 'Đang xác thực...';
+
+  const result = await callAPI({ action: 'verify_otp', email, otp, password });
+  if (result.success) {
+    otpMessage.style.color = 'green';
+    otpMessage.textContent = 'Đăng ký thành công! Bạn có thể đăng nhập.';
+    setTimeout(() => {
+      otpForm.style.display = 'none';
+      registerForm.style.display = 'none';
+      loginForm.style.display = 'block';
+      clearRegisterForm();
+    }, 2000);
+  } else {
+    otpMessage.textContent = result.message || 'Xác thực thất bại.';
+  }
+};
+
+// Quay lại đăng nhập
+document.getElementById('go-login-1').onclick = () => {
+  registerForm.style.display = 'none';
+  otpForm.style.display = 'none';
+  loginForm.style.display = 'block';
+  clearRegisterForm();
+};
+document.getElementById('go-login-2').onclick = () => {
+  otpForm.style.display = 'none';
+  loginForm.style.display = 'block';
+  clearRegisterForm();
+};
+
+// Xóa form đăng ký
+function clearRegisterForm() {
+  regEmailInput.value = '';
+  regPasswordInput.value = '';
+  regPasswordConfirmInput.value = '';
+  regMessage.textContent = '';
+  otpCodeInput.value = '';
+  otpMessage.textContent = '';
+}
+
+// Đăng nhập
+loginBtn.onclick = async () => {
+  const email = loginEmailInput.value.trim();
+  const password = loginPasswordInput.value;
+
+  loginMessage.style.color = 'red';
+  loginMessage.textContent = '';
+
+  if (!email || !password) {
+    loginMessage.textContent = 'Vui lòng nhập email và mật khẩu.';
+    return;
+  }
+
+  loginMessage.style.color = 'black';
+  loginMessage.textContent = 'Đang đăng nhập...';
+
+  const result = await callAPI({ action: 'login', email, password });
+  if (result.success) {
+    loginMessage.style.color = 'green';
+    loginMessage.textContent = 'Đăng nhập thành công.';
+    currentUser = result.email;
+    currentToken = result.token;
+    saveSession();
+    showApp();
+  } else {
+    loginMessage.textContent = result.message || 'Đăng nhập thất bại.';
+  }
+};
+
+// Lưu session localStorage
+function saveSession() {
+  localStorage.setItem('auth', JSON.stringify({ email: currentUser, token: currentToken }));
+}
+
+// Tải session
+function loadSession() {
+  const data = localStorage.getItem('auth');
+  if (!data) return false;
+  try {
+    const obj = JSON.parse(data);
+    if (!obj.email || !obj.token) return false;
+    currentUser = obj.email;
+    currentToken = obj.token;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Hiển thị giao diện app chính
+function showApp() {
+  loginForm.style.display = 'none';
+  registerForm.style.display = 'none';
+  otpForm.style.display = 'none';
+  appDiv.style.display = 'block';
+  userEmailSpan.textContent = currentUser;
+
+  // Load dữ liệu giao dịch nếu có
+  loadTransactions();
+  renderTransactions();
+}
+
+// Đăng xuất
+logoutBtn.onclick = () => {
+  currentUser = null;
+  currentToken = null;
+  currentTransactions = [];
+  localStorage.removeItem('auth');
+  appDiv.style.display = 'none';
+  loginForm.style.display = 'block';
+  loginEmailInput.value = '';
+  loginPasswordInput.value = '';
+  loginMessage.textContent = '';
+};
+
+// Xử lý thêm giao dịch
+transactionForm.onsubmit = e => {
+  e.preventDefault();
+  const desc = transDescInput.value.trim();
+  const amount = parseFloat(transAmountInput.value);
+  const type = transTypeSelect.value;
+
+  if (!desc || isNaN(amount) || !type) return alert('Vui lòng nhập đủ thông tin giao dịch!');
+
+  currentTransactions.push({ desc, amount, type, date: new Date().toISOString() });
+
+  saveTransactions();
+  renderTransactions();
+
+  // Reset form
+  transDescInput.value = '';
+  transAmountInput.value = '';
+  transTypeSelect.value = '';
+};
+
+// Lưu giao dịch localStorage (phân biệt từng user)
+function saveTransactions() {
+  if (!currentUser) return;
+  localStorage.setItem('transactions_' + currentUser, JSON.stringify(currentTransactions));
+}
+
+// Load giao dịch
+function loadTransactions() {
+  if (!currentUser) return;
+  const data = localStorage.getItem('transactions_' + currentUser);
+  if (data) {
+    try {
+      currentTransactions = JSON.parse(data);
+    } catch {
+      currentTransactions = [];
+    }
+  } else {
+    currentTransactions = [];
+  }
+}
+
+// Hiển thị danh sách giao dịch + tổng kết
+function renderTransactions() {
+  transactionList.innerHTML = '';
+
+  let incomeSum = 0;
+  let expenseSum = 0;
+
+  currentTransactions.forEach((t, i) => {
+    const li = document.createElement('li');
+    li.textContent = `${new Date(t.date).toLocaleDateString()} - ${t.desc} - ${t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString()} VND`;
+    transactionList.appendChild(li);
+
+    if (t.type === 'income') incomeSum += t.amount;
+    else if (t.type === 'expense') expenseSum += t.amount;
+  });
+
+  incomeSumSpan.textContent = incomeSum.toLocaleString();
+  expenseSumSpan.textContent = expenseSum.toLocaleString();
+  balanceSpan.textContent = (incomeSum - expenseSum).toLocaleString();
+}
+
+// Khi load trang kiểm tra session
+window.onload = () => {
+  if (loadSession()) {
+    showApp();
+  } else {
+    loginForm.style.display = 'block';
+  }
+};
