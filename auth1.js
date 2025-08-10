@@ -1,4 +1,4 @@
-const AUTH_FILE_URL = 'https://script.google.com/macros/s/AKfycbw7pUKmPCq7WY9_bdqiALzOOkFF3x7eurzRUrJu8HxvUyoPwH0g4Y7XMUUiIzDUEgBZ1A/exec';
+const AUTH_FILE_URL = 'https://script.google.com/macros/s/AKfycbyb8wHK_KskQ8y0unBu03kGDJ9I41praMqp6jjQLmNDp2HELTWcpObsV91Nr70C7hXMRA/exec';
 
 // Cookie helpers
 function getCookie(name) {
@@ -46,7 +46,9 @@ function showLogoutButton() {
     border-radius:50%;background:#f55;color:#fff;border:none;
     cursor:pointer;box-shadow:0 1px 5px rgba(0,0,0,0.3);z-index:9999;
   `;
-  btn.onclick = () => logout();
+  btn.onclick = () => {
+    logout();
+  };
   document.body.appendChild(btn);
 }
 function hideLogoutButton() {
@@ -54,13 +56,33 @@ function hideLogoutButton() {
   if (btn) btn.remove();
 }
 
-// Đăng xuất
+// Hiển thị nút đổi mật khẩu
+function showChangePasswordButton() {
+  if (document.getElementById('change-password-btn')) return;
+  const btn = document.createElement('button');
+  btn.id = 'change-password-btn';
+  btn.textContent = 'Đổi mật khẩu';
+  btn.style = `
+    position: fixed; bottom: 10px; right: 10px; padding: 8px 12px;
+    border-radius: 5px; background: #007bff; color: white; border: none; cursor: pointer;
+    z-index: 9999;
+  `;
+  btn.onclick = () => showChangePasswordForm();
+  document.body.appendChild(btn);
+}
+function hideChangePasswordButton() {
+  const btn = document.getElementById('change-password-btn');
+  if (btn) btn.remove();
+}
+
+// Đăng xuất (xóa cookie + localStorage, ẩn UI)
 function logout() {
   deleteCookie('token');
   deleteCookie('user_id');
   localStorage.removeItem('auth');
   hideStatus();
   hideLogoutButton();
+  hideChangePasswordButton();
   showLoginForm();
 }
 
@@ -79,7 +101,7 @@ function showLoginForm() {
 
   form.innerHTML = `
     <h2 style="margin:0 0 10px;">Đăng nhập</h2>
-    <input type="text" id="login-id" placeholder="Email" autocomplete="username"
+    <input type="text" id="login-id" placeholder="Tên đăng nhập hoặc Email" autocomplete="username"
       style="width:100%;padding:8px;margin-bottom:10px;" />
     <input type="password" id="login-password" placeholder="Mật khẩu" autocomplete="current-password"
       style="width:100%;padding:8px;margin-bottom:10px;" />
@@ -119,22 +141,19 @@ function showRegisterForm() {
     <h2 style="margin:0 0 10px;">Đăng ký</h2>
     <input type="text" id="register-id" placeholder="Email" autocomplete="username"
       style="width:100%;padding:8px;margin-bottom:10px;" />
-    <button id="request-otp" style="width:100%;padding:10px;background:#007bff;color:#fff;border:none;border-radius:5px;cursor:pointer;">Gửi mã OTP</button>
-    <input type="text" id="register-otp" placeholder="Nhập mã OTP" style="width:100%;padding:8px;margin:10px 0;" />
     <input type="password" id="register-password" placeholder="Mật khẩu"
       style="width:100%;padding:8px;margin-bottom:10px;" />
     <input type="password" id="register-password-confirm" placeholder="Nhập lại mật khẩu"
       style="width:100%;padding:8px;margin-bottom:10px;" />
     <button id="register-submit" style="width:100%;padding:10px;background:#007bff;
-      color:#fff;border:none;border-radius:5px;cursor:pointer;">Đăng ký</button>
+      color:#fff;border:none;border-radius:5px;cursor:pointer;">Gửi mã OTP</button>
     <p id="register-message" style="color:red;min-height:18px;margin-top:10px;"></p>
     <p style="margin-top:10px;">Đã có tài khoản? <span id="show-login" style="color:#007bff;cursor:pointer;text-decoration:underline;">Đăng nhập</span></p>
   `;
 
   document.body.appendChild(form);
 
-  form.querySelector('#request-otp').onclick = requestOTP;
-  form.querySelector('#register-submit').onclick = register;
+  form.querySelector('#register-submit').onclick = sendOtpForRegister;
   form.querySelector('#show-login').onclick = () => {
     hideRegisterForm();
     showLoginForm();
@@ -145,111 +164,116 @@ function hideRegisterForm() {
   if (form) form.remove();
 }
 
-// Gửi yêu cầu OTP
-async function requestOTP() {
-  const email = document.getElementById('register-id').value.trim();
-  const messageEl = document.getElementById('register-message');
-  if (!email || !email.includes('@')) {
-    messageEl.textContent = 'Vui lòng nhập email hợp lệ.';
-    return;
-  }
-  messageEl.style.color = 'black';
-  messageEl.textContent = 'Đang gửi mã OTP...';
-  try {
-    const res = await fetch(AUTH_FILE_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'request_otp', email }),
-    });
-    const result = await res.json();
-    if (result.success) {
-      messageEl.style.color = 'green';
-      messageEl.textContent = 'Mã OTP đã được gửi đến email của bạn.';
-    } else {
-      messageEl.style.color = 'red';
-      messageEl.textContent = result.message || 'Gửi mã OTP thất bại.';
-    }
-  } catch (e) {
-    console.error(e);
-    messageEl.style.color = 'red';
-    messageEl.textContent = 'Lỗi kết nối, vui lòng thử lại.';
-  }
+// Form nhập OTP sau khi gửi mã
+function showRegisterOtpForm(email, password) {
+  if (document.getElementById('register-otp-form')) return;
+
+  const form = document.createElement('div');
+  form.id = 'register-otp-form';
+  form.style = `
+    position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);
+    background:#fff;padding:20px;border:1px solid #ccc;border-radius:10px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.2);z-index:10000;width:300px;
+    font-family:sans-serif;
+  `;
+
+  form.innerHTML = `
+    <h2 style="margin:0 0 10px;">Nhập mã OTP</h2>
+    <p>Đã gửi mã xác nhận đến email: <strong>${email}</strong></p>
+    <input type="text" id="register-otp" placeholder="Nhập mã OTP" style="width:100%;padding:8px;margin-bottom:10px;" />
+    <button id="register-otp-submit" style="width:100%;padding:10px;background:#007bff;color:#fff;border:none;border-radius:5px;cursor:pointer;">Xác nhận đăng ký</button>
+    <p id="register-otp-message" style="color:red;min-height:18px;margin-top:10px;"></p>
+    <p style="margin-top:10px;">
+      <span id="cancel-register-otp" style="color:#007bff;cursor:pointer;text-decoration:underline;">Hủy</span>
+    </p>
+  `;
+
+  document.body.appendChild(form);
+
+  form.querySelector('#register-otp-submit').onclick = () => verifyOtpForRegister(email, password);
+  form.querySelector('#cancel-register-otp').onclick = () => {
+    hideRegisterOtpForm();
+    showRegisterForm();
+  };
+}
+function hideRegisterOtpForm() {
+  const form = document.getElementById('register-otp-form');
+  if (form) form.remove();
 }
 
-// Xử lý đăng ký với OTP
-async function register() {
-  const email = document.getElementById('register-id').value.trim();
-  const otp = document.getElementById('register-otp').value.trim();
-  const password = document.getElementById('register-password').value.trim();
-  const passwordConfirm = document.getElementById('register-password-confirm').value.trim();
-  const messageEl = document.getElementById('register-message');
+// Hiển thị form đổi mật khẩu
+function showChangePasswordForm() {
+  if (document.getElementById('change-password-form')) return;
 
-  if (!email || !otp || !password || !passwordConfirm) {
-    messageEl.textContent = 'Vui lòng nhập đủ thông tin.';
-    return;
-  }
-  if (password !== passwordConfirm) {
-    messageEl.textContent = 'Mật khẩu nhập lại không khớp.';
-    return;
-  }
+  const form = document.createElement('div');
+  form.id = 'change-password-form';
+  form.style = `
+    position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);
+    background:#fff;padding:20px;border:1px solid #ccc;border-radius:10px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.2);z-index:10000;width:320px;
+    font-family:sans-serif;
+  `;
 
-  messageEl.style.color = 'black';
-  messageEl.textContent = 'Đang xác thực...';
+  form.innerHTML = `
+    <h2 style="margin:0 0 10px;">Đổi mật khẩu</h2>
+    <input type="password" id="old-password" placeholder="Mật khẩu cũ" style="width:100%;padding:8px;margin-bottom:10px;" />
+    <input type="password" id="new-password" placeholder="Mật khẩu mới" style="width:100%;padding:8px;margin-bottom:10px;" />
+    <input type="password" id="confirm-new-password" placeholder="Nhập lại mật khẩu mới" style="width:100%;padding:8px;margin-bottom:10px;" />
+    <button id="change-password-submit" style="width:100%;padding:10px;background:#007bff;color:#fff;border:none;border-radius:5px;cursor:pointer;">Xác nhận đổi mật khẩu</button>
+    <p id="change-password-message" style="color:red;min-height:18px;margin-top:10px;"></p>
+    <p style="margin-top:10px;">
+      <span id="cancel-change-password" style="color:#007bff;cursor:pointer;text-decoration:underline;">Hủy</span>
+    </p>
+  `;
 
-  try {
-    const res = await fetch(AUTH_FILE_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'verify_otp', email, otp, password }),
-    });
-    const result = await res.json();
-    if (result.success) {
-      messageEl.style.color = 'green';
-      messageEl.textContent = 'Đăng ký thành công! Bạn có thể đăng nhập ngay.';
-      setTimeout(() => {
-        hideRegisterForm();
-        showLoginForm();
-      }, 2000);
-    } else {
-      messageEl.style.color = 'red';
-      messageEl.textContent = result.message || 'Đăng ký thất bại.';
-    }
-  } catch (e) {
-    console.error(e);
-    messageEl.style.color = 'red';
-    messageEl.textContent = 'Lỗi kết nối, vui lòng thử lại.';
-  }
+  document.body.appendChild(form);
+
+  form.querySelector('#change-password-submit').onclick = changePassword;
+  form.querySelector('#cancel-change-password').onclick = () => {
+    hideChangePasswordForm();
+  };
+}
+function hideChangePasswordForm() {
+  const form = document.getElementById('change-password-form');
+  if (form) form.remove();
 }
 
-// Đăng nhập
+// Xử lý đăng nhập
 async function login() {
-  const email = document.getElementById('login-id').value.trim();
-  const password = document.getElementById('login-password').value.trim();
+  const id = document.getElementById('login-id')?.value.trim();
+  const password = document.getElementById('login-password')?.value.trim();
   const messageEl = document.getElementById('login-message');
-
-  if (!email || !password) {
-    messageEl.textContent = 'Vui lòng nhập email và mật khẩu.';
+  if (!id || !password) {
+    messageEl.textContent = 'Vui lòng nhập tên đăng nhập/email và mật khẩu.';
     return;
   }
-
   messageEl.style.color = 'black';
-  messageEl.textContent = 'Đang đăng nhập...';
+  messageEl.textContent = 'Đang kiểm tra...';
 
   try {
     const res = await fetch(AUTH_FILE_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'login', email, password }),
+      body: JSON.stringify({ action: 'login', email: id.toLowerCase(), password }),
     });
     const result = await res.json();
+
     if (result.success) {
+      setCookie('token', result.token);
+      setCookie('user_id', result.email);
+
+      localStorage.setItem('auth', JSON.stringify({
+        id: result.email,
+        token: result.token,
+        role: result.role,
+        timestamp: Date.now(),
+      }));
+
       messageEl.style.color = 'green';
-      messageEl.textContent = 'Đăng nhập thành công.';
-      // Lưu token & user id cookie + localStorage
-      setCookie('token', result.token, 7);
-      setCookie('user_id', result.email, 7);
-      localStorage.setItem('auth', JSON.stringify({ id: result.email, token: result.token, role: result.role }));
+      messageEl.textContent = 'Đăng nhập thành công!';
       hideLoginForm();
       showStatus(result.email, result.role);
       showLogoutButton();
-      // Có thể gọi hàm load dữ liệu user hoặc redirect
+      showChangePasswordButton();
     } else {
       messageEl.style.color = 'red';
       messageEl.textContent = result.message || 'Đăng nhập thất bại.';
@@ -261,37 +285,175 @@ async function login() {
   }
 }
 
-// Kiểm tra trạng thái đăng nhập khi load trang
-async function checkAuth() {
-  const auth = localStorage.getItem('auth');
-  if (!auth) {
-    showLoginForm();
+// Gửi mã OTP khi đăng ký
+async function sendOtpForRegister() {
+  const email = document.getElementById('register-id')?.value.trim().toLowerCase();
+  const password = document.getElementById('register-password')?.value.trim();
+  const passwordConfirm = document.getElementById('register-password-confirm')?.value.trim();
+  const messageEl = document.getElementById('register-message');
+
+  if (!email || !password || !passwordConfirm) {
+    messageEl.textContent = 'Vui lòng nhập đủ thông tin.';
     return;
   }
+  if (password !== passwordConfirm) {
+    messageEl.textContent = 'Mật khẩu nhập lại không khớp.';
+    return;
+  }
+
+  messageEl.style.color = 'black';
+  messageEl.textContent = 'Đang gửi mã OTP...';
+
   try {
-    const { id, token } = JSON.parse(auth);
-    if (!id || !token) {
-      showLoginForm();
-      return;
-    }
     const res = await fetch(AUTH_FILE_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'check_token', email: id, token }),
+      body: JSON.stringify({ action: 'request_otp', email }),
     });
     const result = await res.json();
-    if (result.valid) {
-      showStatus(id, result.role || 'user');
-      showLogoutButton();
-      hideLoginForm();
+
+    if (result.success) {
+      messageEl.style.color = 'green';
+      messageEl.textContent = 'Đã gửi mã xác nhận tới email. Vui lòng kiểm tra email.';
+      setTimeout(() => {
+        hideRegisterForm();
+        showRegisterOtpForm(email, password);
+      }, 1500);
     } else {
-      logout();
-      showLoginForm();
+      messageEl.style.color = 'red';
+      messageEl.textContent = result.message || 'Gửi mã OTP thất bại.';
     }
   } catch (e) {
     console.error(e);
-    showLoginForm();
+    messageEl.style.color = 'red';
+    messageEl.textContent = 'Lỗi kết nối, vui lòng thử lại.';
   }
 }
 
-// Tự động chạy kiểm tra đăng nhập khi script load
-checkAuth();
+// Xác nhận OTP và đăng ký
+async function verifyOtpForRegister(email, password) {
+  const otp = document.getElementById('register-otp')?.value.trim();
+  const messageEl = document.getElementById('register-otp-message');
+
+  if (!otp) {
+    messageEl.textContent = 'Vui lòng nhập mã OTP.';
+    return;
+  }
+
+  messageEl.style.color = 'black';
+  messageEl.textContent = 'Đang xác nhận...';
+
+  try {
+    const res = await fetch(AUTH_FILE_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'verify_otp', email, otp, password }),
+    });
+    const result = await res.json();
+
+    if (result.success) {
+      messageEl.style.color = 'green';
+      messageEl.textContent = 'Đăng ký thành công, bạn có thể đăng nhập ngay.';
+      setTimeout(() => {
+        hideRegisterOtpForm();
+        showLoginForm();
+      }, 2000);
+    } else {
+      messageEl.style.color = 'red';
+      messageEl.textContent = result.message || 'Xác nhận OTP thất bại.';
+    }
+  } catch (e) {
+    console.error(e);
+    messageEl.style.color = 'red';
+    messageEl.textContent = 'Lỗi kết nối, vui lòng thử lại.';
+  }
+}
+
+// Kiểm tra token còn hiệu lực không
+async function verifyToken(id, token) {
+  if (!id || !token) return false;
+  try {
+    const res = await fetch(AUTH_FILE_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'verify_token', email: id.toLowerCase(), token }),
+    });
+    const result = await res.json();
+    return result.success === true;
+  } catch {
+    return false;
+  }
+}
+
+// Đổi mật khẩu
+async function changePassword() {
+  const oldPassword = document.getElementById('old-password')?.value.trim();
+  const newPassword = document.getElementById('new-password')?.value.trim();
+  const confirmNewPassword = document.getElementById('confirm-new-password')?.value.trim();
+  const messageEl = document.getElementById('change-password-message');
+
+  if (!oldPassword || !newPassword || !confirmNewPassword) {
+    messageEl.textContent = 'Vui lòng nhập đủ thông tin.';
+    return;
+  }
+  if (newPassword !== confirmNewPassword) {
+    messageEl.textContent = 'Mật khẩu mới không khớp.';
+    return;
+  }
+
+  const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+  if (!auth.id || !auth.token) {
+    messageEl.textContent = 'Bạn cần đăng nhập trước.';
+    return;
+  }
+
+  messageEl.style.color = 'black';
+  messageEl.textContent = 'Đang xử lý...';
+
+  try {
+    const res = await fetch(AUTH_FILE_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'change_password',
+        email: auth.id.toLowerCase(),
+        token: auth.token,
+        oldPassword,
+        newPassword
+      }),
+    });
+    const result = await res.json();
+
+    if (result.success) {
+      messageEl.style.color = 'green';
+      messageEl.textContent = 'Đổi mật khẩu thành công.';
+      setTimeout(() => {
+        hideChangePasswordForm();
+      }, 2000);
+    } else {
+      messageEl.style.color = 'red';
+      messageEl.textContent = result.message || 'Đổi mật khẩu thất bại.';
+    }
+  } catch (e) {
+    console.error(e);
+    messageEl.style.color = 'red';
+    messageEl.textContent = 'Lỗi kết nối, vui lòng thử lại.';
+  }
+}
+
+// Khởi động kiểm tra đăng nhập (gọi lúc trang load)
+async function initAuth() {
+  const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+  if (auth.id && auth.token) {
+    const valid = await verifyToken(auth.id, auth.token);
+    if (valid) {
+      hideLoginForm();
+      showStatus(auth.id, auth.role);
+      showLogoutButton();
+      showChangePasswordButton();
+      return;
+    }
+  }
+  logout();
+  showLoginForm();
+}
+
+window.onload = () => {
+  initAuth();
+};
