@@ -8,12 +8,14 @@
   body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 1rem; }
   #app, #register-form, #otp-form, #login-form { max-width: 400px; margin: 2rem auto; background: white; padding: 1rem 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
   h2 { margin-top: 0; }
-  input, button { width: 100%; padding: 0.6rem; margin: 0.5rem 0; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem; box-sizing: border-box; }
+  input, button, select { width: 100%; padding: 0.6rem; margin: 0.5rem 0; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem; box-sizing: border-box; }
   button { background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
   button:hover { background: #218838; }
   p { margin: 0.5rem 0; }
   .link { color: #007bff; cursor: pointer; text-decoration: underline; }
-  #message { color: red; min-height: 18px; }
+  #message, #login-message, #reg-message, #otp-message { color: red; min-height: 18px; }
+  ul { padding-left: 1.2rem; }
+  li { margin-bottom: 0.4rem; }
 </style>
 </head>
 <body>
@@ -52,7 +54,7 @@
   <h3>Quản lý thu chi (demo đơn giản)</h3>
   <form id="transaction-form">
     <input type="text" id="trans-desc" placeholder="Mô tả" required />
-    <input type="number" id="trans-amount" placeholder="Số tiền" required />
+    <input type="number" id="trans-amount" placeholder="Số tiền" required min="0" step="any" />
     <select id="trans-type" required>
       <option value="" disabled selected>Loại giao dịch</option>
       <option value="income">Thu</option>
@@ -69,14 +71,14 @@
 </div>
 
 <script>
-const AUTH_FILE_URL = 'https://script.google.com/macros/s/AKfycbwqj7xIv9hHn2iEInti9VnNfMiQEmUluXqbsvouqfeMCj-6FIrnuSiqJKLt0NaEHCtMHA/exec'; // Thay YOUR_WEB_APP_ID thành URL GAS của bạn
+const AUTH_FILE_URL = 'https://script.google.com/macros/s/AKfycbxmfssIz0CDOd-VuzfMplbavEMiTQ5972XGVQYbqhiBJvlSYKl2xPNQQkgmyiY02cpsLg/exec'; // Thay URL deploy GAS của bạn
 
-// --- Biến trạng thái ---
+// Biến trạng thái
 let currentUser = null;
 let currentToken = null;
 let currentTransactions = [];
 
-// --- DOM elements ---
+// DOM elements
 const loginForm = document.getElementById('login-form');
 const registerForm = document.getElementById('register-form');
 const otpForm = document.getElementById('otp-form');
@@ -109,17 +111,20 @@ const incomeSumSpan = document.getElementById('income-sum');
 const expenseSumSpan = document.getElementById('expense-sum');
 const balanceSpan = document.getElementById('balance');
 
-// --- Hàm gọi API GAS ---
+// Gọi API GAS
 async function callAPI(data) {
-  const res = await fetch(AUTH_FILE_URL, {
-    method: 'POST',
-    body: JSON.stringify(data)
-     }
-  });
-  return res.json();
+  try {
+    const res = await fetch(AUTH_FILE_URL, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  } catch(e) {
+    return { success: false, message: 'Lỗi kết nối server' };
+  }
 }
 
-// --- Xử lý đăng ký gửi OTP ---
+// Đăng ký gửi OTP
 regSendOtpBtn.onclick = async () => {
   const email = regEmailInput.value.trim();
   const pass = regPasswordInput.value;
@@ -144,7 +149,6 @@ regSendOtpBtn.onclick = async () => {
   if (result.success) {
     regMessage.style.color = 'green';
     regMessage.textContent = 'Mã xác nhận đã được gửi tới email.';
-    // Chuyển sang form OTP
     showOtpForm(email, pass);
   } else {
     regMessage.textContent = result.message || 'Gửi mã thất bại.';
@@ -157,8 +161,6 @@ function showOtpForm(email, password) {
   otpForm.style.display = 'block';
   otpMessage.textContent = '';
   otpCodeInput.value = '';
-
-  // Lưu tạm email, password để xác thực sau
   otpForm.dataset.email = email;
   otpForm.dataset.password = password;
 }
@@ -195,7 +197,13 @@ verifyOtpBtn.onclick = async () => {
   }
 };
 
-// Quay lại đăng nhập
+// Chuyển giao diện
+document.getElementById('go-register').onclick = () => {
+  loginForm.style.display = 'none';
+  registerForm.style.display = 'block';
+  otpForm.style.display = 'none';
+  clearRegisterForm();
+};
 document.getElementById('go-login-1').onclick = () => {
   registerForm.style.display = 'none';
   otpForm.style.display = 'none';
@@ -208,7 +216,6 @@ document.getElementById('go-login-2').onclick = () => {
   clearRegisterForm();
 };
 
-// Xóa form đăng ký
 function clearRegisterForm() {
   regEmailInput.value = '';
   regPasswordInput.value = '';
@@ -268,20 +275,31 @@ function loadSession() {
 }
 
 // Hiển thị giao diện app chính
-function showApp() {
+async function showApp() {
   loginForm.style.display = 'none';
   registerForm.style.display = 'none';
   otpForm.style.display = 'none';
   appDiv.style.display = 'block';
   userEmailSpan.textContent = currentUser;
 
-  // Load dữ liệu giao dịch nếu có
+  // Kiểm tra token còn hợp lệ không
+  const tokenValidRes = await callAPI({ action: 'check_token', email: currentUser, token: currentToken });
+  if (!tokenValidRes.valid) {
+    logout();
+    alert('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.');
+    return;
+  }
+
   loadTransactions();
   renderTransactions();
 }
 
 // Đăng xuất
 logoutBtn.onclick = () => {
+  logout();
+};
+
+function logout() {
   currentUser = null;
   currentToken = null;
   currentTransactions = [];
@@ -291,9 +309,9 @@ logoutBtn.onclick = () => {
   loginEmailInput.value = '';
   loginPasswordInput.value = '';
   loginMessage.textContent = '';
-};
+}
 
-// Xử lý thêm giao dịch
+// Thêm giao dịch
 transactionForm.onsubmit = e => {
   e.preventDefault();
   const desc = transDescInput.value.trim();
@@ -307,13 +325,12 @@ transactionForm.onsubmit = e => {
   saveTransactions();
   renderTransactions();
 
-  // Reset form
   transDescInput.value = '';
   transAmountInput.value = '';
   transTypeSelect.value = '';
 };
 
-// Lưu giao dịch localStorage (phân biệt từng user)
+// Lưu giao dịch localStorage theo user
 function saveTransactions() {
   if (!currentUser) return;
   localStorage.setItem('transactions_' + currentUser, JSON.stringify(currentTransactions));
@@ -334,14 +351,14 @@ function loadTransactions() {
   }
 }
 
-// Hiển thị danh sách giao dịch + tổng kết
+// Hiển thị giao dịch & tổng kết
 function renderTransactions() {
   transactionList.innerHTML = '';
 
   let incomeSum = 0;
   let expenseSum = 0;
 
-  currentTransactions.forEach((t, i) => {
+  currentTransactions.forEach(t => {
     const li = document.createElement('li');
     li.textContent = `${new Date(t.date).toLocaleDateString()} - ${t.desc} - ${t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString()} VND`;
     transactionList.appendChild(li);
@@ -363,3 +380,7 @@ window.onload = () => {
     loginForm.style.display = 'block';
   }
 };
+</script>
+
+</body>
+</html>
