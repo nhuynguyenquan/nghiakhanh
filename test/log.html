@@ -113,8 +113,8 @@ const balanceSpan = document.getElementById('balance');
 async function callAPI(data) {
   const res = await fetch(AUTH_FILE_URL, {
     method: 'POST',
-    body: JSON.stringify(data),
-    headers: { 'Content-Type': 'application/json' }
+    body: JSON.stringify(data)
+     }
   });
   return res.json();
 }
