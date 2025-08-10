@@ -1,4 +1,4 @@
-const AUTH_FILE_URL = 'https://script.google.com/macros/s/AKfycbzPptR4KdWY7u1KcYTo3EF8dcVl9AMFgDcN7KuIxntjYsv9EnflE4ULF2mtkZ7gk1aD/exec';
+const AUTH_FILE_URL = 'https://script.google.com/macros/s/AKfycbw7pUKmPCq7WY9_bdqiALzOOkFF3x7eurzRUrJu8HxvUyoPwH0g4Y7XMUUiIzDUEgBZ1A/exec';
 
 // Cookie helpers
 function getCookie(name) {
@@ -46,9 +46,7 @@ function showLogoutButton() {
     border-radius:50%;background:#f55;color:#fff;border:none;
     cursor:pointer;box-shadow:0 1px 5px rgba(0,0,0,0.3);z-index:9999;
   `;
-  btn.onclick = () => {
-    logout();
-  };
+  btn.onclick = () => logout();
   document.body.appendChild(btn);
 }
 function hideLogoutButton() {
@@ -56,7 +54,7 @@ function hideLogoutButton() {
   if (btn) btn.remove();
 }
 
-// Đăng xuất (xóa cookie + localStorage, ẩn UI)
+// Đăng xuất
 function logout() {
   deleteCookie('token');
   deleteCookie('user_id');
@@ -81,7 +79,7 @@ function showLoginForm() {
 
   form.innerHTML = `
     <h2 style="margin:0 0 10px;">Đăng nhập</h2>
-    <input type="text" id="login-id" placeholder="Tên đăng nhập hoặc Email" autocomplete="username"
+    <input type="text" id="login-id" placeholder="Email" autocomplete="username"
       style="width:100%;padding:8px;margin-bottom:10px;" />
     <input type="password" id="login-password" placeholder="Mật khẩu" autocomplete="current-password"
       style="width:100%;padding:8px;margin-bottom:10px;" />
@@ -119,8 +117,10 @@ function showRegisterForm() {
 
   form.innerHTML = `
     <h2 style="margin:0 0 10px;">Đăng ký</h2>
-    <input type="text" id="register-id" placeholder="Tên đăng nhập hoặc Email" autocomplete="username"
+    <input type="text" id="register-id" placeholder="Email" autocomplete="username"
       style="width:100%;padding:8px;margin-bottom:10px;" />
+    <button id="request-otp" style="width:100%;padding:10px;background:#007bff;color:#fff;border:none;border-radius:5px;cursor:pointer;">Gửi mã OTP</button>
+    <input type="text" id="register-otp" placeholder="Nhập mã OTP" style="width:100%;padding:8px;margin:10px 0;" />
     <input type="password" id="register-password" placeholder="Mật khẩu"
       style="width:100%;padding:8px;margin-bottom:10px;" />
     <input type="password" id="register-password-confirm" placeholder="Nhập lại mật khẩu"
@@ -133,6 +133,7 @@ function showRegisterForm() {
 
   document.body.appendChild(form);
 
+  form.querySelector('#request-otp').onclick = requestOTP;
   form.querySelector('#register-submit').onclick = register;
   form.querySelector('#show-login').onclick = () => {
     hideRegisterForm();
@@ -144,44 +145,28 @@ function hideRegisterForm() {
   if (form) form.remove();
 }
 
-// Xử lý đăng nhập
-async function login() {
-  const id = document.getElementById('login-id')?.value.trim();
-  const password = document.getElementById('login-password')?.value.trim();
-  const messageEl = document.getElementById('login-message');
-  if (!id || !password) {
-    messageEl.textContent = 'Vui lòng nhập tên đăng nhập/email và mật khẩu.';
+// Gửi yêu cầu OTP
+async function requestOTP() {
+  const email = document.getElementById('register-id').value.trim();
+  const messageEl = document.getElementById('register-message');
+  if (!email || !email.includes('@')) {
+    messageEl.textContent = 'Vui lòng nhập email hợp lệ.';
     return;
   }
   messageEl.style.color = 'black';
-  messageEl.textContent = 'Đang kiểm tra...';
-
+  messageEl.textContent = 'Đang gửi mã OTP...';
   try {
     const res = await fetch(AUTH_FILE_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'login', id, password }),
+      body: JSON.stringify({ action: 'request_otp', email }),
     });
     const result = await res.json();
-
     if (result.success) {
-      setCookie('token', result.token);
-      setCookie('user_id', result.id);
-
-      localStorage.setItem('auth', JSON.stringify({
-        id: result.id,
-        token: result.token,
-        role: result.role,
-        timestamp: Date.now(),
-      }));
-
       messageEl.style.color = 'green';
-      messageEl.textContent = 'Đăng nhập thành công!';
-      hideLoginForm();
-      showStatus(result.id, result.role);
-      showLogoutButton();
+      messageEl.textContent = 'Mã OTP đã được gửi đến email của bạn.';
     } else {
       messageEl.style.color = 'red';
-      messageEl.textContent = result.message || 'Đăng nhập thất bại.';
+      messageEl.textContent = result.message || 'Gửi mã OTP thất bại.';
     }
   } catch (e) {
     console.error(e);
@@ -190,14 +175,15 @@ async function login() {
   }
 }
 
-// Xử lý đăng ký
+// Xử lý đăng ký với OTP
 async function register() {
-  const id = document.getElementById('register-id')?.value.trim();
-  const password = document.getElementById('register-password')?.value.trim();
-  const passwordConfirm = document.getElementById('register-password-confirm')?.value.trim();
+  const email = document.getElementById('register-id').value.trim();
+  const otp = document.getElementById('register-otp').value.trim();
+  const password = document.getElementById('register-password').value.trim();
+  const passwordConfirm = document.getElementById('register-password-confirm').value.trim();
   const messageEl = document.getElementById('register-message');
 
-  if (!id || !password || !passwordConfirm) {
+  if (!email || !otp || !password || !passwordConfirm) {
     messageEl.textContent = 'Vui lòng nhập đủ thông tin.';
     return;
   }
@@ -207,15 +193,14 @@ async function register() {
   }
 
   messageEl.style.color = 'black';
-  messageEl.textContent = 'Đang gửi yêu cầu đăng ký...';
+  messageEl.textContent = 'Đang xác thực...';
 
   try {
     const res = await fetch(AUTH_FILE_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'register', id, password }),
+      body: JSON.stringify({ action: 'verify_otp', email, otp, password }),
     });
     const result = await res.json();
-
     if (result.success) {
       messageEl.style.color = 'green';
       messageEl.textContent = 'Đăng ký thành công! Bạn có thể đăng nhập ngay.';
@@ -234,47 +219,73 @@ async function register() {
   }
 }
 
-// Kiểm tra phiên đăng nhập khi load trang
-async function checkLogin() {
-  const saved = localStorage.getItem('auth');
-  if (saved) {
-    const { id, token, role, timestamp } = JSON.parse(saved);
-    const maxAge = 90 * 24 * 60 * 60 * 1000; // 90 ngày
-    if (Date.now() - timestamp < maxAge) {
-      hideLoginForm();
-      showStatus(id, role);
-      showLogoutButton();
-      return;
-    } else {
-      localStorage.removeItem('auth');
-    }
-  }
+// Đăng nhập
+async function login() {
+  const email = document.getElementById('login-id').value.trim();
+  const password = document.getElementById('login-password').value.trim();
+  const messageEl = document.getElementById('login-message');
 
-  const token = getCookie('token');
-  const userId = getCookie('user_id');
-  if (!token || !userId) {
-    hideStatus();
-    hideLogoutButton();
-    showLoginForm();
+  if (!email || !password) {
+    messageEl.textContent = 'Vui lòng nhập email và mật khẩu.';
     return;
   }
 
+  messageEl.style.color = 'black';
+  messageEl.textContent = 'Đang đăng nhập...';
+
   try {
-    const res = await fetch(`${AUTH_FILE_URL}?action=check_token&id=${encodeURIComponent(userId)}&token=${encodeURIComponent(token)}`);
+    const res = await fetch(AUTH_FILE_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'login', email, password }),
+    });
+    const result = await res.json();
+    if (result.success) {
+      messageEl.style.color = 'green';
+      messageEl.textContent = 'Đăng nhập thành công.';
+      // Lưu token & user id cookie + localStorage
+      setCookie('token', result.token, 7);
+      setCookie('user_id', result.email, 7);
+      localStorage.setItem('auth', JSON.stringify({ id: result.email, token: result.token, role: result.role }));
+      hideLoginForm();
+      showStatus(result.email, result.role);
+      showLogoutButton();
+      // Có thể gọi hàm load dữ liệu user hoặc redirect
+    } else {
+      messageEl.style.color = 'red';
+      messageEl.textContent = result.message || 'Đăng nhập thất bại.';
+    }
+  } catch (e) {
+    console.error(e);
+    messageEl.style.color = 'red';
+    messageEl.textContent = 'Lỗi kết nối, vui lòng thử lại.';
+  }
+}
+
+// Kiểm tra trạng thái đăng nhập khi load trang
+async function checkAuth() {
+  const auth = localStorage.getItem('auth');
+  if (!auth) {
+    showLoginForm();
+    return;
+  }
+  try {
+    const { id, token } = JSON.parse(auth);
+    if (!id || !token) {
+      showLoginForm();
+      return;
+    }
+    const res = await fetch(AUTH_FILE_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'check_token', email: id, token }),
+    });
     const result = await res.json();
     if (result.valid) {
-      hideLoginForm();
-      showStatus(userId, result.role);
+      showStatus(id, result.role || 'user');
       showLogoutButton();
-
-      localStorage.setItem('auth', JSON.stringify({
-        id: userId,
-        token,
-        role: result.role,
-        timestamp: Date.now(),
-      }));
+      hideLoginForm();
     } else {
       logout();
+      showLoginForm();
     }
   } catch (e) {
     console.error(e);
@@ -282,4 +293,5 @@ async function checkLogin() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', checkLogin);
+// Tự động chạy kiểm tra đăng nhập khi script load
+checkAuth();
