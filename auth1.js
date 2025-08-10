@@ -46,9 +46,7 @@ function showLogoutButton() {
     border-radius:50%;background:#f55;color:#fff;border:none;
     cursor:pointer;box-shadow:0 1px 5px rgba(0,0,0,0.3);z-index:9999;
   `;
-  btn.onclick = () => {
-    logout();
-  };
+  btn.onclick = () => logout();
   document.body.appendChild(btn);
 }
 function hideLogoutButton() {
@@ -75,10 +73,10 @@ function hideChangePasswordButton() {
   if (btn) btn.remove();
 }
 
-// Đăng xuất (xóa cookie + localStorage, ẩn UI)
+// Đăng xuất
 function logout() {
   deleteCookie('token');
-  deleteCookie('user_id'); // lưu id, không phải email nữa
+  deleteCookie('user_id'); // lưu id, không phải email
   localStorage.removeItem('auth');
   hideStatus();
   hideLogoutButton();
@@ -133,13 +131,13 @@ function showRegisterForm() {
   form.style = `
     position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);
     background:#fff;padding:20px;border:1px solid #ccc;border-radius:10px;
-    box-shadow:0 2px 10px rgba(0,0,0,0.2);z-index:10000;width:300px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.2);z-index:10000;width:320px;
     font-family:sans-serif;
   `;
 
   form.innerHTML = `
     <h2 style="margin:0 0 10px;">Đăng ký</h2>
-    <input type="text" id="register-id" placeholder="Tên đăng nhập (ID)" autocomplete="username"
+    <input type="text" id="register-id" placeholder="Tên đăng nhập (id)" autocomplete="username"
       style="width:100%;padding:8px;margin-bottom:10px;" />
     <input type="email" id="register-email" placeholder="Email" autocomplete="email"
       style="width:100%;padding:8px;margin-bottom:10px;" />
@@ -166,7 +164,7 @@ function hideRegisterForm() {
   if (form) form.remove();
 }
 
-// Form nhập OTP sau khi gửi mã
+// Form nhập OTP
 function showRegisterOtpForm(id, email, password) {
   if (document.getElementById('register-otp-form')) return;
 
