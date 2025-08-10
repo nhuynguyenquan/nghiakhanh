@@ -1,4 +1,4 @@
-const AUTH_FILE_URL = 'https://script.google.com/macros/s/AKfycbyb8wHK_KskQ8y0unBu03kGDJ9I41praMqp6jjQLmNDp2HELTWcpObsV91Nr70C7hXMRA/exec';
+const AUTH_FILE_URL = 'https://script.google.com/macros/s/AKfycbw-Z_Cq_sSIcMaJ-zTy4TM4X7zT-QZ3D0hI4oSldoqXCvOznRDfTpahwDIz3i1w6nhxcQ/exec';
 
 // Cookie helpers
 function getCookie(name) {
@@ -78,7 +78,7 @@ function hideChangePasswordButton() {
 // Đăng xuất (xóa cookie + localStorage, ẩn UI)
 function logout() {
   deleteCookie('token');
-  deleteCookie('user_id');
+  deleteCookie('user_id'); // lưu id, không phải email nữa
   localStorage.removeItem('auth');
   hideStatus();
   hideLogoutButton();
@@ -139,7 +139,9 @@ function showRegisterForm() {
 
   form.innerHTML = `
     <h2 style="margin:0 0 10px;">Đăng ký</h2>
-    <input type="text" id="register-id" placeholder="Email" autocomplete="username"
+    <input type="text" id="register-id" placeholder="Tên đăng nhập (ID)" autocomplete="username"
+      style="width:100%;padding:8px;margin-bottom:10px;" />
+    <input type="email" id="register-email" placeholder="Email" autocomplete="email"
       style="width:100%;padding:8px;margin-bottom:10px;" />
     <input type="password" id="register-password" placeholder="Mật khẩu"
       style="width:100%;padding:8px;margin-bottom:10px;" />
@@ -165,7 +167,7 @@ function hideRegisterForm() {
 }
 
 // Form nhập OTP sau khi gửi mã
-function showRegisterOtpForm(email, password) {
+function showRegisterOtpForm(id, email, password) {
   if (document.getElementById('register-otp-form')) return;
 
   const form = document.createElement('div');
@@ -190,7 +192,7 @@ function showRegisterOtpForm(email, password) {
 
   document.body.appendChild(form);
 
-  form.querySelector('#register-otp-submit').onclick = () => verifyOtpForRegister(email, password);
+  form.querySelector('#register-otp-submit').onclick = () => verifyOtpForRegister(id, email, password);
   form.querySelector('#cancel-register-otp').onclick = () => {
     hideRegisterOtpForm();
     showRegisterForm();
@@ -240,11 +242,11 @@ function hideChangePasswordForm() {
 
 // Xử lý đăng nhập
 async function login() {
-  const id = document.getElementById('login-id')?.value.trim();
+  const id = document.getElementById('login-id')?.value.trim().toLowerCase();
   const password = document.getElementById('login-password')?.value.trim();
   const messageEl = document.getElementById('login-message');
   if (!id || !password) {
-    messageEl.textContent = 'Vui lòng nhập tên đăng nhập/email và mật khẩu.';
+    messageEl.textContent = 'Vui lòng nhập tên đăng nhập và mật khẩu.';
     return;
   }
   messageEl.style.color = 'black';
@@ -253,16 +255,16 @@ async function login() {
   try {
     const res = await fetch(AUTH_FILE_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'login', email: id.toLowerCase(), password }),
+      body: JSON.stringify({ action: 'login', id, password }),
     });
     const result = await res.json();
 
     if (result.success) {
       setCookie('token', result.token);
-      setCookie('user_id', result.email);
+      setCookie('user_id', result.id);
 
       localStorage.setItem('auth', JSON.stringify({
-        id: result.email,
+        id: result.id,
         token: result.token,
         role: result.role,
         timestamp: Date.now(),
@@ -271,7 +273,7 @@ async function login() {
       messageEl.style.color = 'green';
       messageEl.textContent = 'Đăng nhập thành công!';
       hideLoginForm();
-      showStatus(result.email, result.role);
+      showStatus(result.id, result.role);
       showLogoutButton();
       showChangePasswordButton();
     } else {
@@ -287,12 +289,13 @@ async function login() {
 
 // Gửi mã OTP khi đăng ký
 async function sendOtpForRegister() {
-  const email = document.getElementById('register-id')?.value.trim().toLowerCase();
+  const id = document.getElementById('register-id')?.value.trim().toLowerCase();
+  const email = document.getElementById('register-email')?.value.trim().toLowerCase();
   const password = document.getElementById('register-password')?.value.trim();
   const passwordConfirm = document.getElementById('register-password-confirm')?.value.trim();
   const messageEl = document.getElementById('register-message');
 
-  if (!email || !password || !passwordConfirm) {
+  if (!id || !email || !password || !passwordConfirm) {
     messageEl.textContent = 'Vui lòng nhập đủ thông tin.';
     return;
   }
@@ -307,7 +310,7 @@ async function sendOtpForRegister() {
   try {
     const res = await fetch(AUTH_FILE_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'request_otp', email }),
+      body: JSON.stringify({ action: 'request_otp', id, email }),
     });
     const result = await res.json();
 
@@ -316,7 +319,7 @@ async function sendOtpForRegister() {
       messageEl.textContent = 'Đã gửi mã xác nhận tới email. Vui lòng kiểm tra email.';
       setTimeout(() => {
         hideRegisterForm();
-        showRegisterOtpForm(email, password);
+        showRegisterOtpForm(id, email, password);
       }, 1500);
     } else {
       messageEl.style.color = 'red';
@@ -330,7 +333,7 @@ async function sendOtpForRegister() {
 }
 
 // Xác nhận OTP và đăng ký
-async function verifyOtpForRegister(email, password) {
+async function verifyOtpForRegister(id, email, password) {
   const otp = document.getElementById('register-otp')?.value.trim();
   const messageEl = document.getElementById('register-otp-message');
 
@@ -345,7 +348,7 @@ async function verifyOtpForRegister(email, password) {
   try {
     const res = await fetch(AUTH_FILE_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'verify_otp', email, otp, password }),
+      body: JSON.stringify({ action: 'verify_otp', id, email, otp, password }),
     });
     const result = await res.json();
 
@@ -373,7 +376,7 @@ async function verifyToken(id, token) {
   try {
     const res = await fetch(AUTH_FILE_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'verify_token', email: id.toLowerCase(), token }),
+      body: JSON.stringify({ action: 'verify_token', id, token }),
     });
     const result = await res.json();
     return result.success === true;
@@ -412,7 +415,7 @@ async function changePassword() {
       method: 'POST',
       body: JSON.stringify({
         action: 'change_password',
-        email: auth.id.toLowerCase(),
+        id: auth.id,
         token: auth.token,
         oldPassword,
         newPassword
