@@ -12,17 +12,29 @@
       background: #f4f6f8;
     }
     nav {
-      display: flex;
-      justify-content: center;
-      background-color: #d9a382;
-      padding: 10px;
-    }
-    nav a {
-      color: white;
-      text-decoration: none;
-      margin: 0 15px;
-      font-size: 18px;
-    }
+  display: flex;
+  flex-wrap: wrap;           /* Cho phép xuống dòng */
+  justify-content: center;
+  background-color: #d9a382;
+  padding: 8px 5px;          /* giảm padding cho mobile */
+  gap: 8px;                  /* khoảng cách giữa link */
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  padding: 6px 10px;
+  text-align: center;
+  flex-shrink: 0;            /* Không bị co nhỏ */
+}
+
+@media (max-width: 480px) {
+  nav a {
+    font-size: 14px;         /* chữ nhỏ hơn trên điện thoại nhỏ */
+    padding: 4px 6px;
+  }
+}
     h2 {
       text-align: center;
       color: #d35400;
