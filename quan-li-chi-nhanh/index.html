@@ -34,17 +34,29 @@
     td { border: none; padding: 4px 0; }
   }
   nav {
-    display: flex;
-    justify-content: center;
-    background-color: #d9a382;
-    padding: 10px;
-  }
+  display: flex;
+  flex-wrap: wrap;           /* Cho phép xuống dòng */
+  justify-content: center;
+  background-color: #d9a382;
+  padding: 8px 5px;          /* giảm padding cho mobile */
+  gap: 8px;                  /* khoảng cách giữa link */
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  padding: 6px 10px;
+  text-align: center;
+  flex-shrink: 0;            /* Không bị co nhỏ */
+}
+
+@media (max-width: 480px) {
   nav a {
-    color: white;
-    text-decoration: none;
-    margin: 0 15px;
-    font-size: 18px;
+    font-size: 14px;         /* chữ nhỏ hơn trên điện thoại nhỏ */
+    padding: 4px 6px;
   }
+}
   .month-section { border: 1px solid #ccc; border-radius: 6px; margin: 1rem 0; background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
   .month-header { padding: 10px; background: #d9a382; color: white; cursor: pointer; font-weight: bold; }
   .month-content { display: none; padding: 10px; overflow-x: auto; }
