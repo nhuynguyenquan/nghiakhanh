@@ -58,31 +58,31 @@
     display: none;
   }
   tr {
-  margin-bottom: 0.2rem; 
-  border: 1px solid #ddd;
-  border-radius: 3px;
-  padding: 2px;
-  background: white;
-}
+    margin-bottom: 0.1rem; /* Ngắn hơn */
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    padding: 3px;
+    background: white;
+  }
   td {
-  display: flex;
-  flex-direction: row;      /* dữ liệu + nhãn trên cùng 1 hàng */
-  justify-content: center;  /* dữ liệu căn giữa */
-  align-items: center;      /* căn giữa dọc */
-  border: none;
-  padding: 2px 4px;         /* giảm padding */
-  min-height: 24px;         /* cao vừa đủ */
-  text-align: center;
-  white-space: nowrap;       /* không xuống dòng */
-}
-td::before {
-  content: attr(data-label);
-  font-weight: bold;
-  color: #555;
-  margin-left: 6px;          /* cách dữ liệu một chút */
-  text-align: right;
-  flex-shrink: 0;            /* không bị co lại */
-}
+    display: flex;
+    flex-direction: column;  /* Nhãn trên, dữ liệu dưới */
+    align-items: center;     /* Căn giữa ngang */
+    justify-content: center; /* Căn giữa dọc */
+    border: none;
+    padding: 2px 0;          /* Ngắn hơn */
+    min-height: 18px;        /* Chiều cao ô ngắn */
+    text-align: center;      /* Căn giữa text */
+    white-space: normal;
+  }
+  td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 2px;
+    text-align: left;
+    width: 100%;
+  }
   input, button, select {
     width: 100%;
     box-sizing: border-box;
