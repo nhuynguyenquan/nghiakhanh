@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chọn món - Quán cà phê Nhụy Nguyên</title>
+  <style>
+    body {
+      font-family: "Times New Roman", serif;
+      background: #f8fafc;
+      margin: 0; padding: 0;
+    }
+    header {
+      text-align: center;
+      padding: 16px;
+      background: #67a6da;
+      color: white;
+    }
+    h1 { margin: 0; }
+    .menu {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+    }
+    .item {
+      display: grid;
+      grid-template-columns: 80px 1fr auto;
+      align-items: center;
+      background: #eef6ff;
+      border: 2px solid #7bb4e3;
+      border-radius: 12px;
+      padding: 8px;
+    }
+    .thumb {
+      width: 70px; height: 55px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .info { padding: 0 10px; }
+    .label { font-size: 18px; font-weight: bold; }
+    .price { color: #b91c1c; font-weight: bold; }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn {
+      background: #67a6da;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 18px;
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    footer {
+      background: #fff;
+      padding: 16px;
+      border-top: 2px solid #ddd;
+      position: sticky;
+      bottom: 0;
+    }
+    .cart {
+      font-size: 16px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Menu chọn món</h1>
+    <p>Nhụy Nguyên Coffee</p>
+  </header>
+
+  <section class="menu" id="menu">
+    <!-- Món ăn sẽ được JS render -->
+  </section>
+
+  <footer>
+    <div class="cart" id="cart">Chưa chọn món nào.</div>
+  </footer>
+
+  <script>
+    const menuItems = [
+      { name: "Cà phê muối", price: 35000, img: "https://picsum.photos/seed/cfmuoi/160/120" },
+      { name: "Cà phê đen", price: 25000, img: "https://picsum.photos/seed/cfden/160/120" },
+      { name: "Cà phê sữa", price: 30000, img: "https://picsum.photos/seed/cfsua/160/120" },
+      { name: "Bò húc", price: 20000, img: "https://picsum.photos/seed/bohuc/160/120" },
+      { name: "Number 1", price: 20000, img: "https://picsum.photos/seed/num1/160/120" },
+      { name: "Nước lọc", price: 10000, img: "https://picsum.photos/seed/nuoc/160/120" },
+      { name: "Trà xanh 0 độ", price: 15000, img: "https://picsum.photos/seed/tx/160/120" },
+    ];
+
+    const cart = {};
+    const menuEl = document.getElementById("menu");
+    const cartEl = document.getElementById("cart");
+
+    function renderMenu() {
+      menuEl.innerHTML = "";
+      menuItems.forEach((item, idx) => {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <img class="thumb" src="${item.img}" alt="${item.name}">
+          <div class="info">
+            <div class="label">${item.name}</div>
+            <div class="price">${item.price.toLocaleString()}đ</div>
+          </div>
+          <div class="controls">
+            <button class="btn" onclick="updateCart(${idx}, -1)">-</button>
+            <span id="qty-${idx}">0</span>
+            <button class="btn" onclick="updateCart(${idx}, 1)">+</button>
+          </div>
+        `;
+        menuEl.appendChild(div);
+      });
+    }
+
+    function updateCart(idx, delta) {
+      const item = menuItems[idx];
+      cart[item.name] = (cart[item.name] || 0) + delta;
+      if (cart[item.name] <= 0) delete cart[item.name];
+      document.getElementById(`qty-${idx}`).innerText = cart[item.name] || 0;
+      renderCart();
+    }
+
+    function renderCart() {
+      let totalQty = 0, totalPrice = 0;
+      let text = "";
+      for (let name in cart) {
+        const qty = cart[name];
+        const item = menuItems.find(i => i.name === name);
+        totalQty += qty;
+        totalPrice += qty * item.price;
+        text += `${name} x${qty} – ${(qty * item.price).toLocaleString()}đ<br>`;
+      }
+      if (!totalQty) cartEl.innerHTML = "Chưa chọn món nào.";
+      else cartEl.innerHTML = text + `<br><b>Tổng: ${totalQty} món – ${totalPrice.toLocaleString()}đ</b>`;
+    }
+
+    renderMenu();
+  </script>
+</body>
+</html>
