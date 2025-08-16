@@ -1,145 +1,102 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chọn món</title>
-<style>
-  body { font-family: sans-serif; padding: 1rem; background: #f9f9f9; }
-  h1 { color: #ff914d; }
-  .menu-item { 
-    margin: 0.5rem 0; 
-    padding: 0.5rem; 
-    background: #fff; 
-    border-radius: 5px; 
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
-    display:flex; 
-    justify-content:space-between;
-    align-items:center;
-  }
-  button { 
-    margin-left: 1rem; 
-    padding: 0.3rem 0.8rem;
-    border: none;
-    border-radius: 4px;
-    background: #ff914d;
-    color: #fff;
-    cursor: pointer;
-  }
-  button:hover { background:#e67e22; }
-  #cart { 
-    margin-top: 1rem; 
-    background: #fff; 
-    padding: 0.5rem; 
-    border-radius: 5px; 
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Menu cà phê Nhụy Nguyên</title>
+  <style>
+    :root{
+      --accent:#7bb4e3;
+      --accent-dark:#5a8fb9;
+      --text:#1f2937;
+      --paper:#fffdf7;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:#eceff3; color:var(--text);
+      font: 16px/1.45 "Times New Roman", Georgia, serif;
+      display:grid; place-items:center; padding:24px;
+    }
+
+    .page{
+      width:210mm; height:297mm; background:var(--paper);
+      position:relative; box-shadow:0 10px 30px rgba(0,0,0,.15);
+      padding:20mm 18mm;
+    }
+    @media print{
+      body{background:var(--paper); box-shadow:none; padding:0}
+      .page{box-shadow:none; margin:0; width:auto; height:auto; page-break-after:always}
+    }
+
+    .border{position:absolute; inset:8mm; pointer-events:none}
+    .border:before, .border:after{content:""; position:absolute; inset:0; border-radius:8mm}
+    .border:before{border: 3px solid #b8842b}
+    .border:after{inset:4mm; border: 3px solid #f1d08a}
+
+    header{ text-align:center; margin-top:8mm; margin-bottom:6mm; }
+    h1{ font-size:34px; margin:0; color:#67a6da; }
+
+    .menu{ margin-top:8mm; display:grid; gap:10px; }
+    .item{
+      display:grid; grid-template-columns:56px 1fr auto; align-items:center; gap:12px;
+      background: #e7f0f9; border:2px solid var(--accent); border-radius:12px;
+      padding:6px 10px; 
+    }
+    .item:nth-child(odd){ background:#eef6ff }
+    .thumb{
+      width:56px; height:42px; border-radius:8px; object-fit:cover;
+      border:2px solid #fff; outline:2px solid var(--accent-dark);
+    }
+    .label{ font-size:18px; font-weight:bold; color:#1f3d57 }
+    .price{ font-size:18px; font-weight:bold; color:#b91c1c; }
+
+    footer{ position:absolute; left:0; right:0; bottom:18mm; display:flex; align-items:flex-end; justify-content:space-between; padding:0 18mm; }
+    .thanks{ font-style:italic; font-weight:600 }
+  </style>
 </head>
 <body>
-<h1 id="shop-name">Menu</h1>
-<div id="menu-list"></div>
+  <main class="page" role="document">
+    <div class="border" aria-hidden="true"></div>
 
-<div id="cart">
-  <h3>Giỏ hàng</h3>
-  <div id="cart-items"></div>
-  <button onclick="submitOrder()">Gửi đơn</button>
-</div>
+    <header>
+      <h1>Các món phục vụ</h1>
+      <div class="subtitle">Menu gợi ý – Quý khách có thể thay đổi món</div>
+    </header>
 
-<script>
-let cart = [];
+    <section class="menu" aria-label="Danh sách món" id="menuList">
+      <!-- Danh sách món sẽ được render bằng JS -->
+    </section>
 
-// Lấy param trên URL
-function getParam(name) {
-  return new URLSearchParams(window.location.search).get(name);
-}
-const shopId = getParam('id');
-const token = getParam('token');
-if(!shopId || !token){
-  document.body.innerHTML = "<p>Thiếu ID quán hoặc token!</p>";
-  throw new Error("Thiếu ID quán hoặc token");
-}
+    <footer>
+      <div class="thanks">Cảm ơn quý khách. Chúc quý khách một ngày vui vẻ!</div>
+    </footer>
+  </main>
 
-// Callback JSONP từ GAS trả về menu
-function loadMenuJSONP(data){
-  if(!data || !data.shops) {
-    document.body.innerHTML = "<p>Không lấy được menu!</p>";
-    return;
-  }
-  const shop = data.shops.find(s => s.id === shopId);
-  if(!shop){
-    document.body.innerHTML = "<p>Quán không tồn tại!</p>";
-    return;
-  }
-  document.getElementById('shop-name').textContent = shop.name;
+  <script>
+    // Danh sách món DEMO
+    const demoMenu = [
+      {id:"cf-muoi", name:"Cà phê muối", price:15000, img:"https://picsum.photos/seed/ca-phe-muoi/160/120"},
+      {id:"cf-den", name:"Cà phê đen", price:15000, img:"https://picsum.photos/seed/ca-phe-den/160/120"},
+      {id:"cf-sua", name:"Cà phê sữa", price:20000, img:"https://picsum.photos/seed/ca-phe-sua/160/120"},
+      {id:"bo-huc", name:"Bò húc", price:15000, img:"https://picsum.photos/seed/bo-huc/160/120"},
+      {id:"number1", name:"Number 1", price:15000, img:"https://picsum.photos/seed/number1/160/120"},
+      {id:"nuoc-loc", name:"Nước lọc", price:5000, img:"https://picsum.photos/seed/nuoc-loc/160/120"},
+      {id:"tra-xanh", name:"Trà xanh 0 độ", price:15000, img:"https://picsum.photos/seed/tra-xanh/160/120"},
+    ];
 
-  const menuList = document.getElementById('menu-list');
-  shop.menu.forEach(item => {
-    const div = document.createElement('div');
-    div.className = "menu-item";
-    div.innerHTML = `<span>${item.item} - ${item.price}₫</span>
-                     <button data-name="${item.item}" data-price="${item.price}">Chọn</button>`;
-    div.querySelector('button').addEventListener('click', function(){
-      addToCart(this.dataset.name, parseInt(this.dataset.price));
+    const menuList = document.getElementById("menuList");
+
+    demoMenu.forEach(item=>{
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <img class="thumb" src="${item.img}" alt="${item.name}" />
+        <div class="label">${item.name}</div>
+        <div class="price">${item.price.toLocaleString()}đ</div>
+      `;
+      menuList.appendChild(div);
     });
-    menuList.appendChild(div);
-  });
-}
-
-// Thêm món vào giỏ
-function addToCart(name, price){
-  name = decodeURIComponent(name);
-  const found = cart.find(i=>i.name===name);
-  if(found) found.quantity +=1;
-  else cart.push({name, price, quantity:1});
-  renderCart();
-}
-
-function renderCart(){
-  const div = document.getElementById('cart-items');
-  div.innerHTML = '';
-  let total = 0;
-  cart.forEach(it=>{
-    const p = document.createElement('p');
-    p.textContent = `${it.name} x${it.quantity} - ${it.price*it.quantity}₫`;
-    div.appendChild(p);
-    total += it.price*it.quantity;
-  });
-  if(cart.length){
-    const t = document.createElement('p');
-    t.innerHTML = `<strong>Tổng: ${total}₫</strong>`;
-    div.appendChild(t);
-  }
-}
-
-// Load menu từ GAS (JSONP)
-function loadMenu(){
-  const script = document.createElement('script');
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbzfcZpxQtpl1Ag8UW4kOy_ua8DkziIiiRP0irp3qPE1HhvInHjv7UoYEQ3oaSalGLUo_w/exec";
-  script.src = `${GAS_URL}?callback=loadMenuJSONP&id=${shopId}`;
-  document.body.appendChild(script);
-}
-
-// Gửi đơn hàng về GAS
-function submitOrder(){
-  if(!cart.length){ alert('Chưa chọn món!'); return; }
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbxaAGBglJr0xfin_Sqb1SejgAgTCJ6fTB1uv_e0W0o7SZ-uPJ0U1hPAM8O00fLL4c8lLg/exec"; 
-
-  const payload = {id: shopId, token, items: cart};
-
-  fetch(GAS_URL, {
-    method:'POST',
-    mode:'no-cors',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(payload)
-  }).catch(()=>{});
-
-  alert('Đơn đã gửi!');
-  cart=[];
-  renderCart();
-}
-
-loadMenu();
-</script>
+  </script>
 </body>
 </html>
