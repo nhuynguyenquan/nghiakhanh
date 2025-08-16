@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chọn món</title>
+  <style>
+    body { font-family: sans-serif; background: #f9f9f9; padding: 1rem; }
+    h1 { color: #ff914d; }
+    .menu-item { display: flex; justify-content: space-between; margin: 0.5rem 0; padding: 0.5rem; background: #fff; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);}
+    .menu-item button { background: #ff914d; color: #fff; border: none; border-radius: 3px; padding: 0.3rem 0.6rem; cursor: pointer; }
+    .cart { margin-top: 1rem; }
+    .cart-item { display: flex; justify-content: space-between; margin: 0.3rem 0; }
+    .cart-total { font-weight: bold; margin-top: 0.5rem; }
+    button.checkout { background: #4caf50; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+
+<h1>Menu quán</h1>
+<div id="menu"></div>
+
+<h2>Giỏ hàng</h2>
+<div class="cart" id="cart"></div>
+<div class="cart-total" id="total"></div>
+<button class="checkout" id="checkout">Thanh toán</button>
+
+<script>
+let menuItems = [];
+let cart = [];
+
+// Load menu từ menu.json
+async function loadMenu() {
+  const res = await fetch('menu.json');
+  const data = await res.json();
+  menuItems = data.items;
+  renderMenu();
+}
+
+function renderMenu() {
+  const menuDiv = document.getElementById('menu');
+  menuDiv.innerHTML = '';
+  menuItems.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'menu-item';
+    div.innerHTML = `
+      <span>${item.name} - ${item.price.toLocaleString()}đ</span>
+      <button onclick="addToCart('${item.id}')">Thêm</button>
+    `;
+    menuDiv.appendChild(div);
+  });
+}
+
+function addToCart(id) {
+  const item = menuItems.find(i => i.id === id);
+  const exist = cart.find(c => c.id === id);
+  if (exist) {
+    exist.quantity++;
+  } else {
+    cart.push({ ...item, quantity: 1 });
+  }
+  renderCart();
+}
+
+function renderCart() {
+  const cartDiv = document.getElementById('cart');
+  cartDiv.innerHTML = '';
+  let total = 0;
+  cart.forEach(item => {
+    total += item.price * item.quantity;
+    const div = document.createElement('div');
+    div.className = 'cart-item';
+    div.innerHTML = `
+      <span>${item.name} x ${item.quantity}</span>
+      <span>${(item.price*item.quantity).toLocaleString()}đ</span>
+    `;
+    cartDiv.appendChild(div);
+  });
+  document.getElementById('total').innerText = `Tổng: ${total.toLocaleString()}đ`;
+}
+
+// Thanh toán (ví dụ gửi lên server)
+document.getElementById('checkout').addEventListener('click', () => {
+  if(cart.length===0) { alert("Chưa chọn món!"); return; }
+  const token = localStorage.getItem('token') || ''; // lấy token từ localStorage
+  fetch('https://script.google.com/macros/s/WEB_APP_ID/exec', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ token: token, order: cart })
+  })
+  .then(res=>res.json())
+  .then(data=>{
+    alert('Đặt món thành công!');
+    cart = [];
+    renderCart();
+  });
+});
+
+loadMenu();
+</script>
+
+</body>
+</html>
