@@ -1,145 +1,145 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chọn món - Quán cà phê Nhụy Nguyên</title>
-  <style>
-    body {
-      font-family: "Times New Roman", serif;
-      background: #f8fafc;
-      margin: 0; padding: 0;
-    }
-    header {
-      text-align: center;
-      padding: 16px;
-      background: #67a6da;
-      color: white;
-    }
-    h1 { margin: 0; }
-    .menu {
-      display: grid;
-      gap: 12px;
-      padding: 16px;
-    }
-    .item {
-      display: grid;
-      grid-template-columns: 80px 1fr auto;
-      align-items: center;
-      background: #eef6ff;
-      border: 2px solid #7bb4e3;
-      border-radius: 12px;
-      padding: 8px;
-    }
-    .thumb {
-      width: 70px; height: 55px;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-    .info { padding: 0 10px; }
-    .label { font-size: 18px; font-weight: bold; }
-    .price { color: #b91c1c; font-weight: bold; }
-    .controls {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .btn {
-      background: #67a6da;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 4px 8px;
-      cursor: pointer;
-      font-size: 18px;
-    }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    footer {
-      background: #fff;
-      padding: 16px;
-      border-top: 2px solid #ddd;
-      position: sticky;
-      bottom: 0;
-    }
-    .cart {
-      font-size: 16px;
-      font-weight: bold;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chọn món</title>
+<style>
+  body { font-family: sans-serif; padding: 1rem; background: #f9f9f9; }
+  h1 { color: #ff914d; }
+  .menu-item { 
+    margin: 0.5rem 0; 
+    padding: 0.5rem; 
+    background: #fff; 
+    border-radius: 5px; 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+    display:flex; 
+    justify-content:space-between;
+    align-items:center;
+  }
+  button { 
+    margin-left: 1rem; 
+    padding: 0.3rem 0.8rem;
+    border: none;
+    border-radius: 4px;
+    background: #ff914d;
+    color: #fff;
+    cursor: pointer;
+  }
+  button:hover { background:#e67e22; }
+  #cart { 
+    margin-top: 1rem; 
+    background: #fff; 
+    padding: 0.5rem; 
+    border-radius: 5px; 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+  }
+</style>
 </head>
 <body>
-  <header>
-    <h1>Menu chọn món</h1>
-    <p>Nhụy Nguyên Coffee</p>
-  </header>
+<h1 id="shop-name">Menu</h1>
+<div id="menu-list"></div>
 
-  <section class="menu" id="menu">
-    <!-- Món ăn sẽ được JS render -->
-  </section>
+<div id="cart">
+  <h3>Giỏ hàng</h3>
+  <div id="cart-items"></div>
+  <button onclick="submitOrder()">Gửi đơn</button>
+</div>
 
-  <footer>
-    <div class="cart" id="cart">Chưa chọn món nào.</div>
-  </footer>
+<script>
+let cart = [];
 
-  <script>
-    const menuItems = [
-      { name: "Cà phê muối", price: 35000, img: "https://picsum.photos/seed/cfmuoi/160/120" },
-      { name: "Cà phê đen", price: 25000, img: "https://picsum.photos/seed/cfden/160/120" },
-      { name: "Cà phê sữa", price: 30000, img: "https://picsum.photos/seed/cfsua/160/120" },
-      { name: "Bò húc", price: 20000, img: "https://picsum.photos/seed/bohuc/160/120" },
-      { name: "Number 1", price: 20000, img: "https://picsum.photos/seed/num1/160/120" },
-      { name: "Nước lọc", price: 10000, img: "https://picsum.photos/seed/nuoc/160/120" },
-      { name: "Trà xanh 0 độ", price: 15000, img: "https://picsum.photos/seed/tx/160/120" },
-    ];
+// Lấy param trên URL
+function getParam(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
+const shopId = getParam('id');
+const token = getParam('token');
+if(!shopId || !token){
+  document.body.innerHTML = "<p>Thiếu ID quán hoặc token!</p>";
+  throw new Error("Thiếu ID quán hoặc token");
+}
 
-    const cart = {};
-    const menuEl = document.getElementById("menu");
-    const cartEl = document.getElementById("cart");
+// Callback JSONP từ GAS trả về menu
+function loadMenuJSONP(data){
+  if(!data || !data.shops) {
+    document.body.innerHTML = "<p>Không lấy được menu!</p>";
+    return;
+  }
+  const shop = data.shops.find(s => s.id === shopId);
+  if(!shop){
+    document.body.innerHTML = "<p>Quán không tồn tại!</p>";
+    return;
+  }
+  document.getElementById('shop-name').textContent = shop.name;
 
-    function renderMenu() {
-      menuEl.innerHTML = "";
-      menuItems.forEach((item, idx) => {
-        const div = document.createElement("div");
-        div.className = "item";
-        div.innerHTML = `
-          <img class="thumb" src="${item.img}" alt="${item.name}">
-          <div class="info">
-            <div class="label">${item.name}</div>
-            <div class="price">${item.price.toLocaleString()}đ</div>
-          </div>
-          <div class="controls">
-            <button class="btn" onclick="updateCart(${idx}, -1)">-</button>
-            <span id="qty-${idx}">0</span>
-            <button class="btn" onclick="updateCart(${idx}, 1)">+</button>
-          </div>
-        `;
-        menuEl.appendChild(div);
-      });
-    }
+  const menuList = document.getElementById('menu-list');
+  shop.menu.forEach(item => {
+    const div = document.createElement('div');
+    div.className = "menu-item";
+    div.innerHTML = `<span>${item.item} - ${item.price}₫</span>
+                     <button data-name="${item.item}" data-price="${item.price}">Chọn</button>`;
+    div.querySelector('button').addEventListener('click', function(){
+      addToCart(this.dataset.name, parseInt(this.dataset.price));
+    });
+    menuList.appendChild(div);
+  });
+}
 
-    function updateCart(idx, delta) {
-      const item = menuItems[idx];
-      cart[item.name] = (cart[item.name] || 0) + delta;
-      if (cart[item.name] <= 0) delete cart[item.name];
-      document.getElementById(`qty-${idx}`).innerText = cart[item.name] || 0;
-      renderCart();
-    }
+// Thêm món vào giỏ
+function addToCart(name, price){
+  name = decodeURIComponent(name);
+  const found = cart.find(i=>i.name===name);
+  if(found) found.quantity +=1;
+  else cart.push({name, price, quantity:1});
+  renderCart();
+}
 
-    function renderCart() {
-      let totalQty = 0, totalPrice = 0;
-      let text = "";
-      for (let name in cart) {
-        const qty = cart[name];
-        const item = menuItems.find(i => i.name === name);
-        totalQty += qty;
-        totalPrice += qty * item.price;
-        text += `${name} x${qty} – ${(qty * item.price).toLocaleString()}đ<br>`;
-      }
-      if (!totalQty) cartEl.innerHTML = "Chưa chọn món nào.";
-      else cartEl.innerHTML = text + `<br><b>Tổng: ${totalQty} món – ${totalPrice.toLocaleString()}đ</b>`;
-    }
+function renderCart(){
+  const div = document.getElementById('cart-items');
+  div.innerHTML = '';
+  let total = 0;
+  cart.forEach(it=>{
+    const p = document.createElement('p');
+    p.textContent = `${it.name} x${it.quantity} - ${it.price*it.quantity}₫`;
+    div.appendChild(p);
+    total += it.price*it.quantity;
+  });
+  if(cart.length){
+    const t = document.createElement('p');
+    t.innerHTML = `<strong>Tổng: ${total}₫</strong>`;
+    div.appendChild(t);
+  }
+}
 
-    renderMenu();
-  </script>
+// Load menu từ GAS (JSONP)
+function loadMenu(){
+  const script = document.createElement('script');
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbzfcZpxQtpl1Ag8UW4kOy_ua8DkziIiiRP0irp3qPE1HhvInHjv7UoYEQ3oaSalGLUo_w/exec";
+  script.src = `${GAS_URL}?callback=loadMenuJSONP&id=${shopId}`;
+  document.body.appendChild(script);
+}
+
+// Gửi đơn hàng về GAS
+function submitOrder(){
+  if(!cart.length){ alert('Chưa chọn món!'); return; }
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbxaAGBglJr0xfin_Sqb1SejgAgTCJ6fTB1uv_e0W0o7SZ-uPJ0U1hPAM8O00fLL4c8lLg/exec"; 
+
+  const payload = {id: shopId, token, items: cart};
+
+  fetch(GAS_URL, {
+    method:'POST',
+    mode:'no-cors',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  }).catch(()=>{});
+
+  alert('Đơn đã gửi!');
+  cart=[];
+  renderCart();
+}
+
+loadMenu();
+</script>
 </body>
 </html>
