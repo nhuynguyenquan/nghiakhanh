@@ -43,7 +43,7 @@ async function loadMenu() {
   }
 
   // Load menu
-  const menuData = await fetch('https://script.google.com/macros/s/AKfycbzz6745WQqTcI6WUypUVwwsZEb3M_FA0mWsVonR7luMfiy4zDF8UqJ-dZf0dTOyBaXLpA/exec'); 
+  const menuData = await fetch('https://script.google.com/macros/s/AKfycbzO6rW0tFa5QAKgV2kdrQ9v1Ux7ISUQdg3ri6D9uDViI0u8m2k7sLRfrW58Z2G4rOh2Pw/exec'); 
   const data = await menuData.json();
   const shop = data.shops.find(s => s.id === shopId);
   if (!shop) {
@@ -88,7 +88,7 @@ async function submitOrder() {
 
   if (!cart.length) { alert('Chưa chọn món!'); return; }
 
-  const res = await fetch('https://script.google.com/macros/s/AKfycbzz6745WQqTcI6WUypUVwwsZEb3M_FA0mWsVonR7luMfiy4zDF8UqJ-dZf0dTOyBaXLpA/exec', {
+  const res = await fetch('https://script.google.com/macros/s/AKfycbzO6rW0tFa5QAKgV2kdrQ9v1Ux7ISUQdg3ri6D9uDViI0u8m2k7sLRfrW58Z2G4rOh2Pw/exec', {
     method: 'POST',
     
     body: JSON.stringify({ id: shopId, token, items: cart })
