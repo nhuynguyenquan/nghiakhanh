@@ -203,30 +203,33 @@ function renderReport() {
   const report = document.getElementById('report');
   const grouped = {};
   salesData.logs.forEach(log => {
-    const date = log.time.slice(0, 10);
-    const month = log.time.slice(0, 7);
-    if (!grouped[month]) grouped[month] = {};
-    if (!grouped[month][date]) grouped[month][date] = [];
-    grouped[month][date].push(log);
+    if(!log.type) log.type='sale';
+    const month = log.time.slice(0,7);
+    const date = log.time.slice(0,10);
+    if(!grouped[month]) grouped[month]={ total:0, days:{} };
+    if(!grouped[month].days[date]) grouped[month].days[date]=[];
+    grouped[month].days[date].push(log);
+    if(log.type==='sale') grouped[month].total += log.price*log.quantity;
   });
 
-  let html = '';
-  const months = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
-  if (months.length === 0) { report.innerText = 'Không có dữ liệu để hiển thị.'; return; }
+  let html='';
+  const months = Object.keys(grouped).sort((a,b)=>b.localeCompare(a)); // tháng mới trước
+
+  if(months.length===0) { report.innerText='Không có dữ liệu để hiển thị.'; return; }
 
   months.forEach((month,index)=>{
     const monthId = `month-${index}`;
     html += `<div class="month-section">
-      <div class="month-header" onclick="toggleMonth('${monthId}')">Tháng ${month}</div>
+      <div class="month-header" onclick="toggleMonth('${monthId}')">Tháng ${month} - Tổng: ${grouped[month].total.toLocaleString()}₫</div>
       <div class="month-content" id="${monthId}">`;
 
-    let monthTotal = 0;
-    Object.keys(grouped[month]).sort().forEach(date=>{
-      let dayTotal = 0;
-      let rows = '';
-      grouped[month][date].forEach(log=>{
+    const days = Object.keys(grouped[month].days).sort((a,b)=>b.localeCompare(a)); // ngày mới trước
+    days.forEach(date=>{
+      let dayTotal=0;
+      let rows='';
+      grouped[month].days[date].forEach(log=>{
         const amount = log.price*log.quantity;
-        if(log.type==='sale'){ dayTotal+=amount; monthTotal+=amount; }
+        if(log.type==='sale') dayTotal+=amount;
         rows+=`<tr>
           <td data-label="Chi nhánh">${log.branch}</td>
           <td data-label="Món">${log.item}</td>
@@ -240,10 +243,10 @@ function renderReport() {
         <tr><th>Chi nhánh</th><th>Món</th><th>Số lượng</th><th>Đơn giá</th><th>Loại</th><th>Thời gian</th></tr>${rows}</table>`;
     });
 
-    html+=`<h3>Tổng tháng: ${monthTotal.toLocaleString()}₫</h3></div></div>`;
+    html+=`</div></div>`;
   });
 
-  report.innerHTML = html;
+  report.innerHTML=html;
 }
 
 function toggleMonth(id){
