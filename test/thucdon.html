@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Thực đơn tiệc cưới</title>
+  <title>Menu cà phê Nhụy Nguyên</title>
   <style>
     :root{
       --accent:#7bb4e3;
       --accent-dark:#5a8fb9;
-      --gold:#d4a64a;
       --text:#1f2937;
       --paper:#fffdf7;
     }
@@ -20,109 +19,91 @@
       display:grid; place-items:center; padding:24px;
     }
 
-    /* A4 printable canvas */
     .page{
       width:210mm; height:297mm; background:var(--paper);
       position:relative; box-shadow:0 10px 30px rgba(0,0,0,.15);
-      padding:20mm 18mm; /* inner padding for border */
+      padding:20mm 18mm;
     }
     @media print{
       body{background:var(--paper); box-shadow:none; padding:0}
       .page{box-shadow:none; margin:0; width:auto; height:auto; page-break-after:always}
     }
 
-    /* Decorative border */
     .border{position:absolute; inset:8mm; pointer-events:none}
     .border:before, .border:after{content:""; position:absolute; inset:0; border-radius:8mm}
     .border:before{border: 3px solid #b8842b}
-    .border:after{inset:4mm; border: 3px solid #f1d08a; filter: drop-shadow(0 0 0 rgba(0,0,0,0))}
+    .border:after{inset:4mm; border: 3px solid #f1d08a}
 
-    /* Header */
     header{ text-align:center; margin-top:8mm; margin-bottom:6mm; }
-    .bells{ width:56px; height:56px; margin:0 auto 6px; }
-    h1{ font-size:34px; letter-spacing:.5px; margin:0; color:#67a6da; text-shadow:0 2px 0 #ffffff, 0 3px 3px rgba(0,0,0,.15); }
-    .subtitle{font-size:14px; color:#555; margin-top:4px}
+    h1{ font-size:34px; margin:0; color:#67a6da; }
 
-    /* Menu list */
     .menu{ margin-top:8mm; display:grid; gap:10px; }
     .item{
-      display:grid; grid-template-columns:56px 1fr; align-items:center; gap:12px;
-      background: #e7f0f9; border:2px solid var(--accent); border-radius:12px; overflow:hidden;
+      display:grid; grid-template-columns:56px 1fr auto; align-items:center; gap:12px;
+      background: #e7f0f9; border:2px solid var(--accent); border-radius:12px;
       padding:6px 10px; 
     }
     .item:nth-child(odd){ background:#eef6ff }
     .thumb{
-      width:56px; height:42px; border-radius:8px; object-fit:cover; border:2px solid #fff; outline:2px solid var(--accent-dark);
+      width:56px; height:42px; border-radius:8px; object-fit:cover;
+      border:2px solid #fff; outline:2px solid var(--accent-dark);
     }
     .label{ font-size:18px; font-weight:bold; color:#1f3d57 }
+    .price{ font-size:18px; font-weight:bold; color:#b91c1c; }
 
-    /* Footer */
     footer{ position:absolute; left:0; right:0; bottom:18mm; display:flex; align-items:flex-end; justify-content:space-between; padding:0 18mm; }
-    .couple{ width:120px; opacity:.9 }
     .thanks{ font-style:italic; font-weight:600 }
-
-    /* Small helper ribbon */
-    .ribbon{position:absolute; top:10mm; right:10mm; font-size:12px; color:#6b7280}
   </style>
 </head>
 <body>
   <main class="page" role="document">
     <div class="border" aria-hidden="true"></div>
 
-    <div class="ribbon">Mẫu in A4</div>
-
     <header>
-      <!-- Simple bell icon (inline SVG) -->
-      <svg class="bells" viewBox="0 0 64 64" fill="none" stroke="#333" stroke-width="2">
-        <path d="M11 38c3-10 8-20 21-20s18 10 21 20M18 38h28"/>
-        <path d="M21 38c0 5 4 9 11 9s11-4 11-9"/>
-        <circle cx="26" cy="18" r="2"/><circle cx="38" cy="18" r="2"/>
-        <path d="M24 12c4-4 12-4 16 0"/>
-      </svg>
-      <h1>Thực đơn tiệc cưới</h1>
+      <h1>Các món phục vụ</h1>
       <div class="subtitle">Menu gợi ý – Quý khách có thể thay đổi món</div>
     </header>
 
     <section class="menu" aria-label="Danh sách món">
-      <!-- Thay ảnh bằng URL của bạn hoặc để trống -->
       <div class="item">
-        <img class="thumb" src="https://picsum.photos/seed/khai-vi/160/120" alt="Món khai vị" />
-        <div class="label">Món khai vị</div>
+        <img class="thumb" src="https://picsum.photos/seed/ca-phe-muoi/160/120" alt="Cà phê muối" />
+        <div class="label">Cà phê muối</div>
+        <div class="price">35.000đ</div>
       </div>
       <div class="item">
-        <img class="thumb" src="https://picsum.photos/seed/chinh1/160/120" alt="Món chính 1" />
-        <div class="label">Món chính 1</div>
+        <img class="thumb" src="https://picsum.photos/seed/ca-phe-den/160/120" alt="Cà phê đen" />
+        <div class="label">Cà phê đen</div>
+        <div class="price">25.000đ</div>
       </div>
       <div class="item">
-        <img class="thumb" src="https://picsum.photos/seed/chinh2/160/120" alt="Món chính 2" />
-        <div class="label">Món chính 2</div>
+        <img class="thumb" src="https://picsum.photos/seed/ca-phe-sua/160/120" alt="Cà phê sữa" />
+        <div class="label">Cà phê sữa</div>
+        <div class="price">30.000đ</div>
       </div>
       <div class="item">
-        <img class="thumb" src="https://picsum.photos/seed/chinh3/160/120" alt="Món chính 3" />
-        <div class="label">Món chính 3</div>
+        <img class="thumb" src="https://picsum.photos/seed/bo-huc/160/120" alt="Bò húc" />
+        <div class="label">Bò húc</div>
+        <div class="price">20.000đ</div>
       </div>
       <div class="item">
-        <img class="thumb" src="https://picsum.photos/seed/chinh4/160/120" alt="Món chính 4" />
-        <div class="label">Món chính 4</div>
+        <img class="thumb" src="https://picsum.photos/seed/number1/160/120" alt="Number 1" />
+        <div class="label">Number 1</div>
+        <div class="price">20.000đ</div>
       </div>
       <div class="item">
-        <img class="thumb" src="https://picsum.photos/seed/chinh5/160/120" alt="Món chính 5" />
-        <div class="label">Món chính 5</div>
+        <img class="thumb" src="https://picsum.photos/seed/nuoc-loc/160/120" alt="Nước lọc" />
+        <div class="label">Nước lọc</div>
+        <div class="price">10.000đ</div>
       </div>
       <div class="item">
-        <img class="thumb" src="https://picsum.photos/seed/trang-mieng/160/120" alt="Món tráng miệng" />
-        <div class="label">Món tráng miệng</div>
+        <img class="thumb" src="https://picsum.photos/seed/tra-xanh/160/120" alt="Trà xanh 0 độ" />
+        <div class="label">Trà xanh 0 độ</div>
+        <div class="price">15.000đ</div>
       </div>
     </section>
 
     <footer>
-      <!-- bride & groom silhouette (inline SVG) -->
-      <svg class="couple" viewBox="0 0 120 80" fill="#111">
-        <path d="M30 70c8-18 14-25 26-26 11-1 18 6 24 26H30z"/>
-        <circle cx="62" cy="22" r="6"/>
-        <path d="M58 28c2 6 2 12 1 20l10 2c-3-9-3-17 0-24"/>
-      </svg>
-      <div class="thanks">Chúc quý khách ngon miệng!</div>
+      <div class="thanks">Cảm ơn quý khách. Chúc quý khách một ngày vui vẻ!</div>
     </footer>
   </main>
 </body>
