@@ -88,11 +88,15 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfd_pHMmc9qGXJ4iT2L
 const TELEGRAM_TOKEN = '7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY';
 const CHAT_ID = '6249154937';
 
-let salesData = { branches: [], logs: [] };
+let salesData = { branches: [], logs: [], pins: {} };
 
 async function fetchSalesData() {
   const res = await fetch(SCRIPT_URL);
   salesData = await res.json();
+
+  // Fix log type missing
+  salesData.logs.forEach(log => { if(!log.type) log.type='sale'; });
+
   renderBranches();
   renderReport();
 }
@@ -211,129 +215,100 @@ function renderReport() {
   if (months.length === 0) { report.innerText = 'Không có dữ liệu để hiển thị.'; return; }
 
   months.forEach((month,index)=>{
-    const monthId=`month-${index}`;
-    let monthTotal=0;
-    let monthTable='';
-    const days=Object.keys(grouped[month]).sort((a,b)=>b.localeCompare(a));
-    days.forEach(date=>{
-      let dayTotal=0;
-      let dayWasteQty=0;
-      let dayRows='';
+    const monthId = `month-${index}`;
+    html += `<div class="month-section">
+      <div class="month-header" onclick="toggleMonth('${monthId}')">Tháng ${month}</div>
+      <div class="month-content" id="${monthId}">`;
+
+    let monthTotal = 0;
+    Object.keys(grouped[month]).sort().forEach(date=>{
+      let dayTotal = 0;
+      let rows = '';
       grouped[month][date].forEach(log=>{
-        const amount = log.price * log.quantity;
+        const amount = log.price*log.quantity;
         if(log.type==='sale'){ dayTotal+=amount; monthTotal+=amount; }
-        if(log.type==='waste'){ dayWasteQty+=log.quantity; }
-        const label=log.type==='waste'?'💀 Bị lỗi '+log.item:log.item;
-        dayRows+=`
-          <tr style="${log.type==='waste'?'background:#ffe6e6;':''}">
-            <td data-label="Ngày">${date}</td>
-            <td data-label="Chi nhánh">${log.branch}</td>
-            <td data-label="Món">${label}</td>
-            <td class="numeric" data-label="Số lượng">${log.quantity} ${log.unit||''}</td>
-            <td class="numeric" data-label="Giá">${log.price.toLocaleString()}₫</td>
-            <td class="numeric" data-label="Thành tiền">${amount.toLocaleString()}₫</td>
-          </tr>
-        `;
+        rows+=`<tr>
+          <td data-label="Chi nhánh">${log.branch}</td>
+          <td data-label="Món">${log.item}</td>
+          <td data-label="Số lượng">${log.quantity}</td>
+          <td data-label="Đơn giá">${log.price}</td>
+          <td data-label="Loại">${log.type || 'sale'}</td>
+          <td data-label="Thời gian">${log.time}</td>
+        </tr>`;
       });
-      if(dayWasteQty>0){
-        dayRows+=`
-          <tr style="background:#ffd6d6; font-weight:bold;">
-            <td colspan="5">Tổng số lượng bị lỗi</td>
-            <td class="numeric">${dayWasteQty}</td>
-          </tr>
-        `;
-      }
-      dayRows+=`
-        <tr style="background:#f1f1f1;font-weight:bold;">
-          <td colspan="5" style="text-align:left;">Tổng doanh thu ngày ${date}:</td>
-          <td class="numeric">${dayTotal.toLocaleString()}₫</td>
-        </tr>
-      `;
-      monthTable+=dayRows;
+      html+=`<h4>${date} - Tổng: ${dayTotal.toLocaleString()}₫</h4><table>
+        <tr><th>Chi nhánh</th><th>Món</th><th>Số lượng</th><th>Đơn giá</th><th>Loại</th><th>Thời gian</th></tr>${rows}</table>`;
     });
 
-    html+=`
-      <div class="month-section">
-        <div class="month-header" onclick="toggleMonth('${monthId}')">🗓 Tháng ${month} — Tổng doanh thu: ${monthTotal.toLocaleString()}₫</div>
-        <div id="${monthId}" class="month-content">
-          <table>
-            <thead>
-              <tr><th>Ngày</th><th>Chi nhánh</th><th>Món</th><th>Số lượng</th><th>Giá</th><th>Thành tiền</th></tr>
-            </thead>
-            <tbody>${monthTable}</tbody>
-          </table>
-        </div>
-      </div>
-    `;
+    html+=`<h3>Tổng tháng: ${monthTotal.toLocaleString()}₫</h3></div></div>`;
   });
 
-  report.innerHTML=html;
+  report.innerHTML = html;
 }
 
-function toggleMonth(id){ const el=document.getElementById(id); el.style.display=(el.style.display==='none'||el.style.display==='')?'block':'none'; }
+function toggleMonth(id){
+  const el = document.getElementById(id);
+  if(el.style.display==='none' || el.style.display===''){ el.style.display='block'; }
+  else el.style.display='none';
+}
 
-function addBranch() {
-  const name = document.getElementById('newBranchName').value.trim();
-  if(!name) return alert('Nhập tên chi nhánh!');
-  const pin = prompt("Nhập mã PIN cho chi nhánh:");
-  salesData.branches.push({ name, pin, menu: [] });
+function editItem(bIndex,iIndex,key,value){
+  if(key==='price'||key==='stock') value=parseInt(value);
+  salesData.branches[bIndex].menu[iIndex][key]=value;
   saveData();
-}
-
-function addItem(bIndex) {
-  const name=document.getElementById(`new-name-${bIndex}`).value.trim();
-  const unit=document.getElementById(`new-unit-${bIndex}`).value.trim();
-  const stock=parseInt(document.getElementById(`new-stock-${bIndex}`).value);
-  const price=parseInt(document.getElementById(`new-price-${bIndex}`).value);
-  if(!name || !unit || isNaN(stock) || isNaN(price)) return alert('Nhập đủ thông tin món!');
-  salesData.branches[bIndex].menu.push({ name, unit, stock, price });
-  saveData();
-}
-
-function moveItem(bIndex,iIndex,direction){
-  const menu=salesData.branches[bIndex].menu;
-  const newIndex=iIndex+direction;
-  if(newIndex<0||newIndex>=menu.length)return;
-  [menu[iIndex],menu[newIndex]]=[menu[newIndex],menu[iIndex]];
-  saveData(false);
   renderBranches();
 }
 
-function editItem(bIndex,iIndex,field,value){
-  if(field==='stock'||field==='price')value=parseInt(value);
-  salesData.branches[bIndex].menu[iIndex][field]=value;
-  saveData(false);
-}
-
 function deleteItem(bIndex,iIndex){
-  if(!confirm('Xóa món này?'))return;
-  salesData.branches[bIndex].menu.splice(iIndex,1);
-  saveData();
-}
-
-async function sendTelegram(msg){
-  await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({chat_id:CHAT_ID,text:msg})
-  });
-}
-
-function editPin(bIndex,newPin){
-  const branchName=salesData.branches[bIndex].name;
-  salesData.branches[bIndex].pin=newPin;
-  if(salesData.pins) {
-    for(const pin in salesData.pins){ if(salesData.pins[pin]===branchName) delete salesData.pins[pin]; }
-    salesData.pins[newPin]=branchName;
+  if(confirm('Xóa món này?')){
+    salesData.branches[bIndex].menu.splice(iIndex,1);
+    saveData();
+    renderBranches();
   }
-  saveData(false);
 }
 
-function togglePin(bIndex){ const input=document.getElementById(`pin-${bIndex}`); input.type=input.type==='password'?'text':'password'; }
+function moveItem(bIndex,iIndex,delta){
+  const arr = salesData.branches[bIndex].menu;
+  const newIndex=iIndex+delta;
+  if(newIndex<0 || newIndex>=arr.length) return;
+  [arr[iIndex],arr[newIndex]]=[arr[newIndex],arr[iIndex]];
+  saveData();
+  renderBranches();
+}
 
-async function saveData(refresh=true){
-  await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(salesData)});
-  if(refresh) fetchSalesData();
+function addItem(bIndex){
+  const name=document.getElementById(`new-name-${bIndex}`).value;
+  const unit=document.getElementById(`new-unit-${bIndex}`).value;
+  const stock=parseInt(document.getElementById(`new-stock-${bIndex}`).value)||0;
+  const price=parseInt(document.getElementById(`new-price-${bIndex}`).value)||0;
+  if(!name) return alert('Tên món trống');
+  salesData.branches[bIndex].menu.push({name,unit,stock,price});
+  saveData();
+  renderBranches();
+}
+
+function addBranch(){
+  const name=document.getElementById('newBranchName').value;
+  if(!name) return alert('Tên chi nhánh trống');
+  salesData.branches.push({name,menu:[],pin:''});
+  saveData();
+  renderBranches();
+}
+
+function editPin(bIndex,value){ salesData.branches[bIndex].pin=value; saveData(); }
+function togglePin(bIndex){ const input=document.getElementById(`pin-${bIndex}`); input.type = input.type==='password'?'text':'password'; }
+
+async function saveData(){
+  await fetch(SCRIPT_URL,{
+    method:'POST',
+    body: JSON.stringify(salesData),
+    headers: {'Content-Type':'application/json'}
+  });
+  renderReport();
+}
+
+function sendTelegram(msg){
+  fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}`);
 }
 
 fetchSalesData();
