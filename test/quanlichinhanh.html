@@ -32,33 +32,18 @@
     .form-group { margin-top:6px; }
   }
 </style>
-
-<link rel="manifest" href="../quan-li/manifest.json">
-<meta name="theme-color" content="#4CAF50">
-<script>
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('service-worker.js');
-  navigator.serviceWorker.addEventListener('message',event=>{
-    if(event.data && event.data.type==='NEW_VERSION_AVAILABLE'){
-      if(confirm("Có phiên bản mới của ứng dụng. Bạn có muốn tải lại để cập nhật?")){
-        window.location.reload();
-      }
-    }
-  });
-}
-</script>
 </head>
 
+<body>
 <nav>
-  <a href="../quan-li-thu-chi/">Quản Lí Thu Chi</a>
-  <a href="../quan-li-kho/">Quản Lí kho</a>
-  <a href="../quan-li-menu/">Quản Lí Menu</a>
-  <a href="../quan-li-nv">Quản lí nhân viên</a>
-  <a href="../quan-li-sx">Quản lí sản xuất</a>
-  <a href="../quan-li-chi-nhanh/">Quản Lí Chi Nhánh</a>
+  <a href="#">Quản Lí Thu Chi</a>
+  <a href="#">Quản Lí kho</a>
+  <a href="#">Quản Lí Menu</a>
+  <a href="#">Quản lí nhân viên</a>
+  <a href="#">Quản lí sản xuất</a>
+  <a href="#">Quản Lí Chi Nhánh</a>
 </nav>
 
-<body>
 <h1>📊 Quản lý bán hàng - Nhụy Nguyên</h1>
 
 <div>
@@ -82,21 +67,18 @@ if('serviceWorker' in navigator){
 
 <div id="branches"></div>
 
-<script src="../auth.js"></script>
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfd_pHMmc9qGXJ4iT2LYXg78-WSxXVTHr5O0EeGcs5pa4RlZMB2Gs1xETul4XI-hPFTw/exec';
-const TELEGRAM_TOKEN = '7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY';
-const CHAT_ID = '6249154937';
+let salesData = { branches: [], logs: [] };
 
-let salesData = { branches: [], logs: [], pins: {} };
-
-async function fetchSalesData() {
-  const res = await fetch(SCRIPT_URL);
-  salesData = await res.json();
-
-  // Fix log type missing
-  salesData.logs.forEach(log => { if(!log.type) log.type='sale'; });
-
+function fetchSalesData() {
+  // Mô phỏng dữ liệu ban đầu
+  salesData = {
+    branches: [
+      { name: "Chi nhánh A", pin:"", menu:[ {name:"Cà phê",unit:"ly",stock:50,price:15000} ] },
+      { name: "Chi nhánh B", pin:"", menu:[ {name:"Trà sữa",unit:"ly",stock:30,price:20000} ] }
+    ],
+    logs:[]
+  };
   renderBranches();
   renderReport();
 }
@@ -107,41 +89,38 @@ function renderBranches() {
   const container = document.getElementById('branches');
   container.innerHTML = '';
 
-  salesData.branches.forEach((branch, bIndex) => {
+  salesData.branches.forEach((branch, bIndex)=>{
     const div = document.createElement('div');
     div.className = 'branch';
 
-    let html = `
-      <h2>${branch.name}</h2>
+    let html = `<h2>${branch.name}</h2>
       <div>
         <label>Mã PIN: 
-          <input type="password" id="pin-${bIndex}" value="${branch.pin || ''}" onchange="editPin(${bIndex}, this.value)">
+          <input type="password" id="pin-${bIndex}" value="${branch.pin}" onchange="editPin(${bIndex}, this.value)">
         </label>
         <button onclick="togglePin(${bIndex})">👁️</button>
       </div>
     `;
 
     html += `<table><tr><th>Món</th><th>Đơn vị</th><th>Tồn kho</th><th>Giá</th><th>Bán</th><th>Trừ lỗi</th><th></th></tr>`;
-    branch.menu.forEach((item, iIndex) => {
+    branch.menu.forEach((item,iIndex)=>{
       html += `<tr>
-        <td><input value="${item.name}" onchange="editItem(${bIndex}, ${iIndex}, 'name', this.value)"></td>
-        <td><input value="${item.unit || ''}" onchange="editItem(${bIndex}, ${iIndex}, 'unit', this.value)"></td>
-        <td><input type="number" value="${item.stock}" onchange="editItem(${bIndex}, ${iIndex}, 'stock', this.value)"></td>
-        <td><input type="number" value="${item.price}" onchange="editItem(${bIndex}, ${iIndex}, 'price', this.value)"></td>
+        <td><input value="${item.name}" onchange="editItem(${bIndex},${iIndex},'name',this.value)"></td>
+        <td><input value="${item.unit}" onchange="editItem(${bIndex},${iIndex},'unit',this.value)"></td>
+        <td><input type="number" value="${item.stock}" onchange="editItem(${bIndex},${iIndex},'stock',this.value)" id="stock-${bIndex}-${iIndex}"></td>
+        <td><input type="number" value="${item.price}" onchange="editItem(${bIndex},${iIndex},'price',this.value)"></td>
         <td><input type="number" id="sell-${bIndex}-${iIndex}" min="1" max="${item.stock}"></td>
         <td><input type="number" id="waste-${bIndex}-${iIndex}" min="0" placeholder="Bị lỗi"></td>
         <td>
-          <button onclick="sell(${bIndex}, ${iIndex})">Bán</button>
-          <button onclick="waste(${bIndex}, ${iIndex})">Trừ lỗi</button>
-          <button onclick="deleteItem(${bIndex}, ${iIndex})">🗑</button>
-          <button onclick="moveItem(${bIndex}, ${iIndex}, -1)">⬆️</button>
-          <button onclick="moveItem(${bIndex}, ${iIndex}, 1)">⬇️</button>
+          <button onclick="sell(${bIndex},${iIndex})">Bán</button>
+          <button onclick="waste(${bIndex},${iIndex})">Trừ lỗi</button>
+          <button onclick="deleteItem(${bIndex},${iIndex})">🗑</button>
+          <button onclick="moveItem(${bIndex},${iIndex},-1)">⬆️</button>
+          <button onclick="moveItem(${bIndex},${iIndex},1)">⬇️</button>
         </td>
       </tr>`;
     });
-    html += `</table>`;
-
-    html += `
+    html += `</table>
       <div class="form-group">
         <h4>➕ Thêm món</h4>
         <input placeholder="Tên món" id="new-name-${bIndex}">
@@ -149,133 +128,106 @@ function renderBranches() {
         <input placeholder="Tồn kho" type="number" id="new-stock-${bIndex}">
         <input placeholder="Giá" type="number" id="new-price-${bIndex}">
         <button onclick="addItem(${bIndex})">Thêm</button>
-      </div>
-    `;
-
+      </div>`;
     container.appendChild(div);
     div.innerHTML = html;
   });
 }
 
-function sell(bIndex, iIndex) {
-  const input = document.getElementById(`sell-${bIndex}-${iIndex}`);
-  const qty = parseInt(input.value);
-  const item = salesData.branches[bIndex].menu[iIndex];
-  if (!qty || qty <= 0 || qty > item.stock) return alert('Số lượng không hợp lệ.');
-
-  item.stock -= qty;
+function sell(bIndex,iIndex){
+  const qty=parseInt(document.getElementById(`sell-${bIndex}-${iIndex}`).value);
+  const item=salesData.branches[bIndex].menu[iIndex];
+  if(!qty||qty<=0||qty>item.stock)return alert('Số lượng không hợp lệ.');
+  item.stock-=qty;
   salesData.logs.push({
     branch: salesData.branches[bIndex].name,
     item: item.name,
-    unit: item.unit || '',
+    unit: item.unit,
     quantity: qty,
     price: item.price,
     type: 'sale',
     time: new Date().toISOString()
   });
-
-  sendTelegram(`Đã bán ${qty} ${item.unit || ''} ${item.name} tại ${salesData.branches[bIndex].name}`);
-  saveData();
+  renderBranches();
+  renderReport();
 }
 
-function waste(bIndex, iIndex) {
-  const input = document.getElementById(`waste-${bIndex}-${iIndex}`);
-  const qty = parseInt(input.value);
-  const item = salesData.branches[bIndex].menu[iIndex];
-  if (!qty || qty <= 0 || qty > item.stock) return alert('Số lượng trừ lỗi không hợp lệ.');
-
-  item.stock -= qty;
+function waste(bIndex,iIndex){
+  const qty=parseInt(document.getElementById(`waste-${bIndex}-${iIndex}`).value);
+  const item=salesData.branches[bIndex].menu[iIndex];
+  if(!qty||qty<=0||qty>item.stock)return alert('Số lượng trừ lỗi không hợp lệ.');
+  item.stock-=qty;
   salesData.logs.push({
     branch: salesData.branches[bIndex].name,
     item: item.name,
-    unit: item.unit || '',
+    unit: item.unit,
     quantity: qty,
     price: 0,
     type: 'waste',
     time: new Date().toISOString()
   });
-
-  sendTelegram(`Trừ ${qty} ${item.unit || ''} ${item.name} do bị lỗi tại ${salesData.branches[bIndex].name}`);
-  saveData();
+  renderBranches();
+  renderReport();
 }
 
-function renderReport() {
-  const report = document.getElementById('report');
-  const grouped = {};
-  salesData.logs.forEach(log => {
-    if(!log.type) log.type='sale';
-    const month = log.time.slice(0,7);
-    const date = log.time.slice(0,10);
-    if(!grouped[month]) grouped[month]={ total:0, days:{} };
-    if(!grouped[month].days[date]) grouped[month].days[date]=[];
+function renderReport(){
+  const report=document.getElementById('report');
+  const grouped={};
+  salesData.logs.forEach(log=>{
+    const month=log.time.slice(0,7);
+    const date=log.time.slice(0,10);
+    if(!grouped[month])grouped[month]={total:0,days:{}};
+    if(!grouped[month].days[date])grouped[month].days[date]=[];
     grouped[month].days[date].push(log);
     if(log.type==='sale') grouped[month].total += log.price*log.quantity;
   });
 
   let html='';
-  const months = Object.keys(grouped).sort((a,b)=>b.localeCompare(a)); // tháng mới trước
-
-  if(months.length===0) { report.innerText='Không có dữ liệu để hiển thị.'; return; }
-
+  const months=Object.keys(grouped).sort((a,b)=>b.localeCompare(a));
+  if(months.length===0){ report.innerText='Không có dữ liệu.'; return;}
   months.forEach((month,index)=>{
-    const monthId = `month-${index}`;
+    const monthId=`month-${index}`;
     html += `<div class="month-section">
       <div class="month-header" onclick="toggleMonth('${monthId}')">Tháng ${month} - Tổng: ${grouped[month].total.toLocaleString()}₫</div>
       <div class="month-content" id="${monthId}">`;
-
-    const days = Object.keys(grouped[month].days).sort((a,b)=>b.localeCompare(a)); // ngày mới trước
+    const days=Object.keys(grouped[month].days).sort((a,b)=>b.localeCompare(a));
     days.forEach(date=>{
       let dayTotal=0;
       let rows='';
       grouped[month].days[date].forEach(log=>{
-        const amount = log.price*log.quantity;
-        if(log.type==='sale') dayTotal+=amount;
+        if(log.type==='sale') dayTotal+=log.price*log.quantity;
         rows+=`<tr>
           <td data-label="Chi nhánh">${log.branch}</td>
           <td data-label="Món">${log.item}</td>
           <td data-label="Số lượng">${log.quantity}</td>
           <td data-label="Đơn giá">${log.price}</td>
-          <td data-label="Loại">${log.type || 'bánhàng'}</td>
+          <td data-label="Loại">${log.type}</td>
           <td data-label="Thời gian">${log.time}</td>
         </tr>`;
       });
       html+=`<h4>${date} - Tổng: ${dayTotal.toLocaleString()}₫</h4><table>
         <tr><th>Chi nhánh</th><th>Món</th><th>Số lượng</th><th>Đơn giá</th><th>Loại</th><th>Thời gian</th></tr>${rows}</table>`;
     });
-
-    html+=`</div></div>`;
+    html+='</div></div>';
   });
-
   report.innerHTML=html;
 }
 
-function toggleMonth(id){
-  const el = document.getElementById(id);
-  if(el.style.display==='none' || el.style.display===''){ el.style.display='block'; }
-  else el.style.display='none';
+function toggleMonth(id){ const el=document.getElementById(id); el.style.display=(el.style.display==='none'||el.style.display==='')?'block':'none'; }
+
+function editItem(bIndex,iIndex,key,value){ 
+  if(key==='price'||key==='stock') value=parseInt(value); 
+  salesData.branches[bIndex].menu[iIndex][key]=value; 
+  renderBranches(); 
 }
 
-function editItem(bIndex,iIndex,key,value){
-  if(key==='price'||key==='stock') value=parseInt(value);
-  salesData.branches[bIndex].menu[iIndex][key]=value;
-  saveData();
-  renderBranches();
-}
-
-function deleteItem(bIndex,iIndex){
-  if(confirm('Xóa món này?')){
-    salesData.branches[bIndex].menu.splice(iIndex,1);
-    saveData();
-    renderBranches();
-  }
-}
+function deleteItem(bIndex,iIndex){ if(confirm('Xóa món này?')){ salesData.branches[bIndex].menu.splice(iIndex,1); renderBranches(); } }
 
 function moveItem(bIndex,iIndex,delta){
-  const arr = salesData.branches[bIndex].menu;
+  const arr=salesData.branches[bIndex].menu;
   const newIndex=iIndex+delta;
-  if(newIndex<0 || newIndex>=arr.length) return;
+  if(newIndex<0||newIndex>=arr.length)return;
   [arr[iIndex],arr[newIndex]]=[arr[newIndex],arr[iIndex]];
-  saveData();
   renderBranches();
 }
 
@@ -286,7 +238,6 @@ function addItem(bIndex){
   const price=parseInt(document.getElementById(`new-price-${bIndex}`).value)||0;
   if(!name) return alert('Tên món trống');
   salesData.branches[bIndex].menu.push({name,unit,stock,price});
-  saveData();
   renderBranches();
 }
 
@@ -294,25 +245,11 @@ function addBranch(){
   const name=document.getElementById('newBranchName').value;
   if(!name) return alert('Tên chi nhánh trống');
   salesData.branches.push({name,menu:[],pin:''});
-  saveData();
   renderBranches();
 }
 
-function editPin(bIndex,value){ salesData.branches[bIndex].pin=value; saveData(); }
-function togglePin(bIndex){ const input=document.getElementById(`pin-${bIndex}`); input.type = input.type==='password'?'text':'password'; }
-
-async function saveData(){
-  await fetch(SCRIPT_URL,{
-    method:'POST',
-    body: JSON.stringify(salesData),
-    headers: {'Content-Type':'application/json'}
-  });
-  renderReport();
-}
-
-function sendTelegram(msg){
-  fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}`);
-}
+function editPin(bIndex,value){ salesData.branches[bIndex].pin=value; }
+function togglePin(bIndex){ const input=document.getElementById(`pin-${bIndex}`); input.type=(input.type==='password')?'text':'password'; }
 
 fetchSalesData();
 </script>
