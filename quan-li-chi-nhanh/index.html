@@ -5,116 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Quản lý bán hàng Nhụy Nguyên</title>
 <style>
-  /* Fix iOS font scaling */
-  html {
-    -webkit-text-size-adjust: 100%;
-    -moz-text-size-adjust: 100%;
-    -ms-text-size-adjust: 100%;
-    text-size-adjust: 100%;
+  html { -webkit-text-size-adjust:100%; -moz-text-size-adjust:100%; -ms-text-size-adjust:100%; text-size-adjust:100%; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size:16px; line-height:1.4; background:#f4f4f4; padding:1rem; margin:0; }
+  h1,h2,h3{color:#2c3e50;}
+  .branch { background:white; border-radius:8px; padding:1rem; margin-bottom:1rem; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+  table { width:100%; border-collapse:collapse; table-layout:fixed; margin-top:10px; }
+  th,td { border:1px solid #ddd; padding:6px; text-align:left; }
+  th { background:#f0f0f0; }
+  input,button,select { padding:6px; margin:2px; }
+  .form-group { margin-top:10px; }
+  nav { display:flex; flex-wrap:wrap; justify-content:center; background:#d9a382; padding:8px 5px; gap:8px; }
+  nav a { color:white; text-decoration:none; font-size:16px; padding:6px 10px; text-align:center; flex-shrink:0; }
+  @media(max-width:480px){ nav a{ font-size:14px; padding:4px 6px; } }
+  .month-section{ border:1px solid #ccc; border-radius:6px; margin:1rem 0; background:white; box-shadow:0 1px 4px rgba(0,0,0,0.1); }
+  .month-header{ padding:10px; background:#d9a382; color:white; cursor:pointer; font-weight:bold; }
+  .month-content{ display:none; padding:10px; overflow-x:auto; }
+  .month-content table{ width:100%; border-collapse:collapse; min-width:600px; }
+  .month-content th,.month-content td{ padding:6px 8px; text-align:left; white-space:nowrap; border:1px solid #ddd; }
+  @media(max-width:600px){
+    table,thead,tbody,th,td,tr{ display:block; }
+    thead{ display:none; }
+    tr{ margin-bottom:0.1rem; border:1px solid #ddd; border-radius:3px; padding:3px; background:white; }
+    td{ display:flex; flex-direction:column; align-items:center; justify-content:center; border:none; padding:2px 0; min-height:9px; text-align:center; white-space:normal; }
+    td::before{ content:attr(data-label); font-weight:bold; color:#555; margin-bottom:2px; text-align:left; width:75%; }
+    input,button,select{ width:100%; box-sizing:border-box; margin:3px 0; font-size:1rem; }
+    .form-group{ margin-top:6px; }
   }
-
-  /* Font thân thiện iOS + Android */
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 16px;
-    line-height: 1.4;
-    background: #f4f4f4;
-    padding: 1rem;
-    margin: 0;
-  }
-  h1, h2, h3 { color: #2c3e50; }
-  .branch { background: white; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-  table { width: 100%; border-collapse: collapse;table-layout: fixed; margin-top: 10px; }
-  th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
-  th { background: #f0f0f0; }
-  input, button, select { padding: 6px; margin: 2px; }
-  .form-group { margin-top: 10px; }
-  @media (max-width: 768px) {
-    table, thead, tbody, th, td, tr { display: block; }
-    td { border: none; padding: 4px 0; }
-  }
-  nav {
-  display: flex;
-  flex-wrap: wrap;           /* Cho phép xuống dòng */
-  justify-content: center;
-  background-color: #d9a382;
-  padding: 8px 5px;          /* giảm padding cho mobile */
-  gap: 8px;                  /* khoảng cách giữa link */
-}
-
-nav a {
-  color: white;
-  text-decoration: none;
-  font-size: 16px;
-  padding: 6px 10px;
-  text-align: center;
-  flex-shrink: 0;            /* Không bị co nhỏ */
-}
-
-@media (max-width: 480px) {
-  nav a {
-    font-size: 14px;         /* chữ nhỏ hơn trên điện thoại nhỏ */
-    padding: 4px 6px;
-  }
-}
-  .month-section { border: 1px solid #ccc; border-radius: 6px; margin: 1rem 0; background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
-  .month-header { padding: 10px; background: #d9a382; color: white; cursor: pointer; font-weight: bold; }
-  .month-content { display: none; padding: 10px; overflow-x: auto; }
-  .month-content table { width: 100%; border-collapse: collapse; min-width: 600px; }
-  .month-content th, .month-content td { padding: 6px 8px; text-align: left; white-space: nowrap; border: 1px solid #ddd; }
-  @media (max-width: 600px) {
-  table, thead, tbody, th, td, tr {
-    display: block;
-  }
-  thead {
-    display: none;
-  }
-  tr {
-    margin-bottom: 0.1rem; /* Ngắn hơn */
-    border: 1px solid #ddd;
-    border-radius: 3px;
-    padding: 3px;
-    background: white;
-  }
-  td {
-    display: flex;
-    flex-direction: column;  /* Nhãn trên, dữ liệu dưới */
-    align-items: center;     /* Căn giữa ngang */
-    justify-content: center; /* Căn giữa dọc */
-    border: none;
-    padding: 2px 0;          /* Ngắn hơn */
-    min-height: 9px;        /* Chiều cao ô ngắn */
-    text-align: center;      /* Căn giữa text */
-    white-space: normal;
-  }
-  td::before {
-    content: attr(data-label);
-    font-weight: bold;
-    color: #555;
-    margin-bottom: 2px;
-    text-align: left;
-    width: 75%;
-  }
-  input, button, select {
-    width: 100%;
-    box-sizing: border-box;
-    margin: 3px 0;
-    font-size: 1rem;
-  }
-  .form-group {
-    margin-top: 6px;
-  }
-}
 </style>
-
 <link rel="manifest" href="../quan-li/manifest.json">
 <meta name="theme-color" content="#4CAF50">
 <script>
-if ('serviceWorker' in navigator) {
+if('serviceWorker' in navigator){
   navigator.serviceWorker.register('service-worker.js');
-  navigator.serviceWorker.addEventListener('message', event => {
-    if (event.data && event.data.type === 'NEW_VERSION_AVAILABLE') {
-      if (confirm("Có phiên bản mới của ứng dụng. Bạn có muốn tải lại để cập nhật?")) {
+  navigator.serviceWorker.addEventListener('message',event=>{
+    if(event.data && event.data.type==='NEW_VERSION_AVAILABLE'){
+      if(confirm("Có phiên bản mới của ứng dụng. Bạn có muốn tải lại để cập nhật?")){
         window.location.reload();
       }
     }
@@ -131,12 +56,13 @@ if ('serviceWorker' in navigator) {
   <a href="../quan-li-chi-nhanh/">Quản Lí Chi Nhánh</a>
 </nav>
 <body>
-
 <h1>📊 Quản lý bán hàng - Nhụy Nguyên</h1>
+
 <div>
   <h2>📈 Báo cáo tổng hợp</h2>
   <div id="report"></div>
 </div>
+
 <div>
   <h2>➕ Thêm chi nhánh mới</h2>
   <input id="newBranchName" placeholder="Tên chi nhánh">
@@ -144,71 +70,68 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <hr>
-
 <div>
   <label>Lọc theo ngày: <input type="date" id="filterDate" onchange="renderBranches()"></label>
 </div>
-
 <hr>
 
 <div id="branches"></div>
 
 <script src="../auth.js"></script>
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfd_pHMmc9qGXJ4iT2LYXg78-WSxXVTHr5O0EeGcs5pa4RlZMB2Gs1xETul4XI-hPFTw/exec';
-const TELEGRAM_TOKEN = '7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY';
-const CHAT_ID = '6249154937';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbzfd_pHMmc9qGXJ4iT2LYXg78-WSxXVTHr5O0EeGcs5pa4RlZMB2Gs1xETul4XI-hPFTw/exec';
+const TELEGRAM_TOKEN='7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY';
+const CHAT_ID='6249154937';
 
-let salesData = { branches: [], logs: [] };
+let salesData={branches:[],logs:[],pins:{}};
 
-async function fetchSalesData() {
+// =================== Fetch dữ liệu ===================
+async function fetchSalesData(){
   const res = await fetch(SCRIPT_URL);
   salesData = await res.json();
+  if(!salesData.pins) salesData.pins={};
   renderBranches();
   renderReport();
 }
 
-function getFilterDate() {
-  return document.getElementById('filterDate').value;
-}
+function getFilterDate(){ return document.getElementById('filterDate').value; }
 
-function renderBranches() {
-  const container = document.getElementById('branches');
-  container.innerHTML = '';
+// =================== Render chi nhánh ===================
+function renderBranches(){
+  const container=document.getElementById('branches');
+  container.innerHTML='';
+  salesData.branches.forEach((branch,bIndex)=>{
+    const div=document.createElement('div');
+    div.className='branch';
 
-  salesData.branches.forEach((branch, bIndex) => {
-    const div = document.createElement('div');
-    div.className = 'branch';
-
-    let html = `
-      <h2>${branch.name}</h2>
+    let html=`<h2>${branch.name}</h2>
       <div>
-        <label>Mã PIN: 
-          <input type="password" id="pin-${bIndex}" value="${branch.pin || ''}" onchange="editPin(${bIndex}, this.value)">
+        <label>Mã PIN:
+          <input type="password" id="pin-${bIndex}" value="${branch.pin||''}" onchange="editPin(${bIndex},this.value)">
         </label>
         <button onclick="togglePin(${bIndex})">👁️</button>
-      </div>
-    `;
+      </div>`;
 
-    html += `<table><tr><th>Món</th><th>Đơn vị</th><th>Tồn kho</th><th>Giá</th><th>Bán</th><th></th></tr>`;
-    branch.menu.forEach((item, iIndex) => {
-      html += `<tr>
-        <td><input value="${item.name}" onchange="editItem(${bIndex}, ${iIndex}, 'name', this.value)"></td>
-        <td><input value="${item.unit || ''}" onchange="editItem(${bIndex}, ${iIndex}, 'unit', this.value)"></td>
-        <td><input type="number" value="${item.stock}" onchange="editItem(${bIndex}, ${iIndex}, 'stock', this.value)"></td>
-        <td><input type="number" value="${item.price}" onchange="editItem(${bIndex}, ${iIndex}, 'price', this.value)"></td>
+    html+=`<table>
+      <tr><th>Món</th><th>Đơn vị</th><th>Tồn kho</th><th>Giá</th><th>Bán</th><th>Trừ lỗi</th><th>Hành động</th></tr>`;
+    branch.menu.forEach((item,iIndex)=>{
+      html+=`<tr>
+        <td><input value="${item.name}" onchange="editItem(${bIndex},${iIndex},'name',this.value)"></td>
+        <td><input value="${item.unit||''}" onchange="editItem(${bIndex},${iIndex},'unit',this.value)"></td>
+        <td><input type="number" value="${item.stock}" onchange="editItem(${bIndex},${iIndex},'stock',this.value)"></td>
+        <td><input type="number" value="${item.price}" onchange="editItem(${bIndex},${iIndex},'price',this.value)"></td>
         <td><input type="number" id="sell-${bIndex}-${iIndex}" min="1" max="${item.stock}"></td>
+        <td><input type="number" id="waste-${bIndex}-${iIndex}" min="1" max="${item.stock}" placeholder="Lỗi"></td>
         <td>
-        <button onclick="sell(${bIndex}, ${iIndex})">Bán</button>
-        <button onclick="deleteItem(${bIndex}, ${iIndex})">🗑</button>
-        <button onclick="moveItem(${bIndex}, ${iIndex}, -1)">⬆️</button>
-        <button onclick="moveItem(${bIndex}, ${iIndex}, 1)">⬇️</button>
+          <button onclick="sell(${bIndex},${iIndex})">Bán</button>
+          <button onclick="waste(${bIndex},${iIndex})">Trừ lỗi</button>
+          <button onclick="deleteItem(${bIndex},${iIndex})">🗑</button>
+          <button onclick="moveItem(${bIndex},${iIndex},-1)">⬆️</button>
+          <button onclick="moveItem(${bIndex},${iIndex},1)">⬇️</button>
         </td>
       </tr>`;
     });
-    html += `</table>`;
-
-    html += `
+    html+=`</table>
       <div class="form-group">
         <h4>➕ Thêm món</h4>
         <input placeholder="Tên món" id="new-name-${bIndex}">
@@ -216,190 +139,179 @@ function renderBranches() {
         <input placeholder="Tồn kho" type="number" id="new-stock-${bIndex}">
         <input placeholder="Giá" type="number" id="new-price-${bIndex}">
         <button onclick="addItem(${bIndex})">Thêm</button>
-      </div>
-    `;
+      </div>`;
 
     container.appendChild(div);
-    div.innerHTML = html;
+    div.innerHTML=html;
   });
 }
 
-function renderReport() {
-  const report = document.getElementById('report');
-  const grouped = {};
-  salesData.logs.forEach(log => {
-    const date = log.time.slice(0, 10);
-    const month = log.time.slice(0, 7);
-    if (!grouped[month]) grouped[month] = {};
-    if (!grouped[month][date]) grouped[month][date] = [];
+// =================== Render báo cáo ===================
+function renderReport(){
+  const report=document.getElementById('report');
+  const grouped={};
+  salesData.logs.forEach(log=>{
+    const date=log.time.slice(0,10);
+    const month=log.time.slice(0,7);
+    if(!grouped[month]) grouped[month]={};
+    if(!grouped[month][date]) grouped[month][date]=[];
     grouped[month][date].push(log);
   });
 
-  let html = '';
-  const months = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
-  if (months.length === 0) {
-    report.innerText = 'Không có dữ liệu để hiển thị.';
-    return;
-  }
+  let html='';
+  const months=Object.keys(grouped).sort((a,b)=>b.localeCompare(a));
+  if(months.length===0){ report.innerText='Không có dữ liệu để hiển thị.'; return; }
 
-  months.forEach((month, index) => {
-    const monthId = `month-${index}`;
-    let monthTotal = 0;
-    let monthTable = '';
-
-    const days = Object.keys(grouped[month]).sort((a, b) => b.localeCompare(a));
-    days.forEach(date => {
-      let dayTotal = 0;
-      let dayRows = '';
-
-      grouped[month][date].forEach(log => {
-        const amount = log.price * log.quantity;
-        dayTotal += amount;
-        monthTotal += amount;
-        dayRows += `
-          <tr>
-            <td data-label="Ngày">${date}</td>
-            <td data-label="Chi nhánh">${log.branch}</td>
-            <td data-label="Món">${log.item}</td>
-            <td class="numeric" data-label="Số lượng">${log.quantity} ${log.unit || ''}</td>
-            <td class="numeric" data-label="Giá">${log.price.toLocaleString()}₫</td>
-            <td class="numeric" data-label="Thành tiền">${amount.toLocaleString()}₫</td>
-          </tr>
-        `;
+  months.forEach((month,index)=>{
+    const monthId=`month-${index}`;
+    let monthTotal=0; let monthTable='';
+    const days=Object.keys(grouped[month]).sort((a,b)=>b.localeCompare(a));
+    days.forEach(date=>{
+      let dayTotal=0; let dayRows='';
+      grouped[month][date].forEach(log=>{
+        const amount=log.price*log.quantity;
+        dayTotal+=amount; monthTotal+=amount;
+        dayRows+=`<tr>
+          <td data-label="Ngày">${date}</td>
+          <td data-label="Chi nhánh">${log.branch}</td>
+          <td data-label="Món">${log.item}</td>
+          <td class="numeric" data-label="Số lượng">${log.quantity} ${log.unit||''}</td>
+          <td class="numeric" data-label="Giá">${log.price.toLocaleString()}₫</td>
+          <td class="numeric" data-label="Thành tiền">${amount.toLocaleString()}₫</td>
+        </tr>`;
       });
-      dayRows += `
-          <tr style="background: #f1f1f1; font-weight: bold;">
-            <td colspan="5" style="text-align:left;">Tổng ngày ${date}:</td>
-            <td class="numeric">${dayTotal.toLocaleString()}₫</td>
-          </tr>
-        `;
-      monthTable += dayRows;
+      dayRows+=`<tr style="background:#f1f1f1;font-weight:bold;">
+        <td colspan="5" style="text-align:left;">Tổng ngày ${date}:</td>
+        <td class="numeric">${dayTotal.toLocaleString()}₫</td>
+      </tr>`;
+      monthTable+=dayRows;
     });
-
-    html += `
-      <div class="month-section">
-        <div class="month-header" onclick="toggleMonth('${monthId}')">🗓 Tháng ${month} — Tổng: ${monthTotal.toLocaleString()}₫</div>
-        <div id="${monthId}" class="month-content">
-          <table>
-            <thead>
-              <tr>
-                <th>Ngày</th><th>Chi nhánh</th><th>Món</th><th>Số lượng</th><th>Giá</th><th>Thành tiền</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${monthTable}
-            </tbody>
-          </table>
-        </div>
+    html+=`<div class="month-section">
+      <div class="month-header" onclick="toggleMonth('${monthId}')">🗓 Tháng ${month} — Tổng: ${monthTotal.toLocaleString()}₫</div>
+      <div id="${monthId}" class="month-content">
+        <table>
+          <thead><tr><th>Ngày</th><th>Chi nhánh</th><th>Món</th><th>Số lượng</th><th>Giá</th><th>Thành tiền</th></tr></thead>
+          <tbody>${monthTable}</tbody>
+        </table>
       </div>
-    `;
+    </div>`;
   });
-
-  report.innerHTML = html;
+  report.innerHTML=html;
 }
 
-function toggleMonth(id) {
-  const el = document.getElementById(id);
-  el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
+function toggleMonth(id){
+  const el=document.getElementById(id);
+  el.style.display=(el.style.display==='none'||el.style.display==='')?'block':'none';
 }
 
-function addBranch() {
-  const name = document.getElementById('newBranchName').value.trim();
-  if (!name) return alert('Nhập tên chi nhánh!');
-  const pin = prompt("Nhập mã PIN cho chi nhánh:");
-  salesData.branches.push({ name, pin, menu: [] });
+// =================== CRUD chi nhánh/món ===================
+function addBranch(){
+  const name=document.getElementById('newBranchName').value.trim();
+  if(!name) return alert('Nhập tên chi nhánh!');
+  const pin=prompt("Nhập mã PIN cho chi nhánh:");
+  salesData.branches.push({name,pin,menu:[]});
   saveData();
 }
 
-function addItem(bIndex) {
-  const name = document.getElementById(`new-name-${bIndex}`).value.trim();
-  const unit = document.getElementById(`new-unit-${bIndex}`).value.trim();
-  const stock = parseInt(document.getElementById(`new-stock-${bIndex}`).value);
-  const price = parseInt(document.getElementById(`new-price-${bIndex}`).value);
-  if (!name || !unit || isNaN(stock) || isNaN(price)) return alert('Nhập đủ thông tin món!');
-  salesData.branches[bIndex].menu.push({ name, unit, stock, price });
+function addItem(bIndex){
+  const name=document.getElementById(`new-name-${bIndex}`).value.trim();
+  const unit=document.getElementById(`new-unit-${bIndex}`).value.trim();
+  const stock=parseInt(document.getElementById(`new-stock-${bIndex}`).value);
+  const price=parseInt(document.getElementById(`new-price-${bIndex}`).value);
+  if(!name || !unit || isNaN(stock) || isNaN(price)) return alert('Nhập đủ thông tin món!');
+  salesData.branches[bIndex].menu.push({name,unit,stock,price});
   saveData();
 }
-function moveItem(bIndex, iIndex, direction) {
-  const menu = salesData.branches[bIndex].menu;
-  const newIndex = iIndex + direction;
 
-  // Kiểm tra giới hạn
-  if (newIndex < 0 || newIndex >= menu.length) return;
-
-  // Đổi vị trí
-  const temp = menu[iIndex];
-  menu[iIndex] = menu[newIndex];
-  menu[newIndex] = temp;
-
-  saveData(false); 
-  renderBranches(); 
-}
-
-
-function editItem(bIndex, iIndex, field, value) {
-  if (field === 'stock' || field === 'price') value = parseInt(value);
-  salesData.branches[bIndex].menu[iIndex][field] = value;
+function editItem(bIndex,iIndex,field,value){
+  if(field==='stock'||field==='price') value=parseInt(value);
+  salesData.branches[bIndex].menu[iIndex][field]=value;
   saveData(false);
 }
 
-function deleteItem(bIndex, iIndex) {
-  if (!confirm('Xóa món này?')) return;
-  salesData.branches[bIndex].menu.splice(iIndex, 1);
+function deleteItem(bIndex,iIndex){
+  if(!confirm('Xóa món này?')) return;
+  salesData.branches[bIndex].menu.splice(iIndex,1);
   saveData();
 }
 
-function sell(bIndex, iIndex) {
-  const input = document.getElementById(`sell-${bIndex}-${iIndex}`);
-  const qty = parseInt(input.value);
-  const item = salesData.branches[bIndex].menu[iIndex];
-  if (!qty || qty <= 0 || qty > item.stock) return alert('Số lượng không hợp lệ.');
+function moveItem(bIndex,iIndex,direction){
+  const menu=salesData.branches[bIndex].menu;
+  const newIndex=iIndex+direction;
+  if(newIndex<0||newIndex>=menu.length) return;
+  [menu[iIndex],menu[newIndex]]=[menu[newIndex],menu[iIndex]];
+  saveData(false); renderBranches();
+}
 
-  item.stock -= qty;
+// =================== Bán / Trừ lỗi ===================
+function sell(bIndex,iIndex){
+  const input=document.getElementById(`sell-${bIndex}-${iIndex}`);
+  const qty=parseInt(input.value);
+  const item=salesData.branches[bIndex].menu[iIndex];
+  if(!qty||qty<=0||qty>item.stock) return alert('Số lượng không hợp lệ.');
+  item.stock-=qty;
   salesData.logs.push({
-    branch: salesData.branches[bIndex].name,
-    item: item.name,
-    unit: item.unit || '',
-    quantity: qty,
-    price: item.price,
-    time: new Date().toISOString()
+    branch:salesData.branches[bIndex].name,
+    item:item.name,
+    unit:item.unit||'',
+    quantity:qty,
+    price:item.price,
+    time:new Date().toISOString()
   });
-
-  sendTelegram(`Đã bán ${qty} ${item.unit || ''} ${item.name} tại ${salesData.branches[bIndex].name}`);
+  sendTelegram(`Đã bán ${qty} ${item.unit||''} ${item.name} tại ${salesData.branches[bIndex].name}`);
   saveData();
+  input.value='';
 }
 
-async function sendTelegram(msg) {
-  await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: CHAT_ID, text: msg })
+function waste(bIndex,iIndex){
+  const input=document.getElementById(`waste-${bIndex}-${iIndex}`);
+  const qty=parseInt(input.value);
+  const item=salesData.branches[bIndex].menu[iIndex];
+  if(!qty||qty<=0||qty>item.stock) return alert('Số lượng trừ lỗi không hợp lệ.');
+  item.stock-=qty;
+  salesData.logs.push({
+    branch:salesData.branches[bIndex].name,
+    item:item.name,
+    unit:item.unit||'',
+    quantity:qty,
+    price:0,
+    type:'waste',
+    time:new Date().toISOString()
   });
+  sendTelegram(`Trừ lỗi ${qty} ${item.unit||''} ${item.name} tại ${salesData.branches[bIndex].name}`);
+  saveData();
+  input.value='';
 }
 
-function editPin(bIndex, newPin) {
-  const branchName = salesData.branches[bIndex].name;
-  salesData.branches[bIndex].pin = newPin;
-  for (const pin in salesData.pins) {
-    if (salesData.pins[pin] === branchName) delete salesData.pins[pin];
-  }
-  salesData.pins[newPin] = branchName;
+// =================== PIN ===================
+function editPin(bIndex,newPin){
+  const branchName=salesData.branches[bIndex].name;
+  salesData.branches[bIndex].pin=newPin;
+  for(const pin in salesData.pins){ if(salesData.pins[pin]===branchName) delete salesData.pins[pin]; }
+  salesData.pins[newPin]=branchName;
   saveData(false);
 }
-
-function togglePin(bIndex) {
-  const input = document.getElementById(`pin-${bIndex}`);
-  input.type = input.type === 'password' ? 'text' : 'password';
+function togglePin(bIndex){
+  const input=document.getElementById(`pin-${bIndex}`);
+  input.type=input.type==='password'?'text':'password';
 }
 
-async function saveData(refresh = true) {
-  await fetch(SCRIPT_URL, {
-    method: 'POST',
-    body: JSON.stringify(salesData),
+// =================== Server ===================
+async function saveData(refresh=true){
+  await fetch(SCRIPT_URL,{ method:'POST', body:JSON.stringify(salesData) });
+  if(refresh) fetchSalesData();
+}
+
+// =================== Telegram ===================
+async function sendTelegram(msg){
+  await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({chat_id:CHAT_ID,text:msg})
   });
-  if (refresh) fetchSalesData();
 }
 
+// =================== Init ===================
 fetchSalesData();
 </script>
 </body>
