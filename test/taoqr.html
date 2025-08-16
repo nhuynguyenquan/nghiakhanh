@@ -20,7 +20,7 @@
       font-size: 16px;
     }
     #qrcode {
-      margin-top: 20px;
+      margin: 20px auto;
     }
   </style>
 </head>
@@ -29,6 +29,7 @@
 
   <input type="text" id="qrInput" placeholder="Nhập nội dung hoặc URL" size="40">
   <button onclick="generateQR()">Tạo QR</button>
+  <button id="downloadBtn" onclick="downloadQR()" style="display:none;">Download PNG</button>
 
   <div id="qrcode"></div>
 
@@ -36,6 +37,7 @@
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
   <script>
     let qr;
+
     function generateQR() {
       const text = document.getElementById("qrInput").value.trim();
       if (!text) {
@@ -52,6 +54,19 @@
         colorLight: "#ffffff",
         correctLevel: QRCode.CorrectLevel.H
       });
+      document.getElementById("downloadBtn").style.display = "inline-block";
+    }
+
+    function downloadQR() {
+      const qrCanvas = document.querySelector("#qrcode canvas");
+      if (!qrCanvas) {
+        alert("Vui lòng tạo QR trước!");
+        return;
+      }
+      const link = document.createElement("a");
+      link.href = qrCanvas.toDataURL("image/png");
+      link.download = "qrcode.png";
+      link.click();
     }
   </script>
 </body>
