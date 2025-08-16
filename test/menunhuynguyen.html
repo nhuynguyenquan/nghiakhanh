@@ -1,102 +1,115 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Menu cà phê Nhụy Nguyên</title>
-  <style>
-    :root{
-      --accent:#7bb4e3;
-      --accent-dark:#5a8fb9;
-      --text:#1f2937;
-      --paper:#fffdf7;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; background:#eceff3; color:var(--text);
-      font: 16px/1.45 "Times New Roman", Georgia, serif;
-      display:grid; place-items:center; padding:24px;
-    }
-
-    .page{
-      width:210mm; height:297mm; background:var(--paper);
-      position:relative; box-shadow:0 10px 30px rgba(0,0,0,.15);
-      padding:20mm 18mm;
-    }
-    @media print{
-      body{background:var(--paper); box-shadow:none; padding:0}
-      .page{box-shadow:none; margin:0; width:auto; height:auto; page-break-after:always}
-    }
-
-    .border{position:absolute; inset:8mm; pointer-events:none}
-    .border:before, .border:after{content:""; position:absolute; inset:0; border-radius:8mm}
-    .border:before{border: 3px solid #b8842b}
-    .border:after{inset:4mm; border: 3px solid #f1d08a}
-
-    header{ text-align:center; margin-top:8mm; margin-bottom:6mm; }
-    h1{ font-size:34px; margin:0; color:#67a6da; }
-
-    .menu{ margin-top:8mm; display:grid; gap:10px; }
-    .item{
-      display:grid; grid-template-columns:56px 1fr auto; align-items:center; gap:12px;
-      background: #e7f0f9; border:2px solid var(--accent); border-radius:12px;
-      padding:6px 10px; 
-    }
-    .item:nth-child(odd){ background:#eef6ff }
-    .thumb{
-      width:56px; height:42px; border-radius:8px; object-fit:cover;
-      border:2px solid #fff; outline:2px solid var(--accent-dark);
-    }
-    .label{ font-size:18px; font-weight:bold; color:#1f3d57 }
-    .price{ font-size:18px; font-weight:bold; color:#b91c1c; }
-
-    footer{ position:absolute; left:0; right:0; bottom:18mm; display:flex; align-items:flex-end; justify-content:space-between; padding:0 18mm; }
-    .thanks{ font-style:italic; font-weight:600 }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Chọn món - Demo</title>
+<style>
+  body { font-family: sans-serif; margin: 0; padding: 0; background: #fafafa; }
+  h1 { text-align: center; padding: 1rem; background: #ff914d; color: #fff; margin: 0; }
+  .container { display: flex; flex-wrap: wrap; padding: 1rem; gap: 1rem; justify-content: center; }
+  .item { width: 150px; background: #fff; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.2s; }
+  .item:hover { transform: scale(1.05); }
+  .thumb { width: 100%; height: 100px; object-fit: cover; }
+  .label { padding: .5rem; font-weight: bold; text-align: center; }
+  .price { padding: 0 .5rem 0.5rem; text-align: center; color: #555; }
+  .cart { background: #fff; border-top: 2px solid #ff914d; padding: 1rem; position: fixed; bottom: 0; left: 0; right: 0; max-height: 40%; overflow-y: auto; }
+  .cart h2 { margin-top: 0; }
+  .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #eee; }
+  .cart-controls { display: flex; align-items: center; gap: 0.5rem; }
+  .cart-controls button { padding: 0.2rem 0.5rem; border: none; background: #ff914d; color: white; border-radius: 4px; cursor: pointer; }
+  .total { font-weight: bold; text-align: right; margin-top: 0.5rem; }
+  .send-btn { width: 100%; padding: 0.7rem; margin-top: 0.5rem; border: none; background: #28a745; color: white; font-size: 1rem; border-radius: 6px; cursor: pointer; }
+</style>
 </head>
 <body>
-  <main class="page" role="document">
-    <div class="border" aria-hidden="true"></div>
+  <h1>Thực đơn</h1>
+  <div class="container" id="menuList"></div>
 
-    <header>
-      <h1>Các món phục vụ</h1>
-      <div class="subtitle">Menu gợi ý – Quý khách có thể thay đổi món</div>
-    </header>
+  <div class="cart" id="cart">
+    <h2>Giỏ hàng</h2>
+    <div id="cartItems"></div>
+    <div class="total" id="cartTotal">Tổng: 0đ</div>
+    <button class="send-btn" onclick="sendOrder()">Gửi đơn</button>
+  </div>
 
-    <section class="menu" aria-label="Danh sách món" id="menuList">
-      <!-- Danh sách món sẽ được render bằng JS -->
-    </section>
+<script>
+const menuItems = [
+  { id: "ca-phe-muoi", name: "Cà phê muối", price: 15000, img: "https://picsum.photos/seed/caphe-muoi/200/150" },
+  { id: "ca-phe-den", name: "Cà phê đen", price: 15000, img: "https://picsum.photos/seed/caphe-den/200/150" },
+  { id: "ca-phe-sua", name: "Cà phê sữa", price: 20000, img: "https://picsum.photos/seed/caphe-sua/200/150" },
+  { id: "bo-huc", name: "Bò húc", price: 15000, img: "https://picsum.photos/seed/bo-huc/200/150" },
+  { id: "number1", name: "Number 1", price: 15000, img: "https://picsum.photos/seed/number1/200/150" },
+  { id: "nuoc-loc", name: "Nước lọc", price: 5000, img: "https://picsum.photos/seed/nuoc-loc/200/150" },
+  { id: "tra-xanh", name: "Trà xanh 0 độ", price: 15000, img: "https://picsum.photos/seed/tra-xanh/200/150" }
+];
 
-    <footer>
-      <div class="thanks">Cảm ơn quý khách. Chúc quý khách một ngày vui vẻ!</div>
-    </footer>
-  </main>
+const cart = {};
 
-  <script>
-    // Danh sách món DEMO
-    const demoMenu = [
-      {id:"cf-muoi", name:"Cà phê muối", price:15000, img:"https://picsum.photos/seed/ca-phe-muoi/160/120"},
-      {id:"cf-den", name:"Cà phê đen", price:15000, img:"https://picsum.photos/seed/ca-phe-den/160/120"},
-      {id:"cf-sua", name:"Cà phê sữa", price:20000, img:"https://picsum.photos/seed/ca-phe-sua/160/120"},
-      {id:"bo-huc", name:"Bò húc", price:15000, img:"https://picsum.photos/seed/bo-huc/160/120"},
-      {id:"number1", name:"Number 1", price:15000, img:"https://picsum.photos/seed/number1/160/120"},
-      {id:"nuoc-loc", name:"Nước lọc", price:5000, img:"https://picsum.photos/seed/nuoc-loc/160/120"},
-      {id:"tra-xanh", name:"Trà xanh 0 độ", price:15000, img:"https://picsum.photos/seed/tra-xanh/160/120"},
-    ];
+function renderMenu() {
+  const menuList = document.getElementById("menuList");
+  menuItems.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <img class="thumb" src="${item.img}" alt="${item.name}" />
+      <div class="label">${item.name}</div>
+      <div class="price">${item.price.toLocaleString()}đ</div>
+    `;
+    div.onclick = () => addToCart(item);
+    menuList.appendChild(div);
+  });
+}
 
-    const menuList = document.getElementById("menuList");
+function addToCart(item) {
+  if (!cart[item.id]) {
+    cart[item.id] = { ...item, quantity: 1 };
+  } else {
+    cart[item.id].quantity++;
+  }
+  renderCart();
+}
 
-    demoMenu.forEach(item=>{
-      const div = document.createElement("div");
-      div.className = "item";
-      div.innerHTML = `
-        <img class="thumb" src="${item.img}" alt="${item.name}" />
-        <div class="label">${item.name}</div>
-        <div class="price">${item.price.toLocaleString()}đ</div>
-      `;
-      menuList.appendChild(div);
-    });
-  </script>
+function changeQuantity(id, delta) {
+  if (cart[id]) {
+    cart[id].quantity += delta;
+    if (cart[id].quantity <= 0) delete cart[id];
+    renderCart();
+  }
+}
+
+function renderCart() {
+  const cartItems = document.getElementById("cartItems");
+  cartItems.innerHTML = "";
+  let total = 0;
+  Object.values(cart).forEach(item => {
+    total += item.price * item.quantity;
+    const div = document.createElement("div");
+    div.className = "cart-item";
+    div.innerHTML = `
+      <span>${item.name}</span>
+      <div class="cart-controls">
+        <button onclick="changeQuantity('${item.id}', -1)">-</button>
+        <span>${item.quantity}</span>
+        <button onclick="changeQuantity('${item.id}', 1)">+</button>
+      </div>
+      <span>${(item.price * item.quantity).toLocaleString()}đ</span>
+    `;
+    cartItems.appendChild(div);
+  });
+  document.getElementById("cartTotal").innerText = "Tổng: " + total.toLocaleString() + "đ";
+}
+
+function sendOrder() {
+  if (Object.keys(cart).length === 0) {
+    alert("Giỏ hàng trống!");
+    return;
+  }
+  alert("Đơn hàng đã gửi:\n" + JSON.stringify(cart, null, 2));
+  // sau này có thể gửi lên server hoặc Telegram
+}
+
+renderMenu();
+</script>
 </body>
 </html>
