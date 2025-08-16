@@ -32,6 +32,7 @@ const shopId = getParam('id');
 const token = getParam('token');
 if(!shopId || !token){
   document.body.innerHTML = "<p>Thiếu ID quán hoặc token!</p>";
+  return;
 }
 
 // --- JSONP callback cho CORS ---
@@ -50,8 +51,10 @@ function loadMenuJSONP(data){
   shop.menu.forEach(item => {
     const div = document.createElement('div');
     div.className = "menu-item";
-    div.innerHTML = `${item.item} - ${item.price}₫ <button onclick="addToCart('${encodeURIComponent(item.item)}', ${item.price})">Chọn</button>`;
-    menuList.appendChild(div);
+   div.innerHTML = `${item.item} - ${item.price}₫ <button data-name="${item.item}" data-price="${item.price}">Chọn</button>`;
+div.querySelector('button').addEventListener('click', function(){
+  addToCart(this.dataset.name, parseInt(this.dataset.price));
+});
   });
 }
 
@@ -81,13 +84,14 @@ function renderCart(){
   div.appendChild(t);
 }
 
-// load menu bằng JSONP
 function loadMenu(){
+  if(!shopId || !token) return;
   const script = document.createElement('script');
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbzfcZpxQtpl1Ag8UW4kOy_ua8DkziIiiRP0irp3qPE1HhvInHjv7UoYEQ3oaSalGLUo_w/exec"; 
-  script.src = `${GAS_URL}?callback=loadMenuJSONP`;
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbzfcZpxQtpl1Ag8UW4kOy_ua8DkziIiiRP0irp3qPE1HhvInHjv7UoYEQ3oaSalGLUo_w/exec";
+  script.src = `${GAS_URL}?callback=loadMenuJSONP&id=${shopId}`;
   document.body.appendChild(script);
 }
+
 
 // gửi đơn hàng (POST, no-cors)
 function submitOrder(){
