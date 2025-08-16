@@ -217,11 +217,13 @@ function renderReport() {
     const days=Object.keys(grouped[month]).sort((a,b)=>b.localeCompare(a));
     days.forEach(date=>{
       let dayTotal=0;
+      let dayWasteQty=0;
       let dayRows='';
       grouped[month][date].forEach(log=>{
-        const amount=log.price*log.quantity;
+        const amount = log.price * log.quantity;
         if(log.type==='sale'){ dayTotal+=amount; monthTotal+=amount; }
-        const label=log.type==='waste'?'💀 Bị lỗi':log.item;
+        if(log.type==='waste'){ dayWasteQty+=log.quantity; }
+        const label=log.type==='waste'?'💀 Bị lỗi '+log.item:log.item;
         dayRows+=`
           <tr style="${log.type==='waste'?'background:#ffe6e6;':''}">
             <td data-label="Ngày">${date}</td>
@@ -233,9 +235,17 @@ function renderReport() {
           </tr>
         `;
       });
+      if(dayWasteQty>0){
+        dayRows+=`
+          <tr style="background:#ffd6d6; font-weight:bold;">
+            <td colspan="5">Tổng số lượng bị lỗi</td>
+            <td class="numeric">${dayWasteQty}</td>
+          </tr>
+        `;
+      }
       dayRows+=`
         <tr style="background:#f1f1f1;font-weight:bold;">
-          <td colspan="5" style="text-align:left;">Tổng ngày ${date}:</td>
+          <td colspan="5" style="text-align:left;">Tổng doanh thu ngày ${date}:</td>
           <td class="numeric">${dayTotal.toLocaleString()}₫</td>
         </tr>
       `;
@@ -244,13 +254,11 @@ function renderReport() {
 
     html+=`
       <div class="month-section">
-        <div class="month-header" onclick="toggleMonth('${monthId}')">🗓 Tháng ${month} — Tổng: ${monthTotal.toLocaleString()}₫</div>
+        <div class="month-header" onclick="toggleMonth('${monthId}')">🗓 Tháng ${month} — Tổng doanh thu: ${monthTotal.toLocaleString()}₫</div>
         <div id="${monthId}" class="month-content">
           <table>
             <thead>
-              <tr>
-                <th>Ngày</th><th>Chi nhánh</th><th>Món</th><th>Số lượng</th><th>Giá</th><th>Thành tiền</th>
-              </tr>
+              <tr><th>Ngày</th><th>Chi nhánh</th><th>Món</th><th>Số lượng</th><th>Giá</th><th>Thành tiền</th></tr>
             </thead>
             <tbody>${monthTable}</tbody>
           </table>
@@ -262,49 +270,49 @@ function renderReport() {
   report.innerHTML=html;
 }
 
-function toggleMonth(id){ const el=document.getElementById(id); el.style.display=(el.style.display===''||el.style.display==='none')?'block':'none'; }
+function toggleMonth(id){ const el=document.getElementById(id); el.style.display=(el.style.display==='none'||el.style.display==='')?'block':'none'; }
 
-function addBranch(){
-  const name=document.getElementById('newBranchName').value.trim();
+function addBranch() {
+  const name = document.getElementById('newBranchName').value.trim();
   if(!name) return alert('Nhập tên chi nhánh!');
-  const pin=prompt("Nhập mã PIN cho chi nhánh:");
-  salesData.branches.push({name,pin,menu:[]});
+  const pin = prompt("Nhập mã PIN cho chi nhánh:");
+  salesData.branches.push({ name, pin, menu: [] });
   saveData();
 }
 
-function addItem(bIndex){
+function addItem(bIndex) {
   const name=document.getElementById(`new-name-${bIndex}`).value.trim();
   const unit=document.getElementById(`new-unit-${bIndex}`).value.trim();
   const stock=parseInt(document.getElementById(`new-stock-${bIndex}`).value);
   const price=parseInt(document.getElementById(`new-price-${bIndex}`).value);
-  if(!name||!unit||isNaN(stock)||isNaN(price)) return alert('Nhập đủ thông tin món!');
-  salesData.branches[bIndex].menu.push({name,unit,stock,price});
+  if(!name || !unit || isNaN(stock) || isNaN(price)) return alert('Nhập đủ thông tin món!');
+  salesData.branches[bIndex].menu.push({ name, unit, stock, price });
   saveData();
 }
 
 function moveItem(bIndex,iIndex,direction){
   const menu=salesData.branches[bIndex].menu;
   const newIndex=iIndex+direction;
-  if(newIndex<0||newIndex>=menu.length) return;
+  if(newIndex<0||newIndex>=menu.length)return;
   [menu[iIndex],menu[newIndex]]=[menu[newIndex],menu[iIndex]];
   saveData(false);
   renderBranches();
 }
 
 function editItem(bIndex,iIndex,field,value){
-  if(field==='stock'||field==='price') value=parseInt(value);
+  if(field==='stock'||field==='price')value=parseInt(value);
   salesData.branches[bIndex].menu[iIndex][field]=value;
   saveData(false);
 }
 
 function deleteItem(bIndex,iIndex){
-  if(!confirm('Xóa món này?')) return;
+  if(!confirm('Xóa món này?'))return;
   salesData.branches[bIndex].menu.splice(iIndex,1);
   saveData();
 }
 
-function sendTelegram(msg){
-  fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
+async function sendTelegram(msg){
+  await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({chat_id:CHAT_ID,text:msg})
@@ -314,13 +322,14 @@ function sendTelegram(msg){
 function editPin(bIndex,newPin){
   const branchName=salesData.branches[bIndex].name;
   salesData.branches[bIndex].pin=newPin;
+  if(salesData.pins) {
+    for(const pin in salesData.pins){ if(salesData.pins[pin]===branchName) delete salesData.pins[pin]; }
+    salesData.pins[newPin]=branchName;
+  }
   saveData(false);
 }
 
-function togglePin(bIndex){
-  const input=document.getElementById(`pin-${bIndex}`);
-  input.type=input.type==='password'?'text':'password';
-}
+function togglePin(bIndex){ const input=document.getElementById(`pin-${bIndex}`); input.type=input.type==='password'?'text':'password'; }
 
 async function saveData(refresh=true){
   await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(salesData)});
