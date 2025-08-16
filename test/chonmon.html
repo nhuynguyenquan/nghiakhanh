@@ -84,7 +84,7 @@ function renderCart(){
 // load menu bằng JSONP
 function loadMenu(){
   const script = document.createElement('script');
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbxXfBuxVuooLolfvbx9CMQ9KSFWFbDYVSjOC9q-uIZYKVGxWJ1Z9poMZdCbp3epUTnCtQ/exec"; 
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbzfcZpxQtpl1Ag8UW4kOy_ua8DkziIiiRP0irp3qPE1HhvInHjv7UoYEQ3oaSalGLUo_w/exec"; 
   script.src = `${GAS_URL}?callback=loadMenuJSONP`;
   document.body.appendChild(script);
 }
@@ -92,7 +92,7 @@ function loadMenu(){
 // gửi đơn hàng (POST, no-cors)
 function submitOrder(){
   if(!cart.length){ alert('Chưa chọn món!'); return; }
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbxXfBuxVuooLolfvbx9CMQ9KSFWFbDYVSjOC9q-uIZYKVGxWJ1Z9poMZdCbp3epUTnCtQ/exec"; 
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbxaAGBglJr0xfin_Sqb1SejgAgTCJ6fTB1uv_e0W0o7SZ-uPJ0U1hPAM8O00fLL4c8lLg/exec"; 
 
   const payload = {id: shopId, token, items: cart};
 
