@@ -88,7 +88,7 @@ async function submitOrder() {
 
   if (!cart.length) { alert('Chưa chọn món!'); return; }
 
-  const res = await fetch('YOUR_GAS_URL', {
+  const res = await fetch('https://script.google.com/macros/s/AKfycbzz6745WQqTcI6WUypUVwwsZEb3M_FA0mWsVonR7luMfiy4zDF8UqJ-dZf0dTOyBaXLpA/exec', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id: shopId, token, items: cart })
