@@ -4,13 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nhụy Nguyên - QR Redirect</title>
-  <style>
-    body { font-family: sans-serif; padding: 20px; text-align: center; }
-    a { font-size: 18px; color: blue; text-decoration: underline; }
-  </style>
 </head>
-<body>
-  <h2>Đang xử lý liên kết...</h2>
+<body style="font-family:sans-serif; text-align:center; padding:20px;">
+  <h2>Đang chuyển hướng...</h2>
   <p id="message">Vui lòng đợi...</p>
 
   <script>
@@ -20,13 +16,16 @@
     if (!id) {
       document.getElementById('message').innerText = "Không tìm thấy ID!";
     } else {
-      const GAS_URL = "https://script.google.com/macros/s/AKfycbzkK7gHJtOfNDev_lM-VA0e2gy6pWKk9_0x4y0RPnItl3-cpRYpKwtM_T1Nrr49--hq4A/exec"; 
-
+      const GAS_URL = "https://script.google.com/macros/s/AKfycby_UC0vvecXC0sy1jJdybGPQmQFvUjT_1jb09HXR0ltir9nPucWhCI1_Zurx42u59Vsbw/exec"; 
       fetch(`${GAS_URL}?id=${encodeURIComponent(id)}`)
-        .then(r => r.text())
-        .then(html => {
-          // GAS trả về HTML link bấm tay
-          document.write(html);
+        .then(r => r.json())
+        .then(data => {
+          if (data.url) {
+            // Redirect trình duyệt sang URL nhận được từ GAS
+            window.location.href = data.url;
+          } else {
+            document.getElementById('message').innerText = "Không nhận được URL từ server";
+          }
         })
         .catch(err => {
           document.getElementById('message').innerText = "Lỗi kết nối API: " + err;
