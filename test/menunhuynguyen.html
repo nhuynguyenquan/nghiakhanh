@@ -216,9 +216,7 @@ function sendOrder() {
 
   fetch("https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLiXG5qSC9u51UJPTSq09JzRelJpDaCgb_I-P5cJZDjOd7SEw6NJx_syLwPLHKzqMu_9xKxdMcEX03zfXKK0znMhHLzf2WPY8imSLO57tjLp48SXFanx6mJNRl9Fw9C5XGhT-eQivEpatQUopzNFwsafBZoEBIS4GvW42sIo_A9FGcGtOsTioulQCLrvkDesKHnKhi9zZbjHvp3MvzaMse9A5Y49gxtrV7SkCG6cxKsTdzxLun34WHdtxvTWFLRbOreptlLqBSNr5ItzLwgDQgLUxJKxbfnF4kOeNWpV&lib=ME4lHWJhNI4WF-Y5IVCVDnFnRYxtoENKd", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    
     body: JSON.stringify(order)
   })
   .then(res => res.json())
