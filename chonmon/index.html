@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Chọn món - Demo</title>
+<style>
+/* CSS giữ nguyên như trước */
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin:0; padding:0; background:#fafafa;}
+h1 {text-align:center; padding:1rem; background:#ff914d; color:#fff; margin:0; font-size:1.3rem;}
+.container {display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); gap:0.8rem; padding:0.8rem;}
+.item {background:#fff; border:1px solid #ddd; border-radius:10px; overflow:hidden; cursor:pointer; transition:transform 0.15s; display:flex; flex-direction:column;}
+.item:active {transform:scale(0.97);}
+.thumb {width:100%; height:100px; object-fit:cover;}
+.label {padding:0.4rem; font-weight:600; text-align:center; font-size:0.9rem;}
+.price {padding-bottom:0.6rem; text-align:center; color:#555; font-size:0.85rem;}
+.cart {background:#fff; border-top:2px solid #ff914d; padding:0.8rem; position:fixed; bottom:0; left:0; right:0; max-height:45%; overflow-y:auto; box-shadow:0 -2px 6px rgba(0,0,0,0.1);}
+.cart h2 {margin:0 0 0.5rem; font-size:1.1rem;}
+.cart-item {
+  display: flex;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+  gap: 0.5rem;
+}
+
+.cart-item .name {
+  flex: 2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cart-item .quantity-controls {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.cart-item .quantity-controls button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 1rem;
+}
+
+.cart-item .item-total {
+  flex: 1;
+  text-align: right;
+  white-space: nowrap;
+}
+.cart-controls {display:flex; align-items:center; gap:0.3rem;}
+.cart-controls button {padding:0.3rem 0.6rem; border:none; background:#ff914d; color:white; border-radius:4px; font-size:1rem; cursor:pointer;}
+.total {font-weight:bold; text-align:right; margin-top:0.5rem; font-size:1rem;}
+.send-btn {width:100%; padding:0.8rem; margin-top:0.6rem; border:none; background:#28a745; color:white; font-size:1rem; border-radius:6px; cursor:pointer;}
+@media (max-width:400px) { .thumb{height:80px;} .label{font-size:0.85rem;} .price{font-size:0.8rem;} }
+.send-btn .spinner {
+  border: 2px solid #fff;
+  border-top: 2px solid rgba(255,255,255,0.5);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
+</head>
+<body>
+<h1>MENU</h1>
+<div style="background:#fff; padding:0.8rem; margin:0.8rem; border-radius:10px; box-shadow:0 2px 4px rgba(0,0,0,0.1); font-size:0.9rem; line-height:1.4;">
+  <strong>Hướng dẫn đặt món:</strong>
+  <ol style="padding-left:1.2rem; margin:0.5rem 0;">
+    <li>Chạm vào món bạn muốn chọn để thêm vào giỏ hàng.</li>
+    <li>Trong giỏ hàng, bấm <strong>+</strong> hoặc <strong>-</strong> để điều chỉnh số lượng.</li>
+    <li>Xem tổng tiền ở cuối giỏ hàng.</li>
+    <li>Bấm nút <strong>Gửi đơn</strong> để đặt món. Bạn sẽ nhận được thông báo khi gửi thành công.</li>
+    <li>Nếu link hết hạn, vui lòng quét lại QR để lấy link mới.</li>
+  </ol>
+</div>
+<div class="container" id="menuList"></div>
+
+<div class="cart" id="cart">
+  <h2>Giỏ hàng</h2>
+  <div id="cartItems"></div>
+  <div class="total" id="cartTotal">Tổng: 0đ</div>
+  <button class="send-btn" id="sendBtn" onclick="sendOrder()">Gửi đơn</button>
+</div>
+
+<script>
+const cart = {};
+// Lấy param id/token từ URL
+const params = new URLSearchParams(window.location.search);
+const branchId = params.get("id");
+const token = params.get("token");
+
+if(!branchId || !token){
+  alert("Link đã hết hạn, vui lòng quét QR để lấy link mới!");
+}
+
+// URL GAS
+const GAS_URL = "https://script.google.com/macros/s/AKfycby-FmUQpiz4pnf0LYd2Rxuhxu5mS2Y44aDlKb8TVpFGwlo9TqA5Tp1YTDFhrcncWoAxZA/exec";
+
+async function renderMenu() {
+  try{
+    const res = await fetch(`${GAS_URL}?id=${branchId}&token=${token}`);
+    const data = await res.json();
+    if(data.status === "error") { alert("Lỗi: "+data.message); return; }
+    
+    const menuList = document.getElementById("menuList");
+    data.menu.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <img class="thumb" src="${item.img}" alt="${item.name}" />
+        <div class="label">${item.name}</div>
+        <div class="price">${item.price.toLocaleString()}đ</div>
+      `;
+      div.onclick = () => addToCart(item);
+      menuList.appendChild(div);
+    });
+  }catch(err){
+    alert("Không tải được menu: "+err.message);
+  }
+}
+
+function addToCart(item){
+  if(!cart[item.id]) cart[item.id] = {...item, quantity:1};
+  else cart[item.id].quantity++;
+  renderCart();
+}
+
+function changeQuantity(id, delta){
+  if(cart[id]){
+    cart[id].quantity += delta;
+    if(cart[id].quantity<=0) delete cart[id];
+    renderCart();
+  }
+}
+
+function renderCart(){
+  const cartItems = document.getElementById("cartItems");
+  cartItems.innerHTML = "";
+  let total = 0;
+  Object.values(cart).forEach(item=>{
+    total += item.price*item.quantity;
+    const div = document.createElement("div");
+    div.className = "cart-item";
+    div.innerHTML = `
+  <span class="name" title="${item.name}">${item.name}</span>
+  <div class="quantity-controls">
+    <button onclick="changeQuantity('${item.id}',-1)">-</button>
+    <span>${item.quantity}</span>
+    <button onclick="changeQuantity('${item.id}',1)">+</button>
+  </div>
+  <span class="item-total">${(item.price*item.quantity).toLocaleString()}đ</span>
+`;
+    cartItems.appendChild(div);
+  });
+  document.getElementById("cartTotal").innerText = "Tổng: "+total.toLocaleString()+"đ";
+}
+
+async function sendOrder() {
+  if (Object.keys(cart).length === 0) { 
+    alert("Giỏ hàng trống!"); 
+    return; 
+  }
+
+  const btn = document.getElementById("sendBtn");
+  btn.disabled = true;
+  btn.classList.add("sending");
+  const originalText = btn.innerText;
+  btn.innerText = "Đang gửi...";
+
+  const order = {
+    items: Object.values(cart),
+    total: Object.values(cart).reduce((sum, i) => sum + i.price*i.quantity, 0)
+  };
+
+  try {
+    const res = await fetch(`${GAS_URL}?id=${branchId}&token=${token}`, {
+      method: "POST",
+      body: JSON.stringify(order)
+    });
+    const data = await res.json();
+
+    if(data.status === "success") {
+      alert("Đã gửi đơn thành công! Quý khách vui lòng chờ tí " );
+      for(let k in cart) delete cart[k];
+      renderCart();
+    } else {
+      alert("Lỗi: " + data.message);
+    }
+  } catch(err) {
+    alert("Link đã hết hạn, vui lòng quét QR để lấy link mới!");
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove("sending");
+    btn.innerText = originalText;
+  }
+}
+
+renderMenu();
+</script>
+</body>
+</html>
