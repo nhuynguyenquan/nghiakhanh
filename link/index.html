@@ -6,7 +6,7 @@
   <title>Nhụy Nguyên - QR Redirect</title>
 </head>
 <body style="font-family:sans-serif; text-align:center; padding:20px;">
-  <h2>Đang chuyển hướng...</h2>
+  <h2>Đang xử lý liên kết...</h2>
   <p id="message">Vui lòng đợi...</p>
 
   <script>
@@ -14,7 +14,7 @@
     const id = params.get('id');
 
     if (!id) {
-      document.getElementById('message').innerText = "Không tìm thấy ID!";
+      document.getElementById('message').innerText = "Link đã hết hạn, vui lòng quét QR để lấy link mới!";
     } else {
       const GAS_URL = "https://script.google.com/macros/s/AKfycby_UC0vvecXC0sy1jJdybGPQmQFvUjT_1jb09HXR0ltir9nPucWhCI1_Zurx42u59Vsbw/exec"; 
       fetch(`${GAS_URL}?id=${encodeURIComponent(id)}`)
@@ -24,11 +24,11 @@
             // Redirect trình duyệt sang URL nhận được từ GAS
             window.location.href = data.url;
           } else {
-            document.getElementById('message').innerText = "Không nhận được URL từ server";
+            document.getElementById('message').innerText = "Link đã hết hạn, vui lòng quét QR để lấy link mới!";
           }
         })
         .catch(err => {
-          document.getElementById('message').innerText = "Lỗi kết nối API: " + err;
+          document.getElementById('message').innerText = "Lỗi kết nối API:Link đã hết hạn, vui lòng quét QR để lấy link mới! " + err;
         });
     }
   </script>
