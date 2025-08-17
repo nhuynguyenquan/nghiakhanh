@@ -20,7 +20,7 @@
     if (!id) {
       document.getElementById('message').innerText = "Không tìm thấy ID!";
     } else {
-      const GAS_URL = "https://script.google.com/macros/s/AKfycbxEZu7g5ZldB0x4Ym6ccBmwIFC1qbrLne8pbZCBMeldEVVwV8YvJM2d1Qs5hRQkKrUEVA/exec"; 
+      const GAS_URL = "https://script.google.com/macros/s/AKfycbzkK7gHJtOfNDev_lM-VA0e2gy6pWKk9_0x4y0RPnItl3-cpRYpKwtM_T1Nrr49--hq4A/exec"; 
 
       fetch(`${GAS_URL}?id=${encodeURIComponent(id)}`)
         .then(r => r.text())
