@@ -147,7 +147,7 @@ body {
 const cart = {};
 
 async function renderMenu() {
-  const res = await fetch("https://script.google.com/macros/s/AKfycbxA_mua-oOs9xgHadEz07v2gy-Jm_4Uq_8mVj3KBfvJ_RKk1SoSFs4x9j7pJVVX_yZgnA/exec");
+  const res = await fetch("https://script.google.com/macros/s/AKfycby67S_wsOYVOqMooWOVUj96xVjq158iESA4d0AwM7HETrC_rajki0BosHV1V_yQ2SgKYw/exec");
   const data = await res.json();
   const menuList = document.getElementById("menuList");
   data.menu.forEach(item => {
@@ -214,7 +214,7 @@ function sendOrder() {
     total: Object.values(cart).reduce((sum, i) => sum + i.price * i.quantity, 0)
   };
 
-  fetch("https://script.google.com/macros/s/AKfycbxA_mua-oOs9xgHadEz07v2gy-Jm_4Uq_8mVj3KBfvJ_RKk1SoSFs4x9j7pJVVX_yZgnA/exec", {
+  fetch("https://script.google.com/macros/s/AKfycby67S_wsOYVOqMooWOVUj96xVjq158iESA4d0AwM7HETrC_rajki0BosHV1V_yQ2SgKYw/exec", {
     method: "POST",
     
     body: JSON.stringify(order)
