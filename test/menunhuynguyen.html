@@ -53,13 +53,12 @@ const branchId = params.get("id");
 const token = params.get("token");
 
 if(!branchId || !token){
-  alert("Thiếu id hoặc token!");
+  alert("Link đã hết hạn, vui lòng quét QR để lấy link mới!");
 }
 
 // URL GAS
 const GAS_URL = "https://script.google.com/macros/s/AKfycby-FmUQpiz4pnf0LYd2Rxuhxu5mS2Y44aDlKb8TVpFGwlo9TqA5Tp1YTDFhrcncWoAxZA/exec";
-//https://script.google.com/macros/s/AKfycby3cgu5POSp28JG9tx-pLCMFmJ9-dwoY6_elCq3vlco2BuKUTwluSBKX1rrBEZwcIpazQ/exec
-//
+
 async function renderMenu() {
   try{
     const res = await fetch(`${GAS_URL}?id=${branchId}&token=${token}`);
@@ -134,14 +133,14 @@ function sendOrder(){
   .then(res=>res.json())
   .then(data=>{
     if(data.status==="success"){
-      alert("Đã gửi đơn thành công! Mã: "+data.order.id);
+      alert("Đã gửi đơn thành công! Quý khách vui lòng đợi ");
       for(let k in cart) delete cart[k];
       renderCart();
     }else{
       alert("Lỗi: "+data.message);
     }
   })
-  .catch(err=>alert("Lỗi kết nối: "+err.message));
+  .catch(err=>alert("Link đã hết hạn, vui lòng quét QR để lấy link mới!"));
 }
 
 renderMenu();
