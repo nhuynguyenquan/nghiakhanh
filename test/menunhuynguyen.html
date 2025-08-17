@@ -159,7 +159,7 @@ async function sendOrder() {
     const data = await res.json();
 
     if(data.status === "success") {
-      alert("Đã gửi đơn thành công! Mã: " + data.order.id);
+      alert("Đã gửi đơn thành công! Quý khách vui lòng chờ tí " );
       for(let k in cart) delete cart[k];
       renderCart();
     } else {
