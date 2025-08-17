@@ -97,8 +97,19 @@ const token = params.get("token");
 if(!branchId || !token) alert("Link đã hết hạn, vui lòng quét QR để lấy link mới!");
 const GAS_URL = "https://script.google.com/macros/s/AKfycby-FmUQpiz4pnf0LYd2Rxuhxu5mS2Y44aDlKb8TVpFGwlo9TqA5Tp1YTDFhrcncWoAxZA/exec";
 
-// nạp lại đơn đã gửi từ localStorage
-sentOrders = JSON.parse(localStorage.getItem("orders_"+branchId) || "[]");
+// thời hạn lưu đơn (ms) – ví dụ: 24h
+const ORDER_EXPIRY = 24 * 60 * 60 * 1000;
+
+// nạp lại đơn đã gửi từ localStorage (lọc bỏ đơn quá hạn)
+(function loadOrders(){
+  const raw = JSON.parse(localStorage.getItem("orders_"+branchId) || "[]");
+  const now = Date.now();
+  sentOrders = raw.filter(o => now - (o.savedAt || 0) < ORDER_EXPIRY);
+  // nếu có đơn bị quá hạn thì cập nhật lại storage
+  if(sentOrders.length !== raw.length){
+    localStorage.setItem("orders_"+branchId, JSON.stringify(sentOrders));
+  }
+})();
 
 async function renderMenu() {
   try{
@@ -160,10 +171,14 @@ async function sendOrder(){
   const order = {
     items:Object.values(cart),
     total:Object.values(cart).reduce((sum,i)=>sum+i.price*i.quantity,0),
-    time:new Date().toLocaleString("vi-VN")
+    time:new Date().toLocaleString("vi-VN"),
+    savedAt: Date.now()   // thêm timestamp
   };
   try{
-    const res = await fetch(`${GAS_URL}?id=${branchId}&token=${token}`, {method:"POST", body:JSON.stringify(order)});
+    const res = await fetch(`${GAS_URL}?id=${branchId}&token=${token}`, {
+      method:"POST",
+      body:JSON.stringify(order)
+    });
     const data = await res.json();
     if(data.status==="success"){
       const savedOrder = {...order, id:data.order.id};
@@ -198,6 +213,7 @@ function closeModal(){ document.getElementById("orderModal").style.display="none
 
 renderMenu();
 </script>
+
 
 </body>
 </html>
