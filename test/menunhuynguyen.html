@@ -16,7 +16,42 @@ h1 {text-align:center; padding:1rem; background:#ff914d; color:#fff; margin:0; f
 .price {padding-bottom:0.6rem; text-align:center; color:#555; font-size:0.85rem;}
 .cart {background:#fff; border-top:2px solid #ff914d; padding:0.8rem; position:fixed; bottom:0; left:0; right:0; max-height:45%; overflow-y:auto; box-shadow:0 -2px 6px rgba(0,0,0,0.1);}
 .cart h2 {margin:0 0 0.5rem; font-size:1.1rem;}
-.cart-item {display:flex; justify-content:space-between; align-items:center; padding:0.4rem 0; border-bottom:1px solid #eee; font-size:0.9rem;}
+.cart-item {
+  display: flex;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+  gap: 0.5rem;
+}
+
+.cart-item .name {
+  flex: 2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cart-item .quantity-controls {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.cart-item .quantity-controls button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 1rem;
+}
+
+.cart-item .item-total {
+  flex: 1;
+  text-align: right;
+  white-space: nowrap;
+}
 .cart-controls {display:flex; align-items:center; gap:0.3rem;}
 .cart-controls button {padding:0.3rem 0.6rem; border:none; background:#ff914d; color:white; border-radius:4px; font-size:1rem; cursor:pointer;}
 .total {font-weight:bold; text-align:right; margin-top:0.5rem; font-size:1rem;}
@@ -121,14 +156,14 @@ function renderCart(){
     const div = document.createElement("div");
     div.className = "cart-item";
     div.innerHTML = `
-      <span>${item.name}</span>
-      <div class="cart-controls">
-        <button onclick="changeQuantity('${item.id}',-1)">-</button>
-        <span>${item.quantity}</span>
-        <button onclick="changeQuantity('${item.id}',1)">+</button>
-      </div>
-      <span>${(item.price*item.quantity).toLocaleString()}đ</span>
-    `;
+  <span class="name" title="${item.name}">${item.name}</span>
+  <div class="quantity-controls">
+    <button onclick="changeQuantity('${item.id}',-1)">-</button>
+    <span>${item.quantity}</span>
+    <button onclick="changeQuantity('${item.id}',1)">+</button>
+  </div>
+  <span class="item-total">${(item.price*item.quantity).toLocaleString()}đ</span>
+`;
     cartItems.appendChild(div);
   });
   document.getElementById("cartTotal").innerText = "Tổng: "+total.toLocaleString()+"đ";
