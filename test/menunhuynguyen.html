@@ -22,6 +22,22 @@ h1 {text-align:center; padding:1rem; background:#ff914d; color:#fff; margin:0; f
 .total {font-weight:bold; text-align:right; margin-top:0.5rem; font-size:1rem;}
 .send-btn {width:100%; padding:0.8rem; margin-top:0.6rem; border:none; background:#28a745; color:white; font-size:1rem; border-radius:6px; cursor:pointer;}
 @media (max-width:400px) { .thumb{height:80px;} .label{font-size:0.85rem;} .price{font-size:0.8rem;} }
+.send-btn .spinner {
+  border: 2px solid #fff;
+  border-top: 2px solid rgba(255,255,255,0.5);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 </style>
 </head>
 <body>
@@ -42,7 +58,7 @@ h1 {text-align:center; padding:1rem; background:#ff914d; color:#fff; margin:0; f
   <h2>Giỏ hàng</h2>
   <div id="cartItems"></div>
   <div class="total" id="cartTotal">Tổng: 0đ</div>
-  <button class="send-btn" onclick="sendOrder()">Gửi đơn</button>
+  <button class="send-btn" id="sendBtn" onclick="sendOrder()">Gửi đơn</button>
 </div>
 
 <script>
@@ -118,29 +134,44 @@ function renderCart(){
   document.getElementById("cartTotal").innerText = "Tổng: "+total.toLocaleString()+"đ";
 }
 
-function sendOrder(){
-  if(Object.keys(cart).length===0){ alert("Giỏ hàng trống!"); return; }
+async function sendOrder() {
+  if (Object.keys(cart).length === 0) { 
+    alert("Giỏ hàng trống!"); 
+    return; 
+  }
+
+  const btn = document.getElementById("sendBtn");
+  btn.disabled = true;
+  btn.classList.add("sending");
+  const originalText = btn.innerText;
+  btn.innerText = "Đang gửi...";
 
   const order = {
     items: Object.values(cart),
-    total: Object.values(cart).reduce((sum,i)=>sum+i.price*i.quantity,0)
+    total: Object.values(cart).reduce((sum, i) => sum + i.price*i.quantity, 0)
   };
 
-  fetch(`${GAS_URL}?id=${branchId}&token=${token}`, {
-    method:"POST",
-    body: JSON.stringify(order)
-  })
-  .then(res=>res.json())
-  .then(data=>{
-    if(data.status==="success"){
-      alert("Đã gửi đơn thành công! Quý khách vui lòng đợi ");
+  try {
+    const res = await fetch(`${GAS_URL}?id=${branchId}&token=${token}`, {
+      method: "POST",
+      body: JSON.stringify(order)
+    });
+    const data = await res.json();
+
+    if(data.status === "success") {
+      alert("Đã gửi đơn thành công! Mã: " + data.order.id);
       for(let k in cart) delete cart[k];
       renderCart();
-    }else{
-      alert("Lỗi: "+data.message);
+    } else {
+      alert("Lỗi: " + data.message);
     }
-  })
-  .catch(err=>alert("Link đã hết hạn, vui lòng quét QR để lấy link mới!"));
+  } catch(err) {
+    alert("Link đã hết hạn, vui lòng quét QR để lấy link mới!");
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove("sending");
+    btn.innerText = originalText;
+  }
 }
 
 renderMenu();
