@@ -142,21 +142,15 @@ body {
   </div>
 
 <script>
-const menuItems = [
-  { id: "ca-phe-muoi", name: "Cà phê muối", price: 15000, img: "https://picsum.photos/seed/caphe-muoi/200/150" },
-  { id: "ca-phe-den", name: "Cà phê đen", price: 15000, img: "https://picsum.photos/seed/caphe-den/200/150" },
-  { id: "ca-phe-sua", name: "Cà phê sữa", price: 20000, img: "https://picsum.photos/seed/caphe-sua/200/150" },
-  { id: "bo-huc", name: "Bò húc", price: 15000, img: "https://picsum.photos/seed/bo-huc/200/150" },
-  { id: "number1", name: "Number 1", price: 15000, img: "https://picsum.photos/seed/number1/200/150" },
-  { id: "nuoc-loc", name: "Nước lọc", price: 5000, img: "https://picsum.photos/seed/nuoc-loc/200/150" },
-  { id: "tra-xanh", name: "Trà xanh 0 độ", price: 15000, img: "https://picsum.photos/seed/tra-xanh/200/150" }
-];
+
 
 const cart = {};
 
-function renderMenu() {
+async function renderMenu() {
+  const res = await fetch("https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLiXG5qSC9u51UJPTSq09JzRelJpDaCgb_I-P5cJZDjOd7SEw6NJx_syLwPLHKzqMu_9xKxdMcEX03zfXKK0znMhHLzf2WPY8imSLO57tjLp48SXFanx6mJNRl9Fw9C5XGhT-eQivEpatQUopzNFwsafBZoEBIS4GvW42sIo_A9FGcGtOsTioulQCLrvkDesKHnKhi9zZbjHvp3MvzaMse9A5Y49gxtrV7SkCG6cxKsTdzxLun34WHdtxvTWFLRbOreptlLqBSNr5ItzLwgDQgLUxJKxbfnF4kOeNWpV&lib=ME4lHWJhNI4WF-Y5IVCVDnFnRYxtoENKd");
+  const data = await res.json();
   const menuList = document.getElementById("menuList");
-  menuItems.forEach(item => {
+  data.menu.forEach(item => {
     const div = document.createElement("div");
     div.className = "item";
     div.innerHTML = `
@@ -168,6 +162,7 @@ function renderMenu() {
     menuList.appendChild(div);
   });
 }
+
 
 function addToCart(item) {
   if (!cart[item.id]) {
@@ -213,8 +208,25 @@ function sendOrder() {
     alert("Giỏ hàng trống!");
     return;
   }
-  alert("Đơn hàng đã gửi:\n" + JSON.stringify(cart, null, 2));
-  // sau này có thể gửi lên server hoặc Telegram
+  const order = {
+    items: Object.values(cart),
+    total: Object.values(cart).reduce((sum, i) => sum + i.price * i.quantity, 0)
+  };
+
+  fetch("https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLiXG5qSC9u51UJPTSq09JzRelJpDaCgb_I-P5cJZDjOd7SEw6NJx_syLwPLHKzqMu_9xKxdMcEX03zfXKK0znMhHLzf2WPY8imSLO57tjLp48SXFanx6mJNRl9Fw9C5XGhT-eQivEpatQUopzNFwsafBZoEBIS4GvW42sIo_A9FGcGtOsTioulQCLrvkDesKHnKhi9zZbjHvp3MvzaMse9A5Y49gxtrV7SkCG6cxKsTdzxLun34WHdtxvTWFLRbOreptlLqBSNr5ItzLwgDQgLUxJKxbfnF4kOeNWpV&lib=ME4lHWJhNI4WF-Y5IVCVDnFnRYxtoENKd", {
+    method: "POST",
+    body: JSON.stringify(order)
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === "success") {
+      alert("Đã gửi đơn thành công!");
+      for (let k in cart) delete cart[k];
+      renderCart();
+    } else {
+      alert("Lỗi: " + data.message);
+    }
+  });
 }
 
 renderMenu();
