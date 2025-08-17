@@ -147,7 +147,7 @@ body {
 const cart = {};
 
 async function renderMenu() {
-  const res = await fetch("https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLiXG5qSC9u51UJPTSq09JzRelJpDaCgb_I-P5cJZDjOd7SEw6NJx_syLwPLHKzqMu_9xKxdMcEX03zfXKK0znMhHLzf2WPY8imSLO57tjLp48SXFanx6mJNRl9Fw9C5XGhT-eQivEpatQUopzNFwsafBZoEBIS4GvW42sIo_A9FGcGtOsTioulQCLrvkDesKHnKhi9zZbjHvp3MvzaMse9A5Y49gxtrV7SkCG6cxKsTdzxLun34WHdtxvTWFLRbOreptlLqBSNr5ItzLwgDQgLUxJKxbfnF4kOeNWpV&lib=ME4lHWJhNI4WF-Y5IVCVDnFnRYxtoENKd");
+  const res = await fetch("https://script.google.com/macros/s/AKfycbxA_mua-oOs9xgHadEz07v2gy-Jm_4Uq_8mVj3KBfvJ_RKk1SoSFs4x9j7pJVVX_yZgnA/exec");
   const data = await res.json();
   const menuList = document.getElementById("menuList");
   data.menu.forEach(item => {
@@ -214,7 +214,7 @@ function sendOrder() {
     total: Object.values(cart).reduce((sum, i) => sum + i.price * i.quantity, 0)
   };
 
-  fetch("https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLiXG5qSC9u51UJPTSq09JzRelJpDaCgb_I-P5cJZDjOd7SEw6NJx_syLwPLHKzqMu_9xKxdMcEX03zfXKK0znMhHLzf2WPY8imSLO57tjLp48SXFanx6mJNRl9Fw9C5XGhT-eQivEpatQUopzNFwsafBZoEBIS4GvW42sIo_A9FGcGtOsTioulQCLrvkDesKHnKhi9zZbjHvp3MvzaMse9A5Y49gxtrV7SkCG6cxKsTdzxLun34WHdtxvTWFLRbOreptlLqBSNr5ItzLwgDQgLUxJKxbfnF4kOeNWpV&lib=ME4lHWJhNI4WF-Y5IVCVDnFnRYxtoENKd", {
+  fetch("https://script.google.com/macros/s/AKfycbxA_mua-oOs9xgHadEz07v2gy-Jm_4Uq_8mVj3KBfvJ_RKk1SoSFs4x9j7pJVVX_yZgnA/exec", {
     method: "POST",
     
     body: JSON.stringify(order)
@@ -223,7 +223,7 @@ function sendOrder() {
   .then(data => {
     if (data.status === "success") {
       alert("Đã gửi đơn thành công! Mã: " + data.order.id);
-      for (let k in cart) delete cart[k]; // reset cart
+      for (let k in cart) delete cart[k]; 
       renderCart();
     } else {
       alert("Lỗi: " + data.message);
