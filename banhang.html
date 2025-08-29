@@ -328,34 +328,44 @@
       btn.innerText = "🧾 Gửi đơn hàng";
     }
 
-    function renderTodayStats() {
-        const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' });
-        const logsToday = salesData.logs.filter(log =>
-          log.time?.startsWith(today) && log.branch === branchName
-        );
+   function renderTodayStats() {
+  // Lấy ngày hôm nay tại VN
+  const todayVN = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' });
 
-        const summary = {};
-        let total = 0;
+  const logsToday = salesData.logs.filter(log => {
+    if (!log.time) return false;
 
-        logsToday.forEach(log => {
-          if (!summary[log.item]) summary[log.item] = { quantity: 0, total: 0 };
-          summary[log.item].quantity += log.quantity;
-          summary[log.item].total += log.quantity * log.price;
-          total += log.quantity * log.price;
-        });
+    // Parse log.time về Date
+    const logDate = new Date(log.time);
 
-        const statsDiv = document.getElementById("statsToday");
-        statsDiv.innerHTML = `<h3>📊 Đơn hàng hôm nay:</h3><ul>
-          ${Object.entries(summary)
-            .map(([name, s]) => {
-              // Tìm đơn vị tương ứng trong menu
-              const menuItem = branchData.menu.find(item => item.name === name);
-              const unit = menuItem?.unit || 'cái'; // Nếu không có đơn vị, mặc định là "cái"
-              return `<li>${name}: ${s.quantity} ${unit} ~ ${s.total.toLocaleString()}đ</li>`;
-            })
-            .join("")}
-        </ul><strong>💰 Tổng tiền: ${total.toLocaleString()}đ</strong>`;
-      }
+    // Lấy ngày tại VN của log
+    const logDateVN = logDate.toLocaleDateString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' });
+
+    return logDateVN === todayVN && log.branch === branchName;
+  });
+
+  const summary = {};
+  let total = 0;
+
+  logsToday.forEach(log => {
+    if (!summary[log.item]) summary[log.item] = { quantity: 0, total: 0 };
+    summary[log.item].quantity += log.quantity;
+    summary[log.item].total += log.quantity * log.price;
+    total += log.quantity * log.price;
+  });
+
+  const statsDiv = document.getElementById("statsToday");
+  statsDiv.innerHTML = `<h3>📊 Đơn hàng hôm nay:</h3><ul>
+    ${Object.entries(summary)
+      .map(([name, s]) => {
+        const menuItem = branchData.menu.find(item => item.name === name);
+        const unit = menuItem?.unit || 'cái';
+        return `<li>${name}: ${s.quantity} ${unit} ~ ${s.total.toLocaleString()}đ</li>`;
+      })
+      .join("")}
+  </ul><strong>💰 Tổng tiền: ${total.toLocaleString()}đ</strong>`;
+}
+
 
   </script>
 </body>
