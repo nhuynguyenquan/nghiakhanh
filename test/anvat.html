@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Phân tích menu — Ngôi sao & Mồi hút</title>
+  <style>
+    :root{--bg:#f7f7fb;--card:#fff;--muted:#6b7280;--accent:#2563eb}
+    body{font-family:Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;margin:18px;background:var(--bg);color:#0f172a}
+    .wrap{max-width:1100px;margin:0 auto}
+    .card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 8px 30px rgba(12,15,30,0.06);margin-bottom:14px}
+    h1{font-size:20px;margin:0 0 6px}
+    p.lead{margin:0 0 12px;color:var(--muted)}
+
+    .summary{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+    .stat{flex:1;min-width:180px;padding:12px;border-radius:10px;background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:0 4px 12px rgba(12,15,30,0.04)}
+    .stat h3{margin:0;font-size:14px;color:var(--muted)}
+    .stat p{margin:6px 0 0;font-weight:700;font-size:18px}
+
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    thead th{background:#fbfdff;padding:12px;border-bottom:1px solid #eef2ff;text-align:left}
+    tbody td{padding:12px;border-bottom:1px solid #f5f7fb;vertical-align:middle}
+    .right{text-align:right}
+
+    .badge{display:inline-block;padding:6px 8px;border-radius:999px;font-weight:600;font-size:12px;color:#fff}
+    .star{background:#16a34a} /* green */
+    .good{background:#f59e0b} /* amber */
+    .bait{background:#3b82f6} /* blue */
+
+    .controls{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+    input[type=search]{flex:1;padding:8px;border-radius:8px;border:1px solid #e6eefc}
+    button{background:var(--accent);color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
+    .muted{color:var(--muted)}
+
+    .bar{height:10px;border-radius:6px;background:#e6eefc;overflow:hidden}
+    .bar > i{display:block;height:100%;border-radius:6px}
+    .bar .p{background:#16a34a}
+
+    @media (max-width:720px){.summary{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Phân tích menu — Ngôi sao & Mồi hút</h1>
+      <p class="lead">Bảng phân tích trực quan giúp bạn nhanh chóng thấy món nào là <strong>Ngôi sao lợi nhuận</strong> (profit margin rất cao) và món nào là <strong>Mồi hút khách</strong> (biên thấp nhưng cần để kéo khách).</p>
+
+      <div class="controls">
+        <input id="search" type="search" placeholder="Tìm tên món..." />
+        <button id="sortBtn">Sắp xếp theo biên lợi nhuận ↓</button>
+        <button id="resetBtn" style="background:#10b981">Đặt lại</button>
+      </div>
+
+      <div class="summary">
+        <div class="stat">
+          <h3>Tổng số món</h3>
+          <p id="count">-</p>
+        </div>
+        <div class="stat">
+          <h3>Biên lợi nhuận trung bình</h3>
+          <p id="avg">-</p>
+        </div>
+        <div class="stat">
+          <h3>Tổng lợi nhuận / đơn (tổng mẫu)</h3>
+          <p id="totalProfit">-</p>
+        </div>
+      </div>
+
+      <div style="overflow:auto">
+        <table id="menuTable" aria-label="Bảng phân tích">
+          <thead>
+            <tr>
+              <th>Tên món</th>
+              <th class="right">Giá nhập (VND)</th>
+              <th class="right">Giá bán (VND)</th>
+              <th class="right">Lợi nhuận (VND)</th>
+              <th class="right">Biên lợi nhuận (%)</th>
+              <th>Loại</th>
+              <th style="min-width:160px">Biểu đồ nhanh</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <p class="muted" style="margin-top:10px">Chú thích: <span class="badge star">Ngôi sao (≥70%)</span> <span class="badge good" style="background:#fde68a;color:#111">Lợi nhuận tốt (55–70%)</span> <span class="badge bait">Mồi hút (&lt;55%)</span></p>
+    </div>
+
+    <div class="card muted">
+      <h3>Gợi ý hành động</h3>
+      <ul>
+        <li><strong>Ngôi sao:</strong> đẩy bán mạnh (combo, đặt gần quầy), tăng số lượng sản xuất vì vốn thấp.</li>
+        <li><strong>Mồi hút:</strong> dùng để thu hút khách, thêm upsell (kèm ngôi sao) để tăng giá trị hoá đơn.</li>
+        <li><strong>Lợi nhuận tốt:</strong> giữ lại, có thể làm chương trình khách quen hoặc combo giá trị.</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const initialData = [
+      {name: 'Xúc xích xiên que', cost: 3000, price: 7000},
+      {name: 'Cá viên chiên', cost: 2500, price: 7000},
+      {name: 'Khoai tây lắc phô mai', cost: 4000, price: 10000},
+      {name: 'Bánh bông lan mini', cost: 3000, price: 7000},
+      {name: 'Bánh rán đường', cost: 2500, price: 7000},
+      {name: 'Sữa chua túi', cost: 2000, price: 5000},
+      {name: 'Rau câu nhiều màu', cost: 1500, price: 5000},
+      {name: 'Trà sữa mini (cốc nhỏ)', cost: 5000, price: 10000},
+      {name: 'Ngô hấp', cost: 2000, price: 5000},
+      {name: 'Bắp rang bơ ngọt', cost: 1500, price: 7000}
+    ];
+
+    const tbody = document.querySelector('#menuTable tbody');
+    const countEl = document.getElementById('count');
+    const avgEl = document.getElementById('avg');
+    const totalProfitEl = document.getElementById('totalProfit');
+    const search = document.getElementById('search');
+    const sortBtn = document.getElementById('sortBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    function compute(rows){
+      return rows.map(r => {
+        const profit = r.price - r.cost;
+        const margin = r.price ? (profit / r.price * 100) : 0;
+        let type = '';
+        if(margin >= 70) type = 'Ngôi sao';
+        else if(margin >= 55) type = 'Lợi nhuận tốt';
+        else type = 'Mồi hút';
+        return {...r, profit, margin, type};
+      });
+    }
+
+    let data = compute(initialData);
+
+    function money(x){ return Number(x).toLocaleString('vi-VN'); }
+
+    function render(rows){
+      tbody.innerHTML = '';
+      let totalProfit = 0, totalPrice = 0;
+      rows.forEach(r => { totalProfit += r.profit; totalPrice += r.price; });
+      countEl.textContent = rows.length;
+      avgEl.textContent = ((totalPrice? (totalProfit/totalPrice*100):0).toFixed(1)) + '%';
+      totalProfitEl.textContent = money(totalProfit) + ' đ';
+
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        const badgeClass = r.type === 'Ngôi sao' ? 'star' : (r.type === 'Mồi hút' ? 'bait' : 'good');
+        tr.innerHTML = `
+          <td>${escapeHtml(r.name)}</td>
+          <td class="right">${money(r.cost)}</td>
+          <td class="right">${money(r.price)}</td>
+          <td class="right">${money(r.profit)}</td>
+          <td class="right">${r.margin.toFixed(1)}%</td>
+          <td><span class="badge ${badgeClass}">${r.type}</span></td>
+          <td>
+            <div class="bar" aria-hidden="true">
+              <i class="p" style="width:${Math.min(100,Math.max(0,r.margin))}% ; background:${getBarColor(r.margin)}"></i>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function getBarColor(m){
+      if(m >= 70) return '#16a34a';
+      if(m >= 55) return '#f59e0b';
+      return '#3b82f6';
+    }
+
+    function escapeHtml(str){ return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\"/g, '&quot;'); }
+
+    // search
+    search.addEventListener('input', () => {
+      const q = search.value.trim().toLowerCase();
+      const filtered = data.filter(r => r.name.toLowerCase().includes(q));
+      render(filtered);
+    });
+
+    // sort toggle
+    let desc = true;
+    sortBtn.addEventListener('click', () => {
+      desc = !desc;
+      sortBtn.textContent = desc ? 'Sắp xếp theo biên lợi nhuận ↓' : 'Sắp xếp theo biên lợi nhuận ↑';
+      const sorted = [...data].sort((a,b) => desc ? b.margin - a.margin : a.margin - b.margin);
+      render(sorted);
+    });
+
+    resetBtn.addEventListener('click', () => {
+      data = compute(initialData);
+      search.value = '';
+      desc = true; sortBtn.textContent = 'Sắp xếp theo biên lợi nhuận ↓';
+      render(data);
+    });
+
+    // initial render
+    render(data);
+  </script>
+</body>
+</html>
