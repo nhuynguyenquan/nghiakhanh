@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FULLSTACK 0 ĐỒNG — Video Demo (Day 1)</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b1020; --card:#0f1724; --accent:#00e5a8; --muted:#9aa4b2;
+      --glass: rgba(255,255,255,0.04);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,-apple-system,'Helvetica Neue',Arial;color:#e6eef6;background:linear-gradient(180deg,#071126 0%, #081224 60%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .stage{width:1100px;max-width:100%;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:18px;box-shadow:0 10px 30px rgba(2,6,23,0.6);display:grid;grid-template-columns:360px 1fr;gap:16px}
+
+    /* Left: presenter panel */
+    .presenter{background:var(--card);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:12px}
+    .logo{display:flex;align-items:center;gap:10px}
+    .logo .badge{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#00b7ff);display:flex;align-items:center;justify-content:center;font-weight:700;color:#032;box-shadow:0 6px 18px rgba(0,0,0,0.5)}
+    .logo h1{font-size:16px;margin:0}
+    .face{height:220px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px}
+    .meta{display:flex;flex-direction:column;gap:8px}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{background:var(--glass);padding:6px 8px;border-radius:999px;font-size:13px;color:var(--muted)}
+
+    /* Right: code + demo */
+    .demoCard{background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02));border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:12px}
+    .hook{display:flex;align-items:center;justify-content:space-between}
+    .hook h2{margin:0;font-size:18px}
+    .hook p{margin:0;color:var(--muted);font-size:13px}
+
+    .codeWrap{background:#020314;border-radius:8px;padding:12px;position:relative;overflow:hidden}
+    pre{margin:0;font-family:'JetBrains Mono', monospace;font-size:13px;line-height:1.5;color:#cfeef0;white-space:pre-wrap}
+    .line{opacity:0.95}
+    .highlight{background:linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));padding:2px 6px;border-radius:6px;box-shadow:0 6px 18px rgba(2,6,23,0.6)}
+
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    .controls input[type="text"]{flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--muted)}
+    .btn{padding:8px 12px;border-radius:8px;border:0;background:linear-gradient(90deg,var(--accent),#00b7ff);color:#032;font-weight:600;cursor:pointer}
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+
+    .result{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px;padding:10px;font-family:'JetBrains Mono',monospace;color:#cfeef0;font-size:13px;min-height:60px}
+
+    .caption{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
+
+    /* typing effect */
+    .typingCursor{display:inline-block;width:8px;height:18px;background:var(--accent);margin-left:6px;animation:blink 1s steps(2) infinite}
+    @keyframes blink{50%{opacity:0}}
+
+    /* responsive */
+    @media(max-width:920px){.stage{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <div class="stage" role="main">
+    <section class="presenter">
+      <div class="logo">
+        <div class="badge">0₫</div>
+        <div>
+          <h1>FULLSTACK 0 ĐỒNG</h1>
+          <div style="font-size:12px;color:var(--muted)">Video Day 1 — Intro & Free Backend</div>
+        </div>
+      </div>
+
+      <div class="face" id="faceArea">Góc quay: quay mặt bạn ở đây
+        <div style="position:absolute;right:12px;bottom:12px;font-size:11px;color:var(--muted)">Demo preview</div>
+      </div>
+
+      <div class="meta">
+        <div class="chips">
+          <div class="chip">Google Drive</div>
+          <div class="chip">GAS (Google Apps Script)</div>
+          <div class="chip">GitHub Pages</div>
+          <div class="chip">PWA</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="btn" id="copyBtn">Copy GAS code</button>
+          <button class="btn secondary" id="editBtn">Edit script</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="demoCard">
+      <div class="hook">
+        <div>
+          <h2>Build fullstack app — không tốn 1 xu</h2>
+          <p>Trong 60s: tạo backend miễn phí bằng Google Apps Script và trả về JSON.</p>
+        </div>
+        <div class="caption">Tip: Thay <strong>WEBAPP_URL</strong> bằng link Web App của bạn</div>
+      </div>
+
+      <div class="codeWrap">
+        <pre id="codeBlock"><code class="line">function doGet(e) {</code>
+<code class="line">  const data = {</code>
+<code class="line highlight">    message: "Hello from your free backend!",</code>
+<code class="line">    time: new Date().toISOString()</code>
+<code class="line">  };</code>
+<code class="line">  return ContentService.createTextOutput(JSON.stringify(data))</code>
+<code class="line">    .setMimeType(ContentService.MimeType.JSON);</code>
+<code class="line">}</code></pre>
+      </div>
+
+      <div class="controls">
+        <input id="webappUrl" type="text" placeholder="Paste your Google Apps Script Web App URL here (or leave blank to simulate)"/>
+        <button class="btn" id="callBtn">Show API result</button>
+        <button class="btn secondary" id="simulateBtn">Simulate deploy</button>
+      </div>
+
+      <div class="result" id="resultArea">Kết quả API sẽ hiển thị ở đây...</div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:13px;color:var(--muted)">Script ready — deploy → Web app → Anyone</div>
+        <div style="font-size:13px;color:var(--muted)">Length: 6 dòng <span class="typingCursor"></span></div>
+      </div>
+
+    </section>
+  </div>
+
+  <script>
+    const code = `function doGet(e) {
+  const data = {
+    message: "Hello from your free backend!",
+    time: new Date().toISOString()
+  };
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+
+    // copy code
+    document.getElementById('copyBtn').addEventListener('click', async()=>{
+      try{
+        await navigator.clipboard.writeText(code);
+        alert('GAS code đã được copy vào clipboard. Paste vào Code.gs trong Google Apps Script.');
+      }catch(e){
+        alert('Không thể copy tự động. Hãy copy thủ công từ màn hình.');
+      }
+    });
+
+    // editBtn: open a small modal-like edit in page
+    document.getElementById('editBtn').addEventListener('click', ()=>{
+      const w = window.open('','_blank','width=720,height=520');
+      w.document.write(`<html><head><title>Edit Script</title><meta charset="utf-8"></head><body style="background:#0b1020;color:#e6eef6;font-family:monospace;padding:12px"><pre>${escapeHtml(code)}</pre><p style="color:#9aa4b2">Copy this and paste into Code.gs in your Google Apps Script project.</p></body></html>`);
+    });
+
+    // simulate deploy
+    document.getElementById('simulateBtn').addEventListener('click', ()=>{
+      const result = {message:'Hello from your free backend!', time:new Date().toISOString()};
+      document.getElementById('resultArea').textContent = JSON.stringify(result, null, 2);
+      flashHighlight();
+    });
+
+    // call real URL
+    document.getElementById('callBtn').addEventListener('click', async()=>{
+      const url = document.getElementById('webappUrl').value.trim();
+      const area = document.getElementById('resultArea');
+      area.textContent = 'Calling API...';
+      if(!url){
+        area.textContent = 'No URL provided — use "Simulate deploy" to show example.';
+        return;
+      }
+      try{
+        const resp = await fetch(url, {cache:'no-store'});
+        if(!resp.ok) throw new Error(resp.status+' '+resp.statusText);
+        const json = await resp.json();
+        area.textContent = JSON.stringify(json, null, 2);
+        flashHighlight();
+      }catch(err){
+        area.textContent = 'Error calling API: ' + err.message + '\nMake sure Web App is deployed with access "Anyone".';
+      }
+    });
+
+    function flashHighlight(){
+      const lines = document.querySelectorAll('#codeBlock .line');
+      lines.forEach(l=>l.classList.remove('highlight'));
+      // highlight the message line briefly
+      setTimeout(()=>{
+        const target = document.querySelectorAll('#codeBlock .line')[2];
+        if(target) { target.classList.add('highlight'); setTimeout(()=>target.classList.remove('highlight'),1400);} 
+      },120);
+    }
+
+    function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  </script>
+</body>
+</html>
