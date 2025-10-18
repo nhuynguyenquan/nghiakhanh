@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nhân viên phục vụ ảo</title>
+<style>
+body {
+  font-family: system-ui, sans-serif;
+  background: #fafaf8;
+  margin: 0; padding: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  height: 100vh;
+}
+.chat-box {
+  width: 90%;
+  max-width: 420px;
+  height: 70vh;
+  overflow-y: auto;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  padding: 15px;
+}
+.message { margin: 8px 0; line-height: 1.4; }
+.bot { text-align: left; color: #00704a; }
+.user { text-align: right; color: #444; }
+button {
+  margin-top: 15px;
+  padding: 15px 25px;
+  background: #00704a;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 16px;
+}
+button:active { background: #005c3a; }
+</style>
+</head>
+<body>
+<h2>🤖 Nhân viên phục vụ ảo</h2>
+<div class="chat-box" id="chat"></div>
+<button onclick="startListening()">🎤 Nói với tôi</button>
+
+<script>
+const chat = document.getElementById("chat");
+function addMsg(text, cls) {
+  const div = document.createElement("div");
+  div.className = "message " + cls;
+  div.textContent = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function speak(text) {
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "vi-VN";
+  window.speechSynthesis.speak(utter);
+}
+
+// Logic trả lời đơn giản (offline)
+function getReply(text) {
+  text = text.toLowerCase();
+  if (text.includes("xin chào") || text.includes("hello"))
+    return "Dạ em chào anh/chị ạ! Anh/chị muốn gọi món gì hôm nay ạ?";
+  if (text.includes("cà phê"))
+    return "Dạ có cà phê muối, cà phê sữa và cà phê đen ạ. Anh/chị dùng loại nào?";
+  if (text.includes("bạc xỉu"))
+    return "Bạc xỉu đá ngon lắm ạ, em ghi 1 ly cho anh/chị nhé?";
+  if (text.includes("trà"))
+    return "Dạ, bên em có trà đào cam sả, trà tắc và trà chanh ạ.";
+  if (text.includes("cảm ơn"))
+    return "Dạ, em cảm ơn anh/chị ạ!";
+  if (text.includes("tạm biệt"))
+    return "Dạ, chúc anh/chị một ngày vui vẻ!";
+  return "Dạ, anh/chị có thể nói lại giúp em tên món được không ạ?";
+}
+
+function startListening() {
+  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = "vi-VN";
+  recognition.start();
+
+  recognition.onresult = (event) => {
+    const text = event.results[0][0].transcript;
+    addMsg(text, "user");
+    const reply = getReply(text);
+    setTimeout(() => {
+      addMsg(reply, "bot");
+      speak(reply);
+    }, 500);
+  };
+
+  recognition.onerror = () => {
+    speak("Em không nghe rõ ạ, anh/chị nói lại được không?");
+  };
+}
+
+// Chào khi mở trang
+window.onload = () => {
+  const hello = "Xin chào, em là nhân viên phục vụ ảo. Anh/chị muốn gọi món gì ạ?";
+  addMsg(hello, "bot");
+  speak(hello);
+};
+</script>
+</body>
+</html>
