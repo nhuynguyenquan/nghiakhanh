@@ -174,7 +174,7 @@ async function saveTransaction(transaction) {
   const { id, token } = getAuth();
   return fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+   
     body: JSON.stringify({ id, token, transaction })
   });
 }
@@ -317,7 +317,7 @@ function hideLoading() {
 function sendToTelegram(t) {
   fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    
     body: JSON.stringify({
       chat_id: TELEGRAM_CHAT_ID,
       text: `💰 ${t.amount.toLocaleString()} VND\n📂 ${t.type}\n📝 ${t.note}`
