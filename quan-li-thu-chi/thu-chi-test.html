@@ -146,7 +146,10 @@ let transactions = [];
 
 /* ========= AUTH ========= */
 function getAuth() {
-  return JSON.parse(localStorage.getItem("auth") || "{}");
+  const id = getCookie("uid");
+  const token = getCookie("token");
+
+  return { id, token };
 }
 
 /* ========= FETCH DATA ========= */
