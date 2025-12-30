@@ -1,284 +1,340 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quản lý Thu Chi – Gia đình Bà Thu</title>
-
-  <meta name="theme-color" content="#d35400" />
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý thu chi Gia đình Bà Thu</title>
   <style>
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: 'Quicksand', sans-serif;
       margin: 0;
+      padding: 0;
       background: #f4f6f8;
     }
-
     nav {
       display: flex;
       justify-content: center;
-      gap: 14px;
-      background: #d35400;
+      background-color: #d9a382;
       padding: 10px;
-      flex-wrap: wrap;
     }
-
     nav a {
-      color: #fff;
+      color: white;
       text-decoration: none;
-      font-weight: 500;
+      margin: 0 15px;
+      font-size: 18px;
     }
-
     h2 {
       text-align: center;
       color: #d35400;
-      margin: 16px 0;
     }
-
     label, input, select, button {
       display: block;
       width: 90%;
-      max-width: 420px;
       margin: 8px auto;
       padding: 8px;
       font-size: 1rem;
     }
-
-    button {
-      background: #d35400;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
     .summary {
+      margin: 10px auto;
       text-align: center;
       font-weight: bold;
-      margin-top: 10px;
     }
-
-    .month-box {
-      background: #fff;
-      margin: 12px;
-      border-radius: 8px;
-      overflow: hidden;
-      border: 1px solid #ddd;
-    }
-
-    .month-header {
-      background: #d35400;
-      color: #fff;
-      padding: 10px;
-      display: flex;
-      justify-content: space-between;
-      cursor: pointer;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
+      margin-top: 10px;
     }
-
     th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      font-size: 0.95rem;
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: left;
     }
-
-    th {
-      background: #f1f1f1;
+    table thead {
+      background-color: #eee;
     }
-
-    #loading {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(255,255,255,0.85);
-      font-size: 22px;
-      color: #d35400;
-      text-align: center;
-      padding-top: 20%;
-      z-index: 9999;
+    button {
+      padding: 5px 8px;
+      font-size: 1rem;
+    }
+    .month-box {
+      border: 1px solid #ccc;
+      margin: 10px;
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .month-header {
+      background: #d35400;
+      color: white;
+      padding: 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .month-header strong {
+      font-size: 1rem;
     }
   </style>
+  <link rel="manifest" href="../quan-li/manifest.json">
+  <meta name="theme-color" content="#4CAF50">
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js').then(registration => {
+      console.log('Service Worker đã được đăng ký:', registration);
+    });
+
+    navigator.serviceWorker.addEventListener('message', event => {
+      if (event.data && event.data.type === 'NEW_VERSION_AVAILABLE') {
+        if (confirm("Có phiên bản mới của ứng dụng. Bạn có muốn tải lại để cập nhật?")) {
+          window.location.reload();
+        }
+      }
+    });
+  }
+</script>
 </head>
-
 <body>
+  <nav>
+    <a href="../quan-li-thu-chi/">Quản Lí Thu Chi</a>
+    <a href="../quan-li-kho/">Quản Lí Kho</a>
+    <a href="../quan-li-menu/">Quản Lí Menu</a>
+    <a href="../quan-li-nv/">Quản Lí Nhân Viên</a>
+    <a href="../quan-li-sx/">Quản Lí Sản Xuất</a>
+    <a href="../quan-li-chi-nhanh/">Quản Lí Chi Nhánh</a>
+  </nav>
 
-<nav>
-  <a href="#">Thu Chi</a>
-  <a href="../quan-li-kho/">Kho</a>
-  <a href="../quan-li-menu/">Menu</a>
-  <a href="../quan-li-nv/">Nhân viên</a>
-</nav>
+  <h2>Quản lý thu chi Gia đình Bà Thu</h2>
 
-<h2>Quản lý Thu Chi – Gia đình Bà Thu</h2>
+  <label for="amount">Số tiền:</label>
+  <input type="number" id="amount" placeholder="VD: 100000">
+  <label for="type">Loại:</label>
+  <select id="type">
+    <option value="expense">CHI</option>
+    <option value="income">Thu</option>
+  </select>
+  <label for="note">Mô tả:</label>
+  <input type="text" id="note" placeholder="VD: Bán hàng">
+  <button id="submit-btn">Thêm</button>
 
-<label>Số tiền</label>
-<input id="amount" type="number" placeholder="VD: 100000" />
-
-<label>Loại</label>
-<select id="type">
-  <option value="income">Thu</option>
-  <option value="expense">Chi</option>
-</select>
-
-<label>Mô tả</label>
-<input id="note" placeholder="VD: Bán hàng" />
-
-<button id="submit-btn">Thêm giao dịch</button>
-
-<div class="summary">
-  Tổng thu: <span id="total-income">0</span> |
-  Tổng chi: <span id="total-expense">0</span>
+  <div class="summary">
+    Tổng thu: <span id="total-income">0</span> VND | Tổng chi: <span id="total-expense">0</span> VND
+  </div>
+<div id="loading-overlay" style="
+  display:none;
+  position:fixed;
+  top:0; left:0; width:100%; height:100%;
+  background:rgba(255,255,255,0.8);
+  z-index:9999;
+  font-size:24px;
+  color:#d35400;
+  text-align:center;
+  padding-top:20%;
+  font-family:sans-serif;">
+  ⏳ Đang tải dữ liệu...
 </div>
 
-<div id="transaction-container"></div>
+  <div id="transaction-container"></div>
+<a href="./">Trở lại</a>
+<script src="../auth.js"></script>
+  <script>
+const API_URL = "https://script.google.com/macros/s/AKfycbyHYKvF1VYcWl8kjnIgzIzdITw5cWUz6HMV-N9bVsiAdh6GrQL4Vo9hXLaBZ10spa8ILQ/exec";
+const TELEGRAM_BOT_TOKEN = "7623637573:AAHajhJVvQZXNjA1kJBedtoan5BX85hGF2M";
+const TELEGRAM_CHAT_ID = "6249154937";
 
-<div id="loading">⏳ Đang xử lý...</div>
-
-<script>
-/* ================== CONFIG ================== */
-const API_URL = "https://script.google.com/macros/s/AKfycbx8Tpqq5v6k45i5KGF__GtdWzQSua9kNs3TFRNRQnKP3bMvAEOocJBDj8Ty-oIhIlI-zA/exec";
-
-/* ================== STATE ================== */
 let transactions = [];
 
-/* ================== UTIL ================== */
-const $ = id => document.getElementById(id);
-
-function showLoading(text = "⏳ Đang xử lý...") {
-  const l = $("loading");
-  l.textContent = text;
-  l.style.display = "block";
+/* ========= AUTH ========= */
+function getAuth() {
+  return JSON.parse(localStorage.getItem("auth") || "{}");
 }
 
-function hideLoading() {
-  $("loading").style.display = "none";
-}
-
-/* ================== API ================== */
+/* ========= FETCH DATA ========= */
 async function fetchTransactions() {
-  const res = await fetch(API_URL);
-  const data = await res.json();
-  return data.transactions || [];
+  const { id, token } = getAuth();
+  if (!id || !token) {
+    alert("⚠️ Chưa đăng nhập");
+    return [];
+  }
+
+  try {
+    const res = await fetch(
+      `${API_URL}?id=${encodeURIComponent(id)}&token=${encodeURIComponent(token)}`
+    );
+    const data = await res.json();
+    return data.transactions || [];
+  } catch (err) {
+    console.error("❌ Lỗi lấy dữ liệu:", err);
+    return [];
+  }
 }
 
+/* ========= SAVE ========= */
 async function saveTransaction(transaction) {
-  await fetch(API_URL, {
+  const { id, token } = getAuth();
+  return fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ transaction })
+   mode: "no-cors",
+    body: JSON.stringify({ id, token, transaction })
   });
 }
 
-/* ================== UI ================== */
+async function saveAllTransactions() {
+  const { id, token } = getAuth();
+  return fetch(API_URL, {
+    method: "POST",
+    mode: "no-cors",
+    body: JSON.stringify({ id, token, transactions })
+  });
+}
+
+/* ========= UI ========= */
 function updateUI() {
-  const box = $("transaction-container");
-  box.innerHTML = "";
+  const container = document.getElementById("transaction-container");
+  container.innerHTML = "";
 
   let totalIncome = 0;
   let totalExpense = 0;
-
-  const groups = {};
+  const grouped = {};
 
   transactions.forEach(t => {
-    const m = t.date.slice(0, 7);
-    groups[m] ??= [];
-    groups[m].push(t);
+    const month = t.date.slice(0, 7);
+    (grouped[month] ||= []).push(t);
   });
 
-  Object.keys(groups).sort().reverse().forEach(month => {
-    const list = groups[month].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  Object.keys(grouped).sort().reverse().forEach(month => {
+    const list = grouped[month].sort((a, b) => new Date(b.date) - new Date(a.date));
+    let income = 0, expense = 0;
 
-    let inc = 0, exp = 0;
-    list.forEach(t => t.type === "income" ? inc += t.amount : exp += t.amount);
-    totalIncome += inc;
-    totalExpense += exp;
+    list.forEach(t => t.type === "income" ? income += t.amount : expense += t.amount);
+    totalIncome += income;
+    totalExpense += expense;
 
-    const wrap = document.createElement("div");
-    wrap.className = "month-box";
+    const box = document.createElement("div");
+    box.className = "month-box";
 
-    const head = document.createElement("div");
-    head.className = "month-header";
-    head.innerHTML = `<strong>${month} | Thu: ${inc.toLocaleString()} – Chi: ${exp.toLocaleString()}</strong><span>🔽</span>`;
+    const header = document.createElement("div");
+    header.className = "month-header";
+    header.innerHTML = `<strong>📅 ${month} - Thu: ${income.toLocaleString()} | Chi: ${expense.toLocaleString()}</strong> <span>🔽</span>`;
 
     const table = document.createElement("table");
     table.style.display = "none";
-    table.innerHTML = `
-      <thead>
-        <tr><th>Số tiền</th><th>Loại</th><th>Mô tả</th><th>Ngày</th></tr>
-      </thead>
-      <tbody>
-        ${list.map(t => `
-          <tr>
-            <td>${t.amount.toLocaleString()}</td>
-            <td>${t.type === "income" ? "Thu" : "Chi"}</td>
-            <td>${t.note}</td>
-            <td>${new Date(t.date).toLocaleString("vi-VN")}</td>
-          </tr>`).join("")}
-      </tbody>
-    `;
+    table.innerHTML = `<thead><tr><th>Số tiền</th><th>Loại</th><th>Mô tả</th><th>Ngày</th><th></th></tr></thead><tbody></tbody>`;
 
-    head.onclick = () => {
+    list.forEach((t, i) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${t.amount.toLocaleString()} VND</td>
+        <td>${t.type === "income" ? "Thu" : "Chi"}</td>
+        <td>${t.note}</td>
+        <td>${new Date(t.date).toLocaleString("vi-VN")}</td>
+        <td>
+          <button onclick="editTransaction(${transactions.indexOf(t)})">✏️</button>
+          <button onclick="deleteTransaction(${transactions.indexOf(t)})">🗑️</button>
+        </td>`;
+      table.querySelector("tbody").appendChild(row);
+    });
+
+    header.onclick = () => {
       table.style.display = table.style.display === "none" ? "table" : "none";
     };
 
-    wrap.append(head, table);
-    box.appendChild(wrap);
+    box.append(header, table);
+    container.appendChild(box);
   });
 
-  $("total-income").textContent = totalIncome.toLocaleString();
-  $("total-expense").textContent = totalExpense.toLocaleString();
+  document.getElementById("total-income").textContent = totalIncome.toLocaleString("vi-VN");
+  document.getElementById("total-expense").textContent = totalExpense.toLocaleString("vi-VN");
 }
 
-/* ================== ACTION ================== */
+/* ========= CRUD ========= */
 async function addTransaction() {
-  const amount = parseInt($("amount").value);
-  const type = $("type").value;
-  const note = $("note").value.trim();
-
-  if (!amount || amount <= 0) {
-    alert("Nhập số tiền hợp lệ");
-    return;
-  }
-
-  showLoading("🔄 Đang lưu...");
-  $("submit-btn").disabled = true;
+  const amount = parseInt(amount.value);
+  if (!amount) return alert("Nhập số tiền hợp lệ");
 
   const t = {
     amount,
-    type,
-    note,
+    type: type.value,
+    note: note.value,
     date: new Date().toISOString()
   };
 
+  showLoading("🔄 Đang gửi...");
   await saveTransaction(t);
-  transactions.unshift(t);
+  transactions = await fetchTransactions();
   updateUI();
-
-  $("amount").value = "";
-  $("note").value = "";
-  $("submit-btn").disabled = false;
+  sendToTelegram(t);
+  resetForm();
   hideLoading();
 }
 
-/* ================== INIT ================== */
+async function deleteTransaction(index) {
+  if (!confirm("Xoá giao dịch?")) return;
+  transactions.splice(index, 1);
+  showLoading();
+  await saveAllTransactions();
+  updateUI();
+  hideLoading();
+}
+
+function editTransaction(index) {
+  const t = transactions[index];
+  amount.value = t.amount;
+  type.value = t.type;
+  note.value = t.note;
+
+  submitBtn.onclick = async () => {
+    transactions[index] = {
+      amount: parseInt(amount.value),
+      type: type.value,
+      note: note.value,
+      date: new Date().toISOString()
+    };
+    await saveAllTransactions();
+    updateUI();
+    resetForm();
+  };
+}
+
+/* ========= UTIL ========= */
+function resetForm() {
+  amount.value = "";
+  note.value = "";
+  type.value = "income";
+  submitBtn.onclick = addTransaction;
+}
+
+function showLoading(text="⏳ Đang xử lý...") {
+  const o = document.getElementById("loading-overlay");
+  o.textContent = text;
+  o.style.display = "block";
+}
+function hideLoading() {
+  document.getElementById("loading-overlay").style.display = "none";
+}
+
+/* ========= TELEGRAM ========= */
+function sendToTelegram(t) {
+  fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    method: "POST",
+    
+    body: JSON.stringify({
+      chat_id: TELEGRAM_CHAT_ID,
+      text: `💰 ${t.amount.toLocaleString()} VND\n📂 ${t.type}\n📝 ${t.note}`
+    })
+  });
+}
+
+/* ========= INIT ========= */
 window.onload = async () => {
-  showLoading("⏳ Đang tải dữ liệu...");
+  showLoading();
   transactions = await fetchTransactions();
   updateUI();
   hideLoading();
-
-  $("submit-btn").onclick = addTransaction;
+  submitBtn.onclick = addTransaction;
 };
 </script>
 
 </body>
 </html>
+>
