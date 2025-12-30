@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý thu chi Gia đình Bà Thu</title>
+
+  <style>
+    body { font-family: 'Quicksand', sans-serif; margin: 0; background: #f4f6f8; }
+    nav { display: flex; justify-content: center; background-color: #d9a382; padding: 10px; }
+    nav a { color: white; text-decoration: none; margin: 0 15px; font-size: 18px; }
+    h2 { text-align: center; color: #d35400; }
+    label, input, select, button {
+      display: block; width: 90%; margin: 8px auto; padding: 8px; font-size: 1rem;
+    }
+    .summary { text-align: center; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 10px; border: 1px solid #ccc; }
+    .month-box { border: 1px solid #ccc; margin: 10px; border-radius: 8px; background: #fff; }
+    .month-header {
+      background: #d35400; color: white; padding: 10px;
+      display: flex; justify-content: space-between; cursor: pointer;
+    }
+  </style>
+
+  <link rel="manifest" href="../quan-li/manifest.json">
+  <meta name="theme-color" content="#4CAF50">
+</head>
+
+<body>
+
+<nav>
+  <a href="../quan-li-thu-chi/">Thu Chi</a>
+  <a href="../quan-li-kho/">Kho</a>
+  <a href="../quan-li-menu/">Menu</a>
+  <a href="../quan-li-nv/">Nhân viên</a>
+</nav>
+
+<h2>Quản lý thu chi Gia đình Bà Thu</h2>
+
+<label>Số tiền</label>
+<input type="number" id="amount">
+
+<label>Loại</label>
+<select id="type">
+  <option value="expense">Chi</option>
+  <option value="income">Thu</option>
+</select>
+
+<label>Mô tả</label>
+<input type="text" id="note">
+
+<button id="submit-btn">Thêm</button>
+
+<div class="summary">
+  Tổng thu: <span id="total-income">0</span> |
+  Tổng chi: <span id="total-expense">0</span>
+</div>
+
+<div id="transaction-container"></div>
+
+<div id="loading-overlay" style="
+display:none; position:fixed; inset:0;
+background:rgba(255,255,255,.85);
+font-size:22px; text-align:center; padding-top:20%">
+⏳ Đang xử lý...
+</div>
+
+<script src="../auth.js"></script>
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbxRTnOprhOpnUySRrXII5qJH4vESj2uBuYsDpD9TQldRG-be7LdOo77tlDXiVXsWHm6BA/exec";
+let transactions = [];
+
+/* ========= AUTH ========= */
+function getAuth() {
+  return JSON.parse(localStorage.getItem('auth') || '{}');
+}
+
+/* ========= API ========= */
+async function fetchTransactions() {
+  const { id, token } = getAuth();
+  const res = await fetch(`${API_URL}?id=${id}&token=${encodeURIComponent(token)}`);
+  const data = await res.json();
+  return data.transactions || [];
+}
+
+async function saveTransaction(transaction) {
+  const { id, token } = getAuth();
+  await fetch(API_URL, {
+    method: "POST",
+    mode: "no-cors",
+    body: JSON.stringify({ id, token, transaction })
+  });
+}
+
+async function saveAllTransactions() {
+  const { id, token } = getAuth();
+  await fetch(API_URL, {
+    method: "POST",
+    mode: "no-cors",
+    body: JSON.stringify({ id, token, transactions })
+  });
+}
+
+/* ========= UI ========= */
+function showLoading(show = true) {
+  document.getElementById("loading-overlay").style.display = show ? "block" : "none";
+}
+
+function updateUI() {
+  const box = document.getElementById("transaction-container");
+  box.innerHTML = "";
+  let income = 0, expense = 0;
+
+  const grouped = {};
+  transactions.forEach(t => {
+    const m = t.date.slice(0,7);
+    grouped[m] = grouped[m] || [];
+    grouped[m].push(t);
+  });
+
+  Object.keys(grouped).sort().reverse().forEach(m => {
+    const list = grouped[m];
+    let i = 0, e = 0;
+
+    list.forEach(t => t.type === "income" ? i += t.amount : e += t.amount);
+    income += i; expense += e;
+
+    const div = document.createElement("div");
+    div.className = "month-box";
+
+    const h = document.createElement("div");
+    h.className = "month-header";
+    h.innerHTML = `<strong>${m} | Thu ${i.toLocaleString()} – Chi ${e.toLocaleString()}</strong><span>▼</span>`;
+
+    const table = document.createElement("table");
+    table.style.display = "none";
+    table.innerHTML = `<tr><th>Số tiền</th><th>Loại</th><th>Mô tả</th><th>Ngày</th><th></th></tr>`;
+
+    list.forEach((t, idx) => {
+      table.innerHTML += `
+        <tr>
+          <td>${t.amount.toLocaleString()}</td>
+          <td>${t.type}</td>
+          <td>${t.note}</td>
+          <td>${new Date(t.date).toLocaleString("vi-VN")}</td>
+          <td><button onclick="remove(${transactions.indexOf(t)})">🗑</button></td>
+        </tr>`;
+    });
+
+    h.onclick = () => table.style.display = table.style.display ? "" : "none";
+    div.append(h, table);
+    box.appendChild(div);
+  });
+
+  document.getElementById("total-income").textContent = income.toLocaleString();
+  document.getElementById("total-expense").textContent = expense.toLocaleString();
+}
+
+/* ========= ACTION ========= */
+async function addTransaction() {
+  const amount = +amountInput.value;
+  if (!amount) return alert("Nhập số tiền");
+
+  showLoading(true);
+  await saveTransaction({
+    amount,
+    type: type.value,
+    note: note.value,
+    date: new Date().toISOString()
+  });
+
+  transactions = await fetchTransactions();
+  updateUI();
+  amountInput.value = note.value = "";
+  showLoading(false);
+}
+
+async function remove(i) {
+  if (!confirm("Xoá?")) return;
+  transactions.splice(i,1);
+  showLoading(true);
+  await saveAllTransactions();
+  updateUI();
+  showLoading(false);
+}
+
+/* ========= INIT ========= */
+submitBtn.onclick = addTransaction;
+window.onload = async () => {
+  showLoading(true);
+  transactions = await fetchTransactions();
+  updateUI();
+  showLoading(false);
+};
+</script>
+
+</body>
+</html>
