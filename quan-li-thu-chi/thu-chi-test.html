@@ -4,196 +4,387 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quản lý thu chi Gia đình Bà Thu</title>
-
   <style>
-    body { font-family: 'Quicksand', sans-serif; margin: 0; background: #f4f6f8; }
-    nav { display: flex; justify-content: center; background-color: #d9a382; padding: 10px; }
-    nav a { color: white; text-decoration: none; margin: 0 15px; font-size: 18px; }
-    h2 { text-align: center; color: #d35400; }
-    label, input, select, button {
-      display: block; width: 90%; margin: 8px auto; padding: 8px; font-size: 1rem;
+    body {
+      font-family: 'Quicksand', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f6f8;
     }
-    .summary { text-align: center; font-weight: bold; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { padding: 10px; border: 1px solid #ccc; }
-    .month-box { border: 1px solid #ccc; margin: 10px; border-radius: 8px; background: #fff; }
+    nav {
+      display: flex;
+      justify-content: center;
+      background-color: #d9a382;
+      padding: 10px;
+    }
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 15px;
+      font-size: 18px;
+    }
+    h2 {
+      text-align: center;
+      color: #d35400;
+    }
+    label, input, select, button {
+      display: block;
+      width: 90%;
+      margin: 8px auto;
+      padding: 8px;
+      font-size: 1rem;
+    }
+    .summary {
+      margin: 10px auto;
+      text-align: center;
+      font-weight: bold;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    table thead {
+      background-color: #eee;
+    }
+    button {
+      padding: 5px 8px;
+      font-size: 1rem;
+    }
+    .month-box {
+      border: 1px solid #ccc;
+      margin: 10px;
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
     .month-header {
-      background: #d35400; color: white; padding: 10px;
-      display: flex; justify-content: space-between; cursor: pointer;
+      background: #d35400;
+      color: white;
+      padding: 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .month-header strong {
+      font-size: 1rem;
     }
   </style>
-
   <link rel="manifest" href="../quan-li/manifest.json">
   <meta name="theme-color" content="#4CAF50">
-</head>
-
-<body>
-
-<nav>
-  <a href="../quan-li-thu-chi/">Thu Chi</a>
-  <a href="../quan-li-kho/">Kho</a>
-  <a href="../quan-li-menu/">Menu</a>
-  <a href="../quan-li-nv/">Nhân viên</a>
-</nav>
-
-<h2>Quản lý thu chi Gia đình Bà Thu</h2>
-
-<label>Số tiền</label>
-<input type="number" id="amount">
-
-<label>Loại</label>
-<select id="type">
-  <option value="expense">Chi</option>
-  <option value="income">Thu</option>
-</select>
-
-<label>Mô tả</label>
-<input type="text" id="note">
-
-<button id="submit-btn">Thêm</button>
-
-<div class="summary">
-  Tổng thu: <span id="total-income">0</span> |
-  Tổng chi: <span id="total-expense">0</span>
-</div>
-
-<div id="transaction-container"></div>
-
-<div id="loading-overlay" style="
-display:none; position:fixed; inset:0;
-background:rgba(255,255,255,.85);
-font-size:22px; text-align:center; padding-top:20%">
-⏳ Đang xử lý...
-</div>
-
-<script src="../auth.js"></script>
-<script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxRTnOprhOpnUySRrXII5qJH4vESj2uBuYsDpD9TQldRG-be7LdOo77tlDXiVXsWHm6BA/exec";
-let transactions = [];
-
-/* ========= AUTH ========= */
-function getAuth() {
-  return JSON.parse(localStorage.getItem('auth') || '{}');
-}
-
-/* ========= API ========= */
-async function fetchTransactions() {
-  const { id, token } = getAuth();
-  const res = await fetch(`${API_URL}?id=${id}&token=${encodeURIComponent(token)}`);
-  const data = await res.json();
-  return data.transactions || [];
-}
-
-async function saveTransaction(transaction) {
-  const { id, token } = getAuth();
-  await fetch(API_URL, {
-    method: "POST",
-    mode: "no-cors",
-    body: JSON.stringify({ id, token, transaction })
-  });
-}
-
-async function saveAllTransactions() {
-  const { id, token } = getAuth();
-  await fetch(API_URL, {
-    method: "POST",
-    mode: "no-cors",
-    body: JSON.stringify({ id, token, transactions })
-  });
-}
-
-/* ========= UI ========= */
-function showLoading(show = true) {
-  document.getElementById("loading-overlay").style.display = show ? "block" : "none";
-}
-
-function updateUI() {
-  const box = document.getElementById("transaction-container");
-  box.innerHTML = "";
-  let income = 0, expense = 0;
-
-  const grouped = {};
-  transactions.forEach(t => {
-    const m = t.date.slice(0,7);
-    grouped[m] = grouped[m] || [];
-    grouped[m].push(t);
-  });
-
-  Object.keys(grouped).sort().reverse().forEach(m => {
-    const list = grouped[m];
-    let i = 0, e = 0;
-
-    list.forEach(t => t.type === "income" ? i += t.amount : e += t.amount);
-    income += i; expense += e;
-
-    const div = document.createElement("div");
-    div.className = "month-box";
-
-    const h = document.createElement("div");
-    h.className = "month-header";
-    h.innerHTML = `<strong>${m} | Thu ${i.toLocaleString()} – Chi ${e.toLocaleString()}</strong><span>▼</span>`;
-
-    const table = document.createElement("table");
-    table.style.display = "none";
-    table.innerHTML = `<tr><th>Số tiền</th><th>Loại</th><th>Mô tả</th><th>Ngày</th><th></th></tr>`;
-
-    list.forEach((t, idx) => {
-      table.innerHTML += `
-        <tr>
-          <td>${t.amount.toLocaleString()}</td>
-          <td>${t.type}</td>
-          <td>${t.note}</td>
-          <td>${new Date(t.date).toLocaleString("vi-VN")}</td>
-          <td><button onclick="remove(${transactions.indexOf(t)})">🗑</button></td>
-        </tr>`;
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js').then(registration => {
+      console.log('Service Worker đã được đăng ký:', registration);
     });
 
-    h.onclick = () => table.style.display = table.style.display ? "" : "none";
-    div.append(h, table);
-    box.appendChild(div);
-  });
-
-  document.getElementById("total-income").textContent = income.toLocaleString();
-  document.getElementById("total-expense").textContent = expense.toLocaleString();
-}
-
-/* ========= ACTION ========= */
-async function addTransaction() {
-  const amount = +amountInput.value;
-  if (!amount) return alert("Nhập số tiền");
-
-  showLoading(true);
-  await saveTransaction({
-    amount,
-    type: type.value,
-    note: note.value,
-    date: new Date().toISOString()
-  });
-
-  transactions = await fetchTransactions();
-  updateUI();
-  amountInput.value = note.value = "";
-  showLoading(false);
-}
-
-async function remove(i) {
-  if (!confirm("Xoá?")) return;
-  transactions.splice(i,1);
-  showLoading(true);
-  await saveAllTransactions();
-  updateUI();
-  showLoading(false);
-}
-
-/* ========= INIT ========= */
-submitBtn.onclick = addTransaction;
-window.onload = async () => {
-  showLoading(true);
-  transactions = await fetchTransactions();
-  updateUI();
-  showLoading(false);
-};
+    navigator.serviceWorker.addEventListener('message', event => {
+      if (event.data && event.data.type === 'NEW_VERSION_AVAILABLE') {
+        if (confirm("Có phiên bản mới của ứng dụng. Bạn có muốn tải lại để cập nhật?")) {
+          window.location.reload();
+        }
+      }
+    });
+  }
 </script>
+</head>
+<body>
+  <nav>
+    <a href="../quan-li-thu-chi/">Quản Lí Thu Chi</a>
+    <a href="../quan-li-kho/">Quản Lí Kho</a>
+    <a href="../quan-li-menu/">Quản Lí Menu</a>
+    <a href="../quan-li-nv/">Quản Lí Nhân Viên</a>
+    <a href="../quan-li-sx/">Quản Lí Sản Xuất</a>
+    <a href="../quan-li-chi-nhanh/">Quản Lí Chi Nhánh</a>
+  </nav>
 
+  <h2>Quản lý thu chi Gia đình Bà Thu</h2>
+
+  <label for="amount">Số tiền:</label>
+  <input type="number" id="amount" placeholder="VD: 100000">
+  <label for="type">Loại:</label>
+  <select id="type">
+    <option value="expense">CHI</option>
+    <option value="income">Thu</option>
+  </select>
+  <label for="note">Mô tả:</label>
+  <input type="text" id="note" placeholder="VD: Bán hàng">
+  <button id="submit-btn">Thêm</button>
+
+  <div class="summary">
+    Tổng thu: <span id="total-income">0</span> VND | Tổng chi: <span id="total-expense">0</span> VND
+  </div>
+<div id="loading-overlay" style="
+  display:none;
+  position:fixed;
+  top:0; left:0; width:100%; height:100%;
+  background:rgba(255,255,255,0.8);
+  z-index:9999;
+  font-size:24px;
+  color:#d35400;
+  text-align:center;
+  padding-top:20%;
+  font-family:sans-serif;">
+  ⏳ Đang tải dữ liệu...
+</div>
+
+  <div id="transaction-container"></div>
+<a href="./">Trở lại</a>
+<script src="../auth.js"></script>
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbw8TuWMYRy0kUaFQR78b6VeRJyGDcP4GrTLbOYoIv5uoVlYnxSJxP2kt3sFwAKWnKIJDQ/exec";
+    const TELEGRAM_BOT_TOKEN = "7623637573:AAHajhJVvQZXNjA1kJBedtoan5BX85hGF2M";
+    const TELEGRAM_CHAT_ID = "6249154937";
+    let transactions = [];
+
+    async function fetchTransactions() {
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        return data.transactions || [];
+      } catch (err) {
+        console.error("❌ Lỗi lấy dữ liệu:", err);
+        return [];
+      }
+    }
+    function updateUI() {
+      const container = document.getElementById("transaction-container");
+      container.innerHTML = "";
+
+      let totalIncome = 0;
+      let totalExpense = 0;
+
+      const grouped = {};
+      transactions.forEach(t => {
+        const month = t.date?.slice(0, 7); // YYYY-MM
+        if (!grouped[month]) grouped[month] = [];
+        grouped[month].push(t);
+      });
+
+      const sortedMonths = Object.keys(grouped).sort().reverse();
+
+      sortedMonths.forEach(month => {
+        const list = grouped[month].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        let income = 0;
+        let expense = 0;
+        list.forEach(t => {
+          if (t.type === "income") income += t.amount;
+          else expense += t.amount;
+        });
+        totalIncome += income;
+        totalExpense += expense;
+
+        const monthBox = document.createElement("div");
+        monthBox.className = "month-box";
+
+        const header = document.createElement("div");
+        header.className = "month-header";
+
+        const title = document.createElement("strong");
+        title.textContent = `📅 Tháng ${month.slice(5, 7)}/${month.slice(0, 4)} - Thu: ${income.toLocaleString("vi-VN")} VND, Chi: ${expense.toLocaleString("vi-VN")} VND`;
+
+        const toggle = document.createElement("span");
+        toggle.textContent = "🔽";
+
+        header.appendChild(title);
+        header.appendChild(toggle);
+
+        const table = document.createElement("table");
+        table.style.display = "none";
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>Số tiền</th>
+              <th>Loại</th>
+              <th>Mô tả</th>
+              <th>Ngày</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        `;
+
+        list.forEach(t => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${t.amount.toLocaleString("vi-VN")} VND</td>
+            <td>${t.type === "income" ? "Thu" : "Chi"}</td>
+            <td>${t.note}</td>
+            <td>${new Date(t.date).toLocaleString("vi-VN")}</td>
+            <td>
+              <button onclick="editTransaction(${transactions.indexOf(t)})">✏️</button>
+              <button onclick="deleteTransaction(${transactions.indexOf(t)})">🗑️</button>
+            </td>
+          `;
+          table.querySelector("tbody").appendChild(row);
+        });
+
+        header.onclick = () => {
+          table.style.display = table.style.display === "none" ? "table" : "none";
+          toggle.textContent = table.style.display === "none" ? "🔽" : "🔼";
+        };
+
+        monthBox.appendChild(header);
+        monthBox.appendChild(table);
+        container.appendChild(monthBox);
+      });
+
+      document.getElementById("total-income").textContent = totalIncome.toLocaleString("vi-VN");
+      document.getElementById("total-expense").textContent = totalExpense.toLocaleString("vi-VN");
+    }
+
+   async function addTransaction() {
+  const amountInput = document.getElementById("amount");
+  const typeInput = document.getElementById("type");
+  const noteInput = document.getElementById("note");
+  const submitBtn = document.getElementById("submit-btn");
+
+  const amount = parseInt(amountInput.value);
+  const type = typeInput.value;
+  const note = noteInput.value;
+
+  if (!amount || isNaN(amount)) {
+    alert("Vui lòng nhập số tiền hợp lệ!");
+    return;
+  }
+
+  // Khóa input và nút gửi
+  amountInput.disabled = true;
+  typeInput.disabled = true;
+  noteInput.disabled = true;
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Đang gửi...";
+  showLoading("🔄 Đang gửi dữ liệu...");
+
+  const transaction = {
+    amount,
+    type,
+    note,
+    date: new Date().toISOString()
+  };
+
+  try {
+    await saveTransaction(transaction);
+    transactions = await fetchTransactions();
+    updateUI();
+    sendToTelegram(transaction);
+  } catch (err) {
+    alert("❌ Có lỗi khi gửi dữ liệu!");
+    console.error(err);
+  }
+
+  // Mở lại input và nút gửi
+  resetForm();
+  amountInput.disabled = false;
+  typeInput.disabled = false;
+  noteInput.disabled = false;
+  submitBtn.disabled = false;
+  submitBtn.textContent = "Thêm";
+   hideLoading();
+}
+
+    async function saveTransaction(transaction) {
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          
+          body: JSON.stringify({ transaction }),
+          mode: "no-cors"
+        });
+      } catch (err) {
+        console.error("❌ Lỗi khi gửi:", err);
+      }
+    }
+
+    async function saveAllTransactions() {
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          
+          body: JSON.stringify({ transactions }),
+          mode: "no-cors"
+        });
+      } catch (err) {
+        console.error("❌ Lỗi khi lưu toàn bộ:", err);
+      }
+    }
+
+    async function deleteTransaction(index) {
+      if (!confirm("Bạn có chắc muốn xoá?")) return;
+      transactions.splice(index, 1);
+      showLoading("🔄 Đang gửi dữ liệu...");
+      await saveAllTransactions();
+      updateUI();
+      hideLoading();
+    }
+
+    function showLoading(text = "⏳ Đang tải dữ liệu...") {
+  const overlay = document.getElementById("loading-overlay");
+  overlay.textContent = text;
+  overlay.style.display = "block";
+}
+
+function hideLoading() {
+  document.getElementById("loading-overlay").style.display = "none";
+}
+
+    function editTransaction(index) {
+      const t = transactions[index];
+      document.getElementById("amount").value = t.amount;
+      document.getElementById("type").value = t.type;
+      document.getElementById("note").value = t.note;
+
+      document.getElementById("submit-btn").onclick = async () => {
+        transactions[index] = {
+          amount: parseInt(document.getElementById("amount").value),
+          type: document.getElementById("type").value,
+          note: document.getElementById("note").value,
+          date: new Date().toISOString()
+        };
+        await saveAllTransactions();
+        updateUI();
+        resetForm();
+      };
+    }
+
+    function resetForm() {
+      document.getElementById("amount").value = "";
+      document.getElementById("type").value = "income";
+      document.getElementById("note").value = "";
+      document.getElementById("submit-btn").onclick = addTransaction;
+    }
+
+    function sendToTelegram(t) {
+      const msg = `📌 *Dữ liệu chi tiêu bà Thu *:\n💰 *Số tiền:* ${t.amount.toLocaleString("vi-VN")} VND\n📂 *Loại:* ${t.type === "income" ? "Thu nhập" : "Chi tiêu"}\n📝 *Mô tả:* ${t.note}`;
+      fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHAT_ID,
+          text: msg,
+          parse_mode: "Markdown"
+        })
+      }).then(r => r.json())
+        .then(data => {
+          if (!data.ok) alert("❌ Gửi Telegram thất bại!");
+        });
+    }
+
+    window.onload = async () => {
+      showLoading();
+      transactions = await fetchTransactions();
+      updateUI();
+      hideLoading(); 
+      document.getElementById("submit-btn").onclick = addTransaction;
+    };
+  </script>
 </body>
 </html>
+>
