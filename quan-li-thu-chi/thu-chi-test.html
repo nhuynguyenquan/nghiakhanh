@@ -174,7 +174,7 @@ async function saveTransaction(transaction) {
   const { id, token } = getAuth();
   return fetch(API_URL, {
     method: "POST",
-   
+   mode: "no-cors",
     body: JSON.stringify({ id, token, transaction })
   });
 }
@@ -183,7 +183,7 @@ async function saveAllTransactions() {
   const { id, token } = getAuth();
   return fetch(API_URL, {
     method: "POST",
-    
+    mode: "no-cors",
     body: JSON.stringify({ id, token, transactions })
   });
 }
