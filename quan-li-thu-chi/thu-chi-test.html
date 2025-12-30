@@ -183,7 +183,7 @@ async function saveAllTransactions() {
   const { id, token } = getAuth();
   return fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    
     body: JSON.stringify({ id, token, transactions })
   });
 }
