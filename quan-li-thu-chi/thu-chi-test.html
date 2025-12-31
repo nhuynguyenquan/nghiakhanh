@@ -136,6 +136,22 @@
 
   <div id="transaction-container"></div>
 <a href="./">Trở lại</a>
+
+<div id="auth-info" style="
+  margin:10px auto;
+  width:90%;
+  background:#fff3cd;
+  border:1px solid #ffeeba;
+  padding:10px;
+  border-radius:6px;
+  font-size:14px;
+  word-break:break-all;
+">
+  <strong>Auth debug:</strong><br>
+  ID: <span id="debug-id">---</span><br>
+  Token: <span id="debug-token">---</span>
+</div>
+
 <script src="../auth.js"></script>
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbwwHcVk5efzzlujCXxEcDC4Roe--hLD_V95BGvIcYKC411lli5UMKZUTMIwr3f_6Kn_EQ/exec";
@@ -321,14 +337,34 @@ function sendToTelegram(t) {
   });
 }
 
-/* ========= INIT ========= */
+/* ========= INIT ========= 
 window.onload = async () => {
   submitBtn.onclick = addTransaction;
   showLoading();
   transactions = await fetchTransactions();
   updateUI();
   hideLoading();
+};*/
+
+window.onload = async () => {
+  renderAuthInfo();        // 👈 in id & token
+  showLoading();
+  transactions = await fetchTransactions();
+  updateUI();
+  hideLoading();
+  submitBtn.onclick = addTransaction;
 };
+
+function renderAuthInfo() {
+  const { id, token } = getAuth();
+
+  document.getElementById("debug-id").textContent =
+    id || "(không có id)";
+
+  document.getElementById("debug-token").textContent =
+    token || "(không có token)";
+}
+
 </script>
 </body>
 </html>
