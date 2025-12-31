@@ -152,17 +152,18 @@ const container   = document.getElementById("transaction-container");
 
 let transactions = [];
 
-/* ========= AUTH ========= 
+/* ========= AUTH ========= */
 function getAuth() {
   return {
     id: getCookie("user_id"),
     token: getCookie("token")
   };
-}*/
+}
+/*
 function getAuth() {
   return JSON.parse(localStorage.getItem('auth') || '{}');
 }
-/* ========= FETCH ========= */
+ ========= FETCH ========= */
 async function fetchTransactions() {
   const { id, token } = getAuth();
   if (!id || !token) {
