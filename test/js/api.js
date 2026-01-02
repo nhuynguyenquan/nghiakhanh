@@ -1,3 +1,4 @@
+import { CONFIG } from './config.js';
 export const api = {
   adminLogin(pin) {
     return fetch(CONFIG.API_URL, {
