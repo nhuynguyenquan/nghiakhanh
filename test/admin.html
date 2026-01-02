@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin – Cafe Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    .box {
+      max-width: 420px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    h1 { margin-top: 0; }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    button {
+      background: #222;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover { opacity: 0.9; }
+    .hidden { display: none; }
+    .order {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginBox" class="box">
+  <h1>🔐 Admin Login</h1>
+  <input id="pin" type="password" placeholder="Nhập PIN" />
+  <button onclick="login()">Đăng nhập</button>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminBox" class="box hidden">
+  <h1>📋 Đơn hàng</h1>
+  <div id="orders"></div>
+  <button onclick="logout()">Đăng xuất</button>
+</div>
+
+<script type="module">
+  import { api } from './js/api.js';
+
+  const token = localStorage.getItem('admin_token');
+
+  // Nếu đã có token → thử load admin
+  if (token) {
+    loadOrders();
+  }
+
+  window.login = async function () {
+    const pin = document.getElementById('pin').value.trim();
+    if (!pin) return alert('Nhập PIN');
+
+    const res = await api.adminLogin(pin);
+    if (!res.ok) return alert('Sai PIN');
+
+    localStorage.setItem('admin_token', res.token);
+    loadOrders();
+  };
+
+  async function loadOrders() {
+    const token = localStorage.getItem('admin_token');
+    const res = await api.getOrders(token);
+
+    if (res.error) {
+      localStorage.removeItem('admin_token');
+      return;
+    }
+
+    document.getElementById('loginBox').classList.add('hidden');
+    document.getElementById('adminBox').classList.remove('hidden');
+
+    const ordersDiv = document.getElementById('orders');
+    ordersDiv.innerHTML = '';
+
+    res.orders.forEach(o => {
+      ordersDiv.innerHTML += `
+        <div class="order">
+          <b>${o.orderId}</b><br>
+          Bàn: ${o.table}<br>
+          Tổng: ${o.total}đ<br>
+          Trạng thái: ${o.status}
+        </div>
+      `;
+    });
+  }
+
+  window.logout = function () {
+    localStorage.removeItem('admin_token');
+    location.reload();
+  };
+</script>
+
+</body>
+</html>
