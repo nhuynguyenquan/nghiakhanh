@@ -2,45 +2,245 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Bảng điều khiển</title>
+  <title>Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root {
+      --bg: #020617;
+      --panel: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.15);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #22c55e;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #1e293b, var(--bg));
+      color: var(--text);
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    header .title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    header .actions button {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    header .actions button:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    header .actions .logout {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* ===== MAIN ===== */
+    main {
+      padding: 24px;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .welcome {
+      margin-bottom: 24px;
+    }
+
+    .welcome h2 {
+      margin: 0 0 6px;
+    }
+
+    .welcome p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    /* ===== MODULE GRID ===== */
+    .modules {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .module {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .module:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+
+    .module .icon {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .module .name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .module .desc {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .module.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
 </head>
+
 <body>
-  <h2>Chào mừng bạn!</h2>
-  <p id="status">Đang kiểm tra đăng nhập...</p>
-  <button onclick="logout()">Đăng xuất</button>
-<script src="../auth1.js"></script>
-  <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwbb8TxqMBPIVLB_izyJcmImZiMtyoErCYA7mi02Ln633RfWsU8oLSNEAHvLycIHP9UcA/exec';
 
-    function getCookie(name) {
-      return document.cookie.split('; ').find(row => row.startsWith(name + '='))?.split('=')[1];
-    }
+<header>
+  <div class="title">☕ Cafe Admin Dashboard</div>
+  <div class="actions">
+    <button onclick="refresh()">🔄 Refresh</button>
+    <button class="logout" onclick="logout()">🚪 Logout</button>
+  </div>
+</header>
 
-    function logout() {
-      document.cookie = "token=; max-age=0; path=/";
-      document.cookie = "user_id=; max-age=0; path=/";
-      //window.location.href = 'index.html';
-    }
+<main>
 
-    async function checkLogin() {
-      const token = getCookie('token');
-      const id = getCookie('user_id');
-      if (!token || !id) {
-        document.getElementById('status').innerText = "Chưa đăng nhập!";
-        return;
-      }
+  <div class="welcome">
+    <h2>Xin chào 👋</h2>
+    <p>Chọn module để quản lý hệ thống</p>
+  </div>
 
-      const res = await fetch(`${API_URL}?action=check_token&id=${id}&token=${token}`);
-      const result = await res.json();
-      if (result.valid) {
-        document.getElementById('status').innerText = `Xin chào ${id} (${result.role})`;
-      } else {
-        document.getElementById('status').innerText = "Phiên đăng nhập hết hạn!";
-        logout();
-      }
-    }
+  <div class="modules">
 
-    checkLogin();
-  </script>
+    <div class="module" onclick="openModule('menu')">
+      <div class="icon">📋</div>
+      <div class="name">Quản lý Menu</div>
+      <div class="desc">Thêm / sửa / ẩn món</div>
+    </div>
+
+    <div class="module" onclick="openModule('order')">
+      <div class="icon">🧾</div>
+      <div class="name">Đơn hàng</div>
+      <div class="desc">Theo dõi order theo bàn</div>
+    </div>
+
+    <div class="module" onclick="openModule('table')">
+      <div class="icon">🪑</div>
+      <div class="name">Bàn</div>
+      <div class="desc">QR – trạng thái bàn</div>
+    </div>
+
+    <div class="module" onclick="openModule('revenue')">
+      <div class="icon">💰</div>
+      <div class="name">Doanh thu</div>
+      <div class="desc">Ngày / tháng</div>
+    </div>
+
+    <div class="module" onclick="openModule('staff')">
+      <div class="icon">👨‍🍳</div>
+      <div class="name">Nhân viên</div>
+      <div class="desc">Phân quyền</div>
+    </div>
+
+    <div class="module disabled">
+      <div class="icon">⚙️</div>
+      <div class="name">Cài đặt</div>
+      <div class="desc">Sắp có</div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  © Cafe Admin System
+</footer>
+
+<script type="module">
+import { CONFIG } from './js/config.js';
+
+const API = CONFIG.API_URL;
+
+/* 🔐 Kiểm tra đăng nhập */
+async function checkAuth() {
+  const token = localStorage.getItem('access_token');
+  if (!token) {
+    location.href = 'login.html';
+    return;
+  }
+
+  const res = await fetch(API, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'verify',
+      accessToken: token
+    })
+  }).then(r => r.json());
+
+  if (!res.ok) {
+    logout();
+  }
+}
+checkAuth();
+
+/* 🚪 Logout */
+window.logout = function () {
+  localStorage.clear();
+  location.href = 'login.html';
+};
+
+/* 🔄 Refresh */
+window.refresh = function () {
+  location.reload();
+};
+
+/* 🧩 Mở module */
+window.openModule = function (name) {
+  alert('Mở module: ' + name);
+  // Sau này:
+  // location.href = name + '.html'
+};
+</script>
+
 </body>
 </html>
