@@ -3,20 +3,164 @@
 <head>
   <meta charset="UTF-8">
   <title>Admin Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.15);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #22c55e;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #1e293b, #020617);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 380px;
+      background: var(--card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 28px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo {
+      text-align: center;
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 6px;
+      color: var(--muted);
+    }
+
+    .field input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.3);
+      color: var(--text);
+      outline: none;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+
+    .field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(34,197,94,0.25);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #022c22;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(34,197,94,0.4);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .error {
+      margin-top: 14px;
+      font-size: 14px;
+      color: var(--danger);
+      text-align: center;
+      display: none;
+    }
+
+    .footer {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
 </head>
+
 <body>
 
-<h3>Admin Login</h3>
+  <div class="login-card">
+    <div class="logo">🔐 Admin Panel</div>
+    <div class="subtitle">Đăng nhập quản trị hệ thống</div>
 
-<input id="user" placeholder="Username">
-<input id="pass" type="password" placeholder="Password">
-<button onclick="login()">Đăng nhập</button>
+    <div class="field">
+      <label for="user">Username</label>
+      <input id="user" autocomplete="username" placeholder="admin">
+    </div>
+
+    <div class="field">
+      <label for="pass">Password</label>
+      <input id="pass" type="password" autocomplete="current-password" placeholder="••••••••">
+    </div>
+
+    <button class="btn" id="loginBtn" onclick="login()">Đăng nhập</button>
+
+    <div class="error" id="errorMsg">Sai tài khoản hoặc mật khẩu</div>
+
+    <div class="footer">
+      © Admin System
+    </div>
+  </div>
 
 <script type="module">
 import { CONFIG } from './js/config.js';
 
 const API = CONFIG.API_URL;
+const errorBox = document.getElementById('errorMsg');
+const btn = document.getElementById('loginBtn');
 
+/* 🔍 Kiểm tra đã đăng nhập chưa */
 async function checkLogin() {
   const token = localStorage.getItem('access_token');
   if (!token) return;
@@ -33,21 +177,26 @@ async function checkLogin() {
     location.href = 'admin.html';
   }
 }
-
 checkLogin();
 
+/* 🔑 Login */
 window.login = async function () {
+  errorBox.style.display = 'none';
+  btn.disabled = true;
+
   const res = await fetch(API, {
     method: 'POST',
     body: JSON.stringify({
       action: 'login',
-      username: user.value,
+      username: user.value.trim(),
       password: pass.value
     })
   }).then(r => r.json());
 
+  btn.disabled = false;
+
   if (!res.ok) {
-    alert('Sai tài khoản hoặc mật khẩu');
+    errorBox.style.display = 'block';
     return;
   }
 
@@ -57,6 +206,11 @@ window.login = async function () {
 
   location.href = 'admin.html';
 };
+
+/* ⏎ Enter để login */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') login();
+});
 </script>
 
 </body>
