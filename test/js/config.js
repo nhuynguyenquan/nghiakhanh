@@ -6,7 +6,7 @@ export const CONFIG = {
   BRAND_COLOR: "#222222",
 
   // ===== BACKEND =====
-  API_URL: "https://script.google.com/macros/s/AKfycbxSQIfWSoTBwyaYwMng9AQDm3NLKjbkirJNWbjjCaLeP3OWLB3EQOdW5FC0jB_-sHDUfA/exec",
+  API_URL: "https://script.google.com/macros/s/AKfycbwaZdY32r6ruQjVAFnbE6aywsGO6vfPBMn893yzjeyaJW1mS7zQq7bj9cOokhprIeCwuw/exec",
 
   // ===== ADMIN =====
   ADMIN_SESSION_MINUTES: 60,
