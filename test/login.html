@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Login</title>
+</head>
+<body>
+
+<h3>Admin Login</h3>
+
+<input id="user" placeholder="Username">
+<input id="pass" type="password" placeholder="Password">
+<button onclick="login()">Đăng nhập</button>
+
+<script type="module">
+import { CONFIG } from './js/config.js';
+
+const API = CONFIG.API_URL;
+
+async function checkLogin() {
+  const token = localStorage.getItem('access_token');
+  if (!token) return;
+
+  const res = await fetch(API, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'verify',
+      accessToken: token
+    })
+  }).then(r => r.json());
+
+  if (res.ok) {
+    location.href = 'admin.html';
+  }
+}
+
+checkLogin();
+
+window.login = async function () {
+  const res = await fetch(API, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'login',
+      username: user.value,
+      password: pass.value
+    })
+  }).then(r => r.json());
+
+  if (!res.ok) {
+    alert('Sai tài khoản hoặc mật khẩu');
+    return;
+  }
+
+  localStorage.setItem('access_token', res.accessToken);
+  localStorage.setItem('refresh_token', res.refreshToken);
+  localStorage.setItem('expires_at', Date.now() + res.expiresIn * 1000);
+
+  location.href = 'admin.html';
+};
+</script>
+
+</body>
+</html>
