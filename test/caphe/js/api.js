@@ -3,7 +3,7 @@ import { CONFIG } from './config.js';
 async function callAPI(action, payload = {}) {
   const res = await fetch(CONFIG.API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    
     body: JSON.stringify({
       shopId: CONFIG.SHOP_ID,
       action,
