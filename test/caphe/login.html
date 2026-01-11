@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Admin Login</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="center">
+
+<div class="card">
+  <h2>☕ Admin Login</h2>
+  <input id="user" placeholder="Username">
+  <input id="pass" type="password" placeholder="Password">
+  <button onclick="login()">Đăng nhập</button>
+</div>
+
+<script type="module">
+import { API } from './js/api.js';
+import { saveToken, checkLogin } from './js/auth.js';
+
+if (await checkLogin()) location.href = 'admin.html';
+
+window.login = async () => {
+  const res = await API.login(user.value, pass.value);
+  if (!res.ok) return alert('Sai tài khoản');
+
+  saveToken(res.data);
+  location.href = 'admin.html';
+};
+</script>
+</body>
+</html>

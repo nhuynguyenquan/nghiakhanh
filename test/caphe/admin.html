@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <h2>☕ Dashboard</h2>
+  <button onclick="logout()">Đăng xuất</button>
+</header>
+
+<div id="modules"></div>
+<div id="content"></div>
+
+<script type="module">
+import { MODULES } from './js/app.js';
+import { checkLogin, logout } from './js/auth.js';
+
+if (!(await checkLogin())) location.href = 'login.html';
+
+const modulesDiv = document.getElementById('modules');
+const content = document.getElementById('content');
+
+MODULES.forEach(m => {
+  const btn = document.createElement('button');
+  btn.innerText = m.title;
+  btn.onclick = () => m.render(content);
+  modulesDiv.appendChild(btn);
+});
+
+window.logout = logout;
+</script>
+</body>
+</html>
