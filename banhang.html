@@ -195,6 +195,7 @@
       <div id="statsToday" class="today-stats"></div>
     </div>
   </div>
+  <div id="orderHistory" class="today-stats"></div>
   <a href="./cham-cong/">TRANG CHẤM CÔNG CỦA NHÂN VIÊN</a><br>
 
   <script>
@@ -245,7 +246,7 @@
         document.getElementById("loginError").textContent = "⚠️ Lỗi khi tải dữ liệu.";
         console.error(err);
       }
-      renderTodayStats();
+      renderTodayStats();renderOrderHistory(); 
     }
 
     function renderMenu() {
@@ -321,13 +322,51 @@
         console.error(err);
         alert("⚠️ Đã có lỗi xảy ra khi gửi dữ liệu....Tải lại trang.");
         renderMenu();
-        renderTodayStats();
+        renderTodayStats();renderOrderHistory();
       }
 
       btn.disabled = false;
       btn.innerText = "🧾 Gửi đơn hàng";
     }
+    function renderOrderHistory() {
+  const todayVN = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' });
 
+  const logsToday = salesData.logs.filter(log => {
+    if (!log.time) return false;
+
+    const logDate = new Date(log.time);
+    const logDateVN = logDate.toLocaleDateString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' });
+
+    return logDateVN === todayVN && log.branch === branchName;
+  });
+
+  // Sắp xếp mới nhất lên trên
+  logsToday.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+  const historyDiv = document.getElementById("orderHistory");
+
+  if (logsToday.length === 0) {
+    historyDiv.innerHTML = `<h3>🧾 Lịch sử đơn hôm nay</h3><p>Chưa có đơn nào</p>`;
+    return;
+  }
+
+  historyDiv.innerHTML = `
+    <h3>🧾 Lịch sử đơn hôm nay</h3>
+    <ul>
+      ${logsToday.map(log => {
+        const time = new Date(log.time).toLocaleTimeString('vi-VN');
+        return `
+          <li>
+            🕒 ${time} - 
+            <strong>${log.item}</strong> 
+            x ${log.quantity} 
+            (${(log.quantity * log.price).toLocaleString()}đ)
+          </li>
+        `;
+      }).join("")}
+    </ul>
+  `;
+}
    function renderTodayStats() {
   // Lấy ngày hôm nay tại VN
   const todayVN = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' });
