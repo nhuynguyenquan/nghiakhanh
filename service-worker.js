@@ -1,4 +1,4 @@
-const CACHE_NAME = "banhang-cache-v1";
+const CACHE_NAME = "banhang-cache-v2";
 
 const urlsToCache = [
   "./banhang.html",
