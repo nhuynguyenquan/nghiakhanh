@@ -76,7 +76,9 @@ if('serviceWorker' in navigator){
 <hr>
 
 <div id="branches"></div>
-
+<td data-label="Món">
+  ${log.item} ${log.type==='import'?'(Nhập)': log.type==='waste'?'(Lỗi)':''}
+</td>
 <script src="../auth.js"></script>
 <script>
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbzfd_pHMmc9qGXJ4iT2LYXg78-WSxXVTHr5O0EeGcs5pa4RlZMB2Gs1xETul4XI-hPFTw/exec';
@@ -113,7 +115,7 @@ function renderBranches(){
       </div>`;
 
     html+=`<table>
-      <tr><th>Món</th><th>Đơn vị</th><th>Tồn kho</th><th>Giá</th><th>Bán</th><th>Trừ lỗi</th><th>Hành động</th></tr>`;
+      <tr><th>Món</th><th>Đơn vị</th><th>Tồn kho</th><th>+ Nhập</th><th>Giá</th><th>Bán</th><th>Trừ lỗi</th><th>Hành động</th></tr>`;
     branch.menu.forEach((item,iIndex)=>{
       html+=`<tr>
         <td><input value="${item.name}" onchange="editItem(${bIndex},${iIndex},'name',this.value)"></td>
@@ -123,6 +125,15 @@ function renderBranches(){
         <td><input type="number" id="sell-${bIndex}-${iIndex}" min="1" max="${item.stock}"></td>
         <td><input type="number" id="waste-${bIndex}-${iIndex}" min="1" max="${item.stock}" placeholder="Lỗi"></td>
         <td>
+          <td>
+  <input type="number" value="${item.stock}" 
+    onchange="editItem(${bIndex},${iIndex},'stock',this.value)">
+</td>
+
+<td>
+  <input type="number" id="add-${bIndex}-${iIndex}" placeholder="+ thêm">
+  <button onclick="addStock(${bIndex},${iIndex})">+</button>
+</td>
           <button onclick="sell(${bIndex},${iIndex})">Bán</button>
           <button onclick="waste(${bIndex},${iIndex})">Trừ lỗi</button>
           <button onclick="deleteItem(${bIndex},${iIndex})">🗑</button>
@@ -169,7 +180,8 @@ function renderReport(){
     days.forEach(date=>{
       let dayTotal=0; let dayRows='';
       grouped[month][date].forEach(log=>{
-        const amount=log.price*log.quantity;
+        const amount = log.type === 'import' ? 0 : log.price * log.quantity;
+        //const amount=log.price*log.quantity;
         dayTotal+=amount; monthTotal+=amount;
         dayRows+=`<tr>
           <td data-label="Ngày">${date}</td>
@@ -301,7 +313,31 @@ async function saveData(refresh=true){
   await fetch(SCRIPT_URL,{ method:'POST', body:JSON.stringify(salesData) });
   if(refresh) fetchSalesData();
 }
+function addStock(bIndex,iIndex){
+  const input=document.getElementById(`add-${bIndex}-${iIndex}`);
+  const qty=parseInt(input.value);
 
+  if(!qty || qty<=0) return alert('Số lượng nhập không hợp lệ');
+
+  const item=salesData.branches[bIndex].menu[iIndex];
+  item.stock += qty;
+
+  // log nhập kho (quan trọng để tracking)
+  salesData.logs.push({
+    branch: salesData.branches[bIndex].name,
+    item: item.name,
+    unit: item.unit || '',
+    quantity: qty,
+    price: 0,
+    type: 'import',
+    time: new Date().toISOString()
+  });
+
+  sendTelegram(`📦 Nhập thêm ${qty} ${item.unit||''} ${item.name} tại ${salesData.branches[bIndex].name}`);
+
+  saveData();
+  input.value='';
+}
 // =================== Telegram ===================
 async function sendTelegram(msg){
   await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
