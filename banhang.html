@@ -190,6 +190,10 @@
     <!-- Giao diện bán hàng -->
     <div id="salesSection" class="hidden">
       <h2 id="branchTitle"></h2>
+      <div id="liveTotal" style="margin:16px 0; font-size:18px; font-weight:bold; text-align:right;">
+  💰 Tổng tạm tính: 0đ
+    </div>
+    <div id="liveTotal"></div>
       <div id="menuList"></div>
       <button id="submitOrderBtn" onclick="sendOrder()">🧾 Gửi đơn hàng</button>
       <div id="statsToday" class="today-stats"></div>
@@ -250,21 +254,29 @@
     }
 
     function renderMenu() {
-      const menuList = document.getElementById("menuList");
-      menuList.innerHTML = "";
+  const menuList = document.getElementById("menuList");
+  menuList.innerHTML = "";
 
-      branchData.menu.forEach(item => {
-        const div = document.createElement("div");
-        div.className = "menu-item";
-        div.dataset.name = item.name;
+  branchData.menu.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "menu-item";
+    div.dataset.name = item.name;
 
-        div.innerHTML = `
-          <span>${item.name} (${item.stock})</span>
-          <input type="number" min="0" value="0"/>
-        `;
-        menuList.appendChild(div);
-      });
-    }
+    div.innerHTML = `
+      <span>${item.name} (${item.stock})</span>
+      <input type="number" min="0" value="0"/>
+    `;
+
+    // 👇 thêm sự kiện input
+    const input = div.querySelector("input");
+    input.addEventListener("input", updateLiveTotal);
+
+    menuList.appendChild(div);
+  });
+
+  // reset tổng khi load lại menu
+  updateLiveTotal();
+}
 
     async function sendOrder() {
       const btn = document.getElementById("submitOrderBtn");
@@ -404,7 +416,24 @@
       .join("")}
   </ul><strong>💰 Tổng tiền: ${total.toLocaleString()}đ</strong>`;
 }
+function updateLiveTotal() {
+  let total = 0;
 
+  const rows = document.querySelectorAll(".menu-item");
+
+  rows.forEach(row => {
+    const name = row.dataset.name;
+    const qty = parseInt(row.querySelector("input").value) || 0;
+
+    const menuItem = branchData.menu.find(m => m.name === name);
+    const price = menuItem ? menuItem.price : 0;
+
+    total += qty * price;
+  });
+
+  document.getElementById("liveTotal").innerText =
+    "💰 Tổng tạm tính: " + total.toLocaleString() + "đ";
+}
 
   </script>
 </body>
