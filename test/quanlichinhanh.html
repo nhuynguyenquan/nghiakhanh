@@ -28,12 +28,8 @@ input,button { padding:5px; margin:2px; }
 <hr>
 
 <div id="branches"></div>
-<<<<<<< HEAD
 
 <script src="../auth.js"></script>
-=======
-
->>>>>>> 9e71cf22527e885fb964f8123d0c80848df4c8cc
 <script>
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbzfd_pHMmc9qGXJ4iT2LYXg78-WSxXVTHr5O0EeGcs5pa4RlZMB2Gs1xETul4XI-hPFTw/exec';
 const TELEGRAM_TOKEN='7783089403:AAGNpG6GsdlF7VXVfPTW8Y1xQJEqBahL1PY';
@@ -57,25 +53,9 @@ function render(){
     let html=`<div class="branch">
       <h2>${b.name}</h2>
 
-<<<<<<< HEAD
     html+=`<table>
       <tr><th>Món</th><th>Đơn vị</th><th>Tồn kho</th><th>+ Tồn</th><th>Giá</th><th>Bán</th><th>Trừ lỗi</th><th>Hành động</th></tr>`;
     branch.menu.forEach((item,iIndex)=>{
-=======
-      <table>
-      <tr>
-        <th>Món</th>
-        <th>Tồn</th>
-        <th>Giá</th>
-        <th>Bán</th>
-        <th>Nhập thêm</th>
-        <th>Hành động</th>
-      </tr>`;
-
-    b.menu.forEach((item,iIndex)=>{
-      const low=item.stock<=5;
-
->>>>>>> 9e71cf22527e885fb964f8123d0c80848df4c8cc
       html+=`<tr>
         <td><input value="${item.name}" onchange="editItem(${bIndex},${iIndex},'name',this.value)"></td>
         <td><input value="${item.unit||''}" onchange="editItem(${bIndex},${iIndex},'unit',this.value)"></td>
@@ -105,7 +85,6 @@ function render(){
     <input id="price-${bIndex}" type="number" placeholder="Giá">
     <button onclick="addItem(${bIndex})">Thêm</button>
 
-<<<<<<< HEAD
 function addStock(bIndex,iIndex){
   const input = document.getElementById(`add-stock-${bIndex}-${iIndex}`);
   const qty = parseInt(input.value);
@@ -178,8 +157,6 @@ function renderReport(){
           <tbody>${monthTable}</tbody>
         </table>
       </div>
-=======
->>>>>>> 9e71cf22527e885fb964f8123d0c80848df4c8cc
     </div>`;
 
     container.innerHTML+=html;
@@ -252,7 +229,6 @@ function importStock(b,i){
   save();
 }
 
-<<<<<<< HEAD
 // =================== Server ===================
 async function saveData(refresh=true){
   await fetch(SCRIPT_URL,{ method:'POST', body:JSON.stringify(salesData) });
@@ -260,18 +236,6 @@ async function saveData(refresh=true){
 }
 
 // =================== Telegram ===================
-=======
-// ===== SAVE =====
-async function save(){
-  await fetch(SCRIPT_URL,{
-    method:'POST',
-    body:JSON.stringify(salesData)
-  });
-  fetchData();
-}
-
-// ===== TELE =====
->>>>>>> 9e71cf22527e885fb964f8123d0c80848df4c8cc
 async function sendTelegram(msg){
   await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
     method:'POST',
