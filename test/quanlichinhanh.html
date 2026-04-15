@@ -77,23 +77,9 @@ function render(){
 
 >>>>>>> 9e71cf22527e885fb964f8123d0c80848df4c8cc
       html+=`<tr>
-<<<<<<< HEAD
         <td><input value="${item.name}" onchange="editItem(${bIndex},${iIndex},'name',this.value)"></td>
         <td><input value="${item.unit||''}" onchange="editItem(${bIndex},${iIndex},'unit',this.value)"></td>
         <td><input type="number" value="${item.stock}" onchange="editItem(${bIndex},${iIndex},'stock',this.value)"></td>
-=======
-        <td>${item.name}</td>
-
-        <td class="${low?'low-stock':''}">
-          ${item.stock}
-        </td>
-
-        <td>${item.price}</td>
-
-        <td>
-          <input type="number" id="sell-${bIndex}-${iIndex}" placeholder="SL">
-        </td>
->>>>>>> 9e71cf22527e885fb964f8123d0c80848df4c8cc
 
 <td>
   <input type="number" id="add-stock-${bIndex}-${iIndex}" placeholder="+ thêm">
