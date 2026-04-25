@@ -328,8 +328,7 @@
         });
 
         alert("✅ Gửi đơn thành công!");
-        renderMenu();
-        renderTodayStats();
+        await refreshData();
       } catch (err) {
         console.error(err);
         alert("⚠️ Đã có lỗi xảy ra khi gửi dữ liệu....Tải lại trang.");
@@ -434,7 +433,22 @@ function updateLiveTotal() {
   document.getElementById("liveTotal").innerText =
     "💰 Tổng tạm tính: " + total.toLocaleString() + "đ";
 }
+async function refreshData() {
+  try {
+    const res = await fetch(SCRIPT_URL + "?t=" + Date.now()); // chống cache
+    salesData = await res.json();
 
+    if (branchName) {
+      branchData = salesData.branches.find(b => b.name === branchName);
+
+      renderMenu();
+      renderTodayStats();
+      renderOrderHistory();
+    }
+  } catch (err) {
+    console.error("Refresh lỗi:", err);
+  }
+}
   </script>
 </body>
 </html>
