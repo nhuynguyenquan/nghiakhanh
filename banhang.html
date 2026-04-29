@@ -279,67 +279,71 @@
 }
 
     async function sendOrder() {
-      const btn = document.getElementById("submitOrderBtn");
-      btn.disabled = true;
-      btn.innerText = "Đang gửi...";
+  const btn = document.getElementById("submitOrderBtn");
+  btn.disabled = true;
+  btn.innerText = "Đang gửi...";
 
-      const items = [];
-      const rows = document.querySelectorAll(".menu-item");
+  const items = [];
+  const rows = document.querySelectorAll(".menu-item");
 
-      rows.forEach(row => {
-        const name = row.dataset.name;
-        const qty = parseInt(row.querySelector("input").value);
-        if (qty > 0) items.push({ name, quantity: qty });
-      });
+  rows.forEach(row => {
+    const name = row.dataset.name;
+    const qty = parseInt(row.querySelector("input").value);
+    if (qty > 0) items.push({ name, quantity: qty });
+  });
 
-      if (items.length === 0) {
-        alert("⚠️ Vui lòng chọn ít nhất 1 món.");
-        btn.disabled = false;
-        btn.innerText = "🧾 Gửi đơn hàng";
-        return;
-      }
+  if (items.length === 0) {
+    alert("⚠️ Vui lòng chọn ít nhất 1 món.");
+    btn.disabled = false;
+    btn.innerText = "🧾 Gửi đơn hàng";
+    return;
+  }
 
-      const now = new Date().toISOString();
+  const now = new Date().toISOString();
 
-      items.forEach(order => {
-        const menuItem = branchData.menu.find(m => m.name === order.name);
-        const price = menuItem ? menuItem.price : 0;
+  items.forEach(order => {
+    const menuItem = branchData.menu.find(m => m.name === order.name);
 
-        salesData.logs.push({
-          branch: branchName,
-          item: order.name,
-          quantity: order.quantity,
-          price,cost, 
-           type: 'sell',
-          time: now
-        });
+    const price = menuItem ? menuItem.price : 0;
+    const cost = menuItem ? (menuItem.cost || 0) : 0;
 
-        if (menuItem) {
-          menuItem.stock -= order.quantity;
-          if (menuItem.stock < 0) menuItem.stock = 0;
-        }
-      });
+    salesData.logs.push({
+      branch: branchName,
+      item: order.name,
+      unit: menuItem?.unit || '', // ✅ nên có
+      quantity: order.quantity,
+      price,
+      cost,
+      type: 'sell',
+      time: now
+    });
 
-      try {
-        await fetch(SCRIPT_URL, {
-          method: "POST",
-          //headers: { "Content-Type": "application/json" },
-          //mode: "no-cors",
-          body: JSON.stringify(salesData), keepalive: true,
-        });
-
-        alert("✅ Gửi đơn thành công!");
-        await refreshData();
-      } catch (err) {
-        console.error(err);
-        alert("⚠️ Đã có lỗi xảy ra khi gửi dữ liệu....Tải lại trang.");
-        renderMenu();
-        renderTodayStats();renderOrderHistory();
-      }
-
-      btn.disabled = false;
-      btn.innerText = "🧾 Gửi đơn hàng";
+    if (menuItem) {
+      menuItem.stock -= order.quantity;
+      if (menuItem.stock < 0) menuItem.stock = 0;
     }
+  });
+
+  try {
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify(salesData),
+      keepalive: true
+    });
+
+    alert("✅ Gửi đơn thành công!");
+    await refreshData();
+  } catch (err) {
+    console.error(err);
+    alert("⚠️ Đã có lỗi xảy ra khi gửi dữ liệu....Tải lại trang.");
+    renderMenu();
+    renderTodayStats();
+    renderOrderHistory();
+  }
+
+  btn.disabled = false;
+  btn.innerText = "🧾 Gửi đơn hàng";
+}
     function renderOrderHistory() {
   const todayVN = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' });
 
