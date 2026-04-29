@@ -218,8 +218,12 @@ if(!log.type || log.type === 'sell'){
           <td data-label="Chi nhánh">${log.branch}</td>
           <td data-label="Món">${log.item}</td>
           <td data-label="Số lượng">${log.quantity} ${log.unit||''}</td>
-          <td data-label="Giá">${log.price.toLocaleString()}₫</td>
-          <td data-label="Thành tiền">${amount.toLocaleString()}₫</td>
+          <td data-label="Giá">
+  ${(!log.type || log.type === 'sell') ? log.price.toLocaleString()+'₫' : '-'}
+</td>
+          <td data-label="Thành tiền">
+  ${amount ? amount.toLocaleString()+'₫' : '-'}
+</td>
           <td data-label="Lợi nhuận">${profit.toLocaleString()}₫</td>
         </tr>`;
       });
@@ -324,7 +328,8 @@ function sell(bIndex,iIndex){
   unit:item.unit||'',
   quantity:qty,
   price:item.price,
-  cost:item.cost || 0, // thêm
+  cost:item.cost || 0,
+  type:'sell', // thêm
   time:new Date().toISOString()
 });
   sendTelegram(`Đã bán ${qty} ${item.unit||''} ${item.name} tại ${salesData.branches[bIndex].name}`);
@@ -389,7 +394,7 @@ function addStock(bIndex,iIndex){
   quantity:qty,
   price:item.price,
   cost:item.cost || 0,
-  type:'sell', // ✅ thêm
+   type:'import',
   time:new Date().toISOString()
 });
 
