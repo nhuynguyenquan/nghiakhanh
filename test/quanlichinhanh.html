@@ -159,59 +159,95 @@ function renderBranches(){
 // =================== Render báo cáo ===================
 function renderReport(){
   const report=document.getElementById('report');
-  const profit = (log.price - (log.cost || 0)) * log.quantity;
   const grouped={};
+
   salesData.logs.forEach(log=>{
     const date=log.time.slice(0,10);
     const month=log.time.slice(0,7);
+
     if(!grouped[month]) grouped[month]={};
     if(!grouped[month][date]) grouped[month][date]=[];
+
     grouped[month][date].push(log);
   });
 
   let html='';
   const months=Object.keys(grouped).sort((a,b)=>b.localeCompare(a));
-  if(months.length===0){ report.innerText='Không có dữ liệu để hiển thị.'; return; }
+
+  if(months.length===0){
+    report.innerText='Không có dữ liệu để hiển thị.';
+    return;
+  }
 
   months.forEach((month,index)=>{
     const monthId=`month-${index}`;
-    let monthTotal=0; let monthTable='';
+    let monthTotal=0;
+    let monthProfit=0; // ✅ thêm
+    let monthTable='';
+
     const days=Object.keys(grouped[month]).sort((a,b)=>b.localeCompare(a));
+
     days.forEach(date=>{
-      let dayTotal=0; let dayRows='';
-      let dayProfit = 0;
-dayProfit += profit;
-monthProfit += profit;
+      let dayTotal=0;
+      let dayProfit=0; // ✅ thêm
+      let dayRows='';
+
       grouped[month][date].forEach(log=>{
-        const amount=log.price*log.quantity;
-        dayTotal+=amount; monthTotal+=amount;
+        const amount = log.price * log.quantity;
+
+        // ✅ tính profit đúng chỗ
+        const profit = (log.price - (log.cost || 0)) * log.quantity;
+
+        dayTotal += amount;
+        monthTotal += amount;
+
+        dayProfit += profit;
+        monthProfit += profit;
+
         dayRows+=`<tr>
           <td data-label="Ngày">${date}</td>
           <td data-label="Chi nhánh">${log.branch}</td>
           <td data-label="Món">${log.item}</td>
-          <td class="numeric" data-label="Số lượng">${log.quantity} ${log.unit||''}</td>
-          <td class="numeric" data-label="Giá">${log.price.toLocaleString()}₫</td>
-          <td class="numeric" data-label="Thành tiền">${amount.toLocaleString()}₫</td>
-          <td class="numeric" data-label="Lợi nhuận">${profit.toLocaleString()}₫</td>
+          <td data-label="Số lượng">${log.quantity} ${log.unit||''}</td>
+          <td data-label="Giá">${log.price.toLocaleString()}₫</td>
+          <td data-label="Thành tiền">${amount.toLocaleString()}₫</td>
+          <td data-label="Lợi nhuận">${profit.toLocaleString()}₫</td>
         </tr>`;
       });
+
+      // ✅ tổng ngày
       dayRows+=`<tr style="background:#f1f1f1;font-weight:bold;">
-        <td colspan="5" style="text-align:left;">Tổng ngày ${date}:</td>
-        <td class="numeric">${dayTotal.toLocaleString()}₫</td>
-        
+        <td colspan="5">Tổng ngày ${date}</td>
+        <td>${dayTotal.toLocaleString()}₫</td>
+        <td>${dayProfit.toLocaleString()}₫</td>
       </tr>`;
+
       monthTable+=dayRows;
     });
+
     html+=`<div class="month-section">
-      <div class="month-header" onclick="toggleMonth('${monthId}')">🗓 Tháng ${month} — Tổng: ${monthTotal.toLocaleString()}₫</div>
+      <div class="month-header" onclick="toggleMonth('${monthId}')">
+        🗓 Tháng ${month} — Doanh thu: ${monthTotal.toLocaleString()}₫ | Lợi nhuận: ${monthProfit.toLocaleString()}₫
+      </div>
       <div id="${monthId}" class="month-content">
         <table>
-          <thead><tr><th>Ngày</th><th>Chi nhánh</th><th>Món</th><th>Số lượng</th><th>Giá</th><th>Thành tiền</th><th>Lợi nhuận</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Ngày</th>
+              <th>Chi nhánh</th>
+              <th>Món</th>
+              <th>Số lượng</th>
+              <th>Giá</th>
+              <th>Thành tiền</th>
+              <th>Lợi nhuận</th>
+            </tr>
+          </thead>
           <tbody>${monthTable}</tbody>
         </table>
       </div>
     </div>`;
   });
+
   report.innerHTML=html;
 }
 
