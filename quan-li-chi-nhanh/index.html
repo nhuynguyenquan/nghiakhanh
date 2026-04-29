@@ -193,10 +193,19 @@ function renderReport(){
       let dayRows='';
 
       grouped[month][date].forEach(log=>{
-        const amount = log.price * log.quantity;
+       let amount = 0;
+
+if(!log.type || log.type === 'sell'){
+  amount = log.price * log.quantity;
+}
 
         // ✅ tính profit đúng chỗ
-        const profit = (log.price - (log.cost || 0)) * log.quantity;
+        let profit = 0;
+
+// chỉ tính lợi nhuận khi là bán hàng
+if(!log.type || log.type === 'sell'){
+  profit = (log.price - (log.cost || 0)) * log.quantity;
+}
 
         dayTotal += amount;
         monthTotal += amount;
@@ -209,9 +218,15 @@ function renderReport(){
           <td data-label="Chi nhánh">${log.branch}</td>
           <td data-label="Món">${log.item}</td>
           <td data-label="Số lượng">${log.quantity} ${log.unit||''}</td>
-          <td data-label="Giá">${log.price.toLocaleString()}₫</td>
-          <td data-label="Thành tiền">${amount.toLocaleString()}₫</td>
-          <td data-label="Lợi nhuận">${profit.toLocaleString()}₫</td>
+          <td data-label="Giá">
+  ${(!log.type || log.type === 'sell') ? log.price.toLocaleString()+'₫' : '-'}
+</td>
+          <td data-label="Thành tiền">
+  ${amount ? amount.toLocaleString()+'₫' : '-'}
+</td>
+          <td data-label="Lợi nhuận">
+  ${profit ? profit.toLocaleString()+'₫' : '-'}
+</td>
         </tr>`;
       });
 
@@ -315,7 +330,8 @@ function sell(bIndex,iIndex){
   unit:item.unit||'',
   quantity:qty,
   price:item.price,
-  cost:item.cost || 0, // thêm
+  cost:item.cost || 0,
+  type:'sell', // thêm
   time:new Date().toISOString()
 });
   sendTelegram(`Đã bán ${qty} ${item.unit||''} ${item.name} tại ${salesData.branches[bIndex].name}`);
@@ -374,14 +390,15 @@ function addStock(bIndex,iIndex){
 
   // (tuỳ chọn) log lại nhập kho
   salesData.logs.push({
-    branch: salesData.branches[bIndex].name,
-    item: item.name,
-    unit: item.unit || '',
-    quantity: qty,
-    price: 0,
-    type: 'import',
-    time: new Date().toISOString()
-  });
+  branch:salesData.branches[bIndex].name,
+  item:item.name,
+  unit:item.unit||'',
+  quantity:qty,
+  price:0,
+  cost:item.cost || 0,
+   type:'import',
+  time:new Date().toISOString()
+});
 
   saveData();
   input.value = '';
