@@ -309,7 +309,8 @@
           branch: branchName,
           item: order.name,
           quantity: order.quantity,
-          price,
+          price,cost, 
+           type: 'sell',
           time: now
         });
 
@@ -324,7 +325,7 @@
           method: "POST",
           //headers: { "Content-Type": "application/json" },
           //mode: "no-cors",
-          body: JSON.stringify(salesData)
+          body: JSON.stringify(salesData), keepalive: true,
         });
 
         alert("✅ Gửi đơn thành công!");
