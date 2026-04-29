@@ -113,7 +113,7 @@ function renderBranches(){
       </div>`;
 
     html+=`<table>
-      <tr><th>Món</th><th>Đơn vị</th><th>Tồn kho</th><th>+ Tồn</th><th>Giá</th><th>Bán</th><th>Trừ lỗi</th><th>Hành động</th></tr>`;
+      <tr><th>Món</th><th>Đơn vị</th><th>Tồn kho</th><th>+ Tồn</th><th>Giá nhập</th><th>Giá bán</th><th>Bán</th><th>Trừ lỗi</th><th>Hành động</th></tr>`;
     branch.menu.forEach((item,iIndex)=>{
       html+=`<tr>
         <td><input value="${item.name}" onchange="editItem(${bIndex},${iIndex},'name',this.value)"></td>
@@ -124,7 +124,10 @@ function renderBranches(){
   <input type="number" id="add-stock-${bIndex}-${iIndex}" placeholder="+ thêm">
   <button onclick="addStock(${bIndex},${iIndex})">➕</button>
 </td>
-
+<td>
+  <input type="number" value="${item.cost || 0}" 
+    onchange="editItem(${bIndex},${iIndex},'cost',this.value)">
+</td>
 <td><input type="number" value="${item.price}" onchange="editItem(${bIndex},${iIndex},'price',this.value)"></td>
         <td><input type="number" id="sell-${bIndex}-${iIndex}" min="1" max="${item.stock}"></td>
         <td><input type="number" id="waste-${bIndex}-${iIndex}" min="1" max="${item.stock}" placeholder="Lỗi"></td>
@@ -143,7 +146,8 @@ function renderBranches(){
         <input placeholder="Tên món" id="new-name-${bIndex}">
         <input placeholder="Đơn vị" id="new-unit-${bIndex}">
         <input placeholder="Tồn kho" type="number" id="new-stock-${bIndex}">
-        <input placeholder="Giá" type="number" id="new-price-${bIndex}">
+        <input placeholder="Giá nhập" type="number" id="new-cost-${bIndex}">
+        <input placeholder="Giá bán" type="number" id="new-price-${bIndex}">
         <button onclick="addItem(${bIndex})">Thêm</button>
       </div>`;
 
@@ -156,52 +160,94 @@ function renderBranches(){
 function renderReport(){
   const report=document.getElementById('report');
   const grouped={};
+
   salesData.logs.forEach(log=>{
     const date=log.time.slice(0,10);
     const month=log.time.slice(0,7);
+
     if(!grouped[month]) grouped[month]={};
     if(!grouped[month][date]) grouped[month][date]=[];
+
     grouped[month][date].push(log);
   });
 
   let html='';
   const months=Object.keys(grouped).sort((a,b)=>b.localeCompare(a));
-  if(months.length===0){ report.innerText='Không có dữ liệu để hiển thị.'; return; }
+
+  if(months.length===0){
+    report.innerText='Không có dữ liệu để hiển thị.';
+    return;
+  }
 
   months.forEach((month,index)=>{
     const monthId=`month-${index}`;
-    let monthTotal=0; let monthTable='';
+    let monthTotal=0;
+    let monthProfit=0; // ✅ thêm
+    let monthTable='';
+
     const days=Object.keys(grouped[month]).sort((a,b)=>b.localeCompare(a));
+
     days.forEach(date=>{
-      let dayTotal=0; let dayRows='';
+      let dayTotal=0;
+      let dayProfit=0; // ✅ thêm
+      let dayRows='';
+
       grouped[month][date].forEach(log=>{
-        const amount=log.price*log.quantity;
-        dayTotal+=amount; monthTotal+=amount;
+        const amount = log.price * log.quantity;
+
+        // ✅ tính profit đúng chỗ
+        const profit = (log.price - (log.cost || 0)) * log.quantity;
+
+        dayTotal += amount;
+        monthTotal += amount;
+
+        dayProfit += profit;
+        monthProfit += profit;
+
         dayRows+=`<tr>
           <td data-label="Ngày">${date}</td>
           <td data-label="Chi nhánh">${log.branch}</td>
           <td data-label="Món">${log.item}</td>
-          <td class="numeric" data-label="Số lượng">${log.quantity} ${log.unit||''}</td>
-          <td class="numeric" data-label="Giá">${log.price.toLocaleString()}₫</td>
-          <td class="numeric" data-label="Thành tiền">${amount.toLocaleString()}₫</td>
+          <td data-label="Số lượng">${log.quantity} ${log.unit||''}</td>
+          <td data-label="Giá">${log.price.toLocaleString()}₫</td>
+          <td data-label="Thành tiền">${amount.toLocaleString()}₫</td>
+          <td data-label="Lợi nhuận">${profit.toLocaleString()}₫</td>
         </tr>`;
       });
+
+      // ✅ tổng ngày
       dayRows+=`<tr style="background:#f1f1f1;font-weight:bold;">
-        <td colspan="5" style="text-align:left;">Tổng ngày ${date}:</td>
-        <td class="numeric">${dayTotal.toLocaleString()}₫</td>
+        <td colspan="5">Tổng ngày ${date}</td>
+        <td>${dayTotal.toLocaleString()}₫</td>
+        <td>${dayProfit.toLocaleString()}₫</td>
       </tr>`;
+
       monthTable+=dayRows;
     });
+
     html+=`<div class="month-section">
-      <div class="month-header" onclick="toggleMonth('${monthId}')">🗓 Tháng ${month} — Tổng: ${monthTotal.toLocaleString()}₫</div>
+      <div class="month-header" onclick="toggleMonth('${monthId}')">
+        🗓 Tháng ${month} — Doanh thu: ${monthTotal.toLocaleString()}₫ | Lợi nhuận: ${monthProfit.toLocaleString()}₫
+      </div>
       <div id="${monthId}" class="month-content">
         <table>
-          <thead><tr><th>Ngày</th><th>Chi nhánh</th><th>Món</th><th>Số lượng</th><th>Giá</th><th>Thành tiền</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Ngày</th>
+              <th>Chi nhánh</th>
+              <th>Món</th>
+              <th>Số lượng</th>
+              <th>Giá</th>
+              <th>Thành tiền</th>
+              <th>Lợi nhuận</th>
+            </tr>
+          </thead>
           <tbody>${monthTable}</tbody>
         </table>
       </div>
     </div>`;
   });
+
   report.innerHTML=html;
 }
 
@@ -223,14 +269,21 @@ function addItem(bIndex){
   const name=document.getElementById(`new-name-${bIndex}`).value.trim();
   const unit=document.getElementById(`new-unit-${bIndex}`).value.trim();
   const stock=parseInt(document.getElementById(`new-stock-${bIndex}`).value);
+  const cost=parseInt(document.getElementById(`new-cost-${bIndex}`).value);
   const price=parseInt(document.getElementById(`new-price-${bIndex}`).value);
-  if(!name || !unit || isNaN(stock) || isNaN(price)) return alert('Nhập đủ thông tin món!');
-  salesData.branches[bIndex].menu.push({name,unit,stock,price});
+
+  if(!name || !unit || isNaN(stock) || isNaN(price) || isNaN(cost))
+    return alert('Nhập đủ thông tin món!');
+
+  salesData.branches[bIndex].menu.push({
+    name, unit, stock, price, cost
+  });
+
   saveData();
 }
 
 function editItem(bIndex,iIndex,field,value){
-  if(field==='stock'||field==='price') value=parseInt(value);
+  if(field==='stock'||field==='price'||field==='cost') value=parseInt(value);
   salesData.branches[bIndex].menu[iIndex][field]=value;
   saveData(false);
 }
@@ -257,13 +310,14 @@ function sell(bIndex,iIndex){
   if(!qty||qty<=0||qty>item.stock) return alert('Số lượng không hợp lệ.');
   item.stock-=qty;
   salesData.logs.push({
-    branch:salesData.branches[bIndex].name,
-    item:item.name,
-    unit:item.unit||'',
-    quantity:qty,
-    price:item.price,
-    time:new Date().toISOString()
-  });
+  branch:salesData.branches[bIndex].name,
+  item:item.name,
+  unit:item.unit||'',
+  quantity:qty,
+  price:item.price,
+  cost:item.cost || 0, // thêm
+  time:new Date().toISOString()
+});
   sendTelegram(`Đã bán ${qty} ${item.unit||''} ${item.name} tại ${salesData.branches[bIndex].name}`);
   saveData();
   input.value='';
