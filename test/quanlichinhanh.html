@@ -31,6 +31,44 @@
     input,button,select{ width:100%; box-sizing:border-box; margin:3px 0; font-size:1rem; }
     .form-group{ margin-top:6px; }
   }
+  .menu-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px,1fr));
+  gap:8px;
+  margin-top:10px;
+}
+
+.menu-item{
+  background:#fff;
+  border-radius:10px;
+  padding:10px;
+  text-align:center;
+  font-weight:600;
+  box-shadow:0 2px 5px rgba(0,0,0,0.1);
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.menu-item:hover{
+  background:#f0f0f0;
+}
+
+.item-detail{
+  display:none;
+  background:#fff;
+  margin-top:8px;
+  padding:10px;
+  border-radius:10px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.15);
+}
+
+.item-detail.active{
+  display:block;
+}
+
+.item-detail input{
+  width:100%;
+}
 </style>
 <link rel="manifest" href="../quan-li/manifest.json">
 <meta name="theme-color" content="#4CAF50">
@@ -137,15 +175,54 @@ function renderBranches(){
         </td>
       </tr>`;
     });
-    html+=`</table>
-      <div class="form-group">
-        <h4>➕ Thêm món</h4>
-        <input placeholder="Tên món" id="new-name-${bIndex}">
-        <input placeholder="Đơn vị" id="new-unit-${bIndex}">
-        <input placeholder="Tồn kho" type="number" id="new-stock-${bIndex}">
-        <input placeholder="Giá" type="number" id="new-price-${bIndex}">
-        <button onclick="addItem(${bIndex})">Thêm</button>
-      </div>`;
+    html += `<div class="menu-grid">`;
+
+branch.menu.forEach((item,iIndex)=>{
+  html += `
+    <div>
+      <!-- nút tên món -->
+      <div class="menu-item" onclick="toggleItem(${bIndex},${iIndex})">
+        ${item.name}
+      </div>
+
+      <!-- panel thao tác -->
+      <div class="item-detail" id="detail-${bIndex}-${iIndex}">
+        
+        <div><b>${item.name}</b></div>
+
+        <label>Đơn vị</label>
+        <input value="${item.unit||''}" onchange="editItem(${bIndex},${iIndex},'unit',this.value)">
+
+        <label>Tồn kho</label>
+        <input type="number" value="${item.stock}" onchange="editItem(${bIndex},${iIndex},'stock',this.value)">
+
+        <label>+ Tồn</label>
+        <input type="number" id="add-stock-${bIndex}-${iIndex}">
+        <button onclick="addStock(${bIndex},${iIndex})">➕ Nhập</button>
+
+        <label>Giá</label>
+        <input type="number" value="${item.price}" onchange="editItem(${bIndex},${iIndex},'price',this.value)">
+
+        <label>Bán</label>
+        <input type="number" id="sell-${bIndex}-${iIndex}">
+        <button onclick="sell(${bIndex},${iIndex})">Bán</button>
+
+        <label>Trừ lỗi</label>
+        <input type="number" id="waste-${bIndex}-${iIndex}">
+        <button onclick="waste(${bIndex},${iIndex})">Trừ lỗi</button>
+
+        <hr>
+
+        <button onclick="deleteItem(${bIndex},${iIndex})">🗑 Xóa</button>
+        <button onclick="moveItem(${bIndex},${iIndex},-1)">⬆️</button>
+        <button onclick="moveItem(${bIndex},${iIndex},1)">⬇️</button>
+
+      </div>
+    </div>
+  `;
+});
+
+html += `</div>`;
 
     container.appendChild(div);
     div.innerHTML=html;
@@ -331,6 +408,18 @@ function addStock(bIndex,iIndex){
 
   saveData();
   input.value = '';
+}
+function toggleItem(bIndex,iIndex){
+  const id = `detail-${bIndex}-${iIndex}`;
+  const el = document.getElementById(id);
+
+  // đóng tất cả trước
+  document.querySelectorAll('.item-detail').forEach(d=>{
+    if(d.id !== id) d.classList.remove('active');
+  });
+
+  // toggle cái đang chọn
+  el.classList.toggle('active');
 }
 // =================== Telegram ===================
 async function sendTelegram(msg){
