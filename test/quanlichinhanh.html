@@ -224,7 +224,9 @@ if(!log.type || log.type === 'sell'){
           <td data-label="Thành tiền">
   ${amount ? amount.toLocaleString()+'₫' : '-'}
 </td>
-          <td data-label="Lợi nhuận">${profit.toLocaleString()}₫</td>
+          <td data-label="Lợi nhuận">
+  ${profit ? profit.toLocaleString()+'₫' : '-'}
+</td>
         </tr>`;
       });
 
@@ -392,7 +394,7 @@ function addStock(bIndex,iIndex){
   item:item.name,
   unit:item.unit||'',
   quantity:qty,
-  price:item.price,
+  price:0,
   cost:item.cost || 0,
    type:'import',
   time:new Date().toISOString()
