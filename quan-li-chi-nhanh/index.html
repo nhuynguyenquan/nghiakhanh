@@ -143,7 +143,7 @@ function renderBranches(){
       `;
 
       // tbody nhóm (ẩn mặc định)
-      html += `<tbody id="${catId}" style="display:none">`;
+      html += `<tbody id="${catId}">`;
 
       groupedMenu[cat].forEach(({ item, iIndex }) => {
         html += `
@@ -319,8 +319,11 @@ function toggleCat(id){
   const el = document.getElementById(id);
   if(!el) return;
 
-  el.style.display =
-    (el.style.display === 'none') ? 'table-row-group' : 'none';
+  if(el.style.display === 'none'){
+    el.style.display = 'table-row-group';
+  }else{
+    el.style.display = 'none';
+  }
 }
 // =================== CRUD chi nhánh/món ===================
 function addBranch(){
