@@ -117,6 +117,7 @@ function renderBranches(){
     branch.menu.forEach((item,iIndex)=>{
       html+=`<tr>
         <td><input value="${item.name}" onchange="editItem(${bIndex},${iIndex},'name',this.value)"></td>
+        
         <td><input value="${item.unit||''}" onchange="editItem(${bIndex},${iIndex},'unit',this.value)"></td>
         <td><input type="number" value="${item.stock}" onchange="editItem(${bIndex},${iIndex},'stock',this.value)"></td>
 
@@ -374,7 +375,7 @@ function togglePin(bIndex){
 
 // =================== Server ===================
 async function saveData(refresh=true){
-  await fetch(SCRIPT_URL,{ method:'POST', body:JSON.stringify(salesData) });
+  await fetch(SCRIPT_URL,{ method:'POST', body:JSON.stringify(salesData),keepalive: true });
   if(refresh) fetchSalesData();
 }
 //////cong ton kho
@@ -408,7 +409,8 @@ async function sendTelegram(msg){
   await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({chat_id:CHAT_ID,text:msg})
+    body:JSON.stringify({chat_id:CHAT_ID,text:msg}),
+    keepalive: true,
   });
 }
 
