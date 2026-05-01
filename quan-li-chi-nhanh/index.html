@@ -130,9 +130,11 @@ function renderBranches(){
 
     Object.keys(groupedMenu).sort().forEach(cat => {
 
-      // ✅ FIX: safe id (tránh lỗi tiếng Việt + space)
-      const safeCat = cat.replace(/\s+/g, '-').toLowerCase();
-      const catId = `cat-${bIndex}-${safeCat}`;
+       const safeCat = cat
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g,'-');
+
+  const catId = `cat-${bIndex}-${safeCat}`;
 
       // header nhóm
       html += `
