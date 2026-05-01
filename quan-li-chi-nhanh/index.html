@@ -362,14 +362,6 @@ function deleteItem(bIndex,iIndex){
   salesData.branches[bIndex].menu.splice(iIndex,1);
   saveData();
 }
-
-function toggleCat(id){
-  const el = document.getElementById('cat-' + id);
-  if(!el) return;
-
-  el.style.display =
-    (el.style.display === 'none') ? 'table-row-group' : 'none';
-}
 function moveItem(bIndex,iIndex,direction){
   const menu=salesData.branches[bIndex].menu;
   const newIndex=iIndex+direction;
