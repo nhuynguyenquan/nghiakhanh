@@ -98,70 +98,93 @@ function getFilterDate(){ return document.getElementById('filterDate').value; }
 
 // =================== Render chi nhánh ===================
 function renderBranches(){
-  const container=document.getElementById('branches');
-  container.innerHTML='';
-  salesData.branches.forEach((branch,bIndex)=>{
-    const div=document.createElement('div');
-    div.className='branch';
+  const container = document.getElementById('branches');
+  container.innerHTML = '';
 
-    let html=`<h2>${branch.name}</h2>
+  salesData.branches.forEach((branch, bIndex) => {
+    const div = document.createElement('div');
+    div.className = 'branch';
+
+    let html = `<h2>${branch.name}</h2>
       <div>
         <label>Mã PIN:
-          <input type="password" id="pin-${bIndex}" value="${branch.pin||''}" onchange="editPin(${bIndex},this.value)">
+          <input type="password" id="pin-${bIndex}" value="${branch.pin || ''}" onchange="editPin(${bIndex},this.value)">
         </label>
         <button onclick="togglePin(${bIndex})">👁️</button>
       </div>`;
 
-    html+=`<table>
-      <tr><th>Món</th><th>Đơn vị</th><th>Tồn kho</th><th>+ Tồn</th><th>Giá nhập</th><th>Giá bán</th><th>Bán</th><th>Trừ lỗi</th><th>Hành động</th></tr>`;
+    html += `<table>
+      <tr>
+        <th>Món</th><th>Nhóm</th><th>Đơn vị</th><th>Tồn kho</th>
+        <th>+ Tồn</th><th>Giá nhập</th><th>Giá bán</th>
+        <th>Bán</th><th>Trừ lỗi</th><th>Hành động</th>
+      </tr>`;
+
     const groupedMenu = {};
-branch.menu.forEach((item, iIndex) => {
-  const cat = item.category || 'Khác';
-  if(!groupedMenu[cat]) groupedMenu[cat] = [];
-  groupedMenu[cat].push({item, iIndex});
-});
 
-Object.keys(groupedMenu).sort().forEach(cat => {
-  html += `<tr onclick="toggleCat('${bIndex}-${cat}')"
-  style="background:#eee;font-weight:bold;cursor:pointer">
-  <td colspan="10">📂 ${cat}</td>
-</tr>
-<tbody id="cat-${bIndex}-${cat}">`;
+    branch.menu.forEach((item, iIndex) => {
+      const cat = item.category || 'Khác';
+      if (!groupedMenu[cat]) groupedMenu[cat] = [];
+      groupedMenu[cat].push({ item, iIndex });
+    });
 
-  groupedMenu[cat].forEach(({item, iIndex}) => {
-    html += `<tr>
-  <td><input value="${item.name}" onchange="editItem(${bIndex},${iIndex},'name',this.value)"></td>
+    Object.keys(groupedMenu).sort().forEach(cat => {
 
-  <td>
-    <input value="${item.category||'Khác'}"
-      onchange="editItem(${bIndex},${iIndex},'category',this.value)">
-  </td>
+      // ✅ FIX: safe id (tránh lỗi tiếng Việt + space)
+      const safeCat = cat.replace(/\s+/g, '-').toLowerCase();
+      const catId = `cat-${bIndex}-${safeCat}`;
 
-  <td><input value="${item.unit||''}" onchange="editItem(${bIndex},${iIndex},'unit',this.value)"></td>
+      // header nhóm
+      html += `
+        <tr onclick="toggleCat('${catId}')"
+          style="background:#eee;font-weight:bold;cursor:pointer">
+          <td colspan="10">📂 ${cat}</td>
+        </tr>
+      `;
 
-  <td><input type="number" value="${item.stock}" onchange="editItem(${bIndex},${iIndex},'stock',this.value)"></td>
+      // tbody nhóm (ẩn mặc định)
+      html += `<tbody id="${catId}" style="display:none">`;
 
-  <td>
-    <input type="number" id="add-stock-${bIndex}-${iIndex}">
-    <button onclick="addStock(${bIndex},${iIndex})">➕</button>
-  </td>
+      groupedMenu[cat].forEach(({ item, iIndex }) => {
+        html += `
+        <tr>
+          <td><input value="${item.name}" onchange="editItem(${bIndex},${iIndex},'name',this.value)"></td>
 
-  <td><input type="number" value="${item.cost||0}" onchange="editItem(${bIndex},${iIndex},'cost',this.value)"></td>
+          <td>
+            <input value="${item.category || 'Khác'}"
+              onchange="editItem(${bIndex},${iIndex},'category',this.value)">
+          </td>
 
-  <td><input type="number" value="${item.price}" onchange="editItem(${bIndex},${iIndex},'price',this.value)"></td>
+          <td><input value="${item.unit || ''}" onchange="editItem(${bIndex},${iIndex},'unit',this.value)"></td>
 
-  <td><input type="number" id="sell-${bIndex}-${iIndex}"></td>
+          <td><input type="number" value="${item.stock}" onchange="editItem(${bIndex},${iIndex},'stock',this.value)"></td>
 
-  <td><input type="number" id="waste-${bIndex}-${iIndex}"></td>
+          <td>
+            <input type="number" id="add-stock-${bIndex}-${iIndex}">
+            <button onclick="addStock(${bIndex},${iIndex})">➕</button>
+          </td>
 
-  <td>
-    <button onclick="sell(${bIndex},${iIndex})">Bán</button>
-    <button onclick="waste(${bIndex},${iIndex})">Lỗi</button>
-    <button onclick="deleteItem(${bIndex},${iIndex})">🗑</button>
-  </td>
-</tr>`;
-});
-    html+=`</table>
+          <td><input type="number" value="${item.cost || 0}" onchange="editItem(${bIndex},${iIndex},'cost',this.value)"></td>
+
+          <td><input type="number" value="${item.price}" onchange="editItem(${bIndex},${iIndex},'price',this.value)"></td>
+
+          <td><input type="number" id="sell-${bIndex}-${iIndex}"></td>
+
+          <td><input type="number" id="waste-${bIndex}-${iIndex}"></td>
+
+          <td>
+            <button onclick="sell(${bIndex},${iIndex})">Bán</button>
+            <button onclick="waste(${bIndex},${iIndex})">Lỗi</button>
+            <button onclick="deleteItem(${bIndex},${iIndex})">🗑</button>
+          </td>
+        </tr>`;
+      });
+
+      html += `</tbody>`;
+    });
+
+    html += `</table>
+
       <div class="form-group">
         <h4>➕ Thêm món</h4>
         <input placeholder="Tên món" id="new-name-${bIndex}">
@@ -173,8 +196,8 @@ Object.keys(groupedMenu).sort().forEach(cat => {
         <button onclick="addItem(${bIndex})">Thêm</button>
       </div>`;
 
+    div.innerHTML = html;
     container.appendChild(div);
-    div.innerHTML=html;
   });
 }
 
@@ -334,6 +357,13 @@ function deleteItem(bIndex,iIndex){
   saveData();
 }
 
+function toggleCat(id){
+  const el = document.getElementById('cat-' + id);
+  if(!el) return;
+
+  el.style.display =
+    (el.style.display === 'none') ? 'table-row-group' : 'none';
+}
 function moveItem(bIndex,iIndex,direction){
   const menu=salesData.branches[bIndex].menu;
   const newIndex=iIndex+direction;
