@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quan-li-cache-v1';
+const CACHE_NAME = 'quan-li-cache-v4';
 const urlsToCache = [
   '../quan-li-thu-chi/',
   '../quan-li-thu-chi/index.html',
