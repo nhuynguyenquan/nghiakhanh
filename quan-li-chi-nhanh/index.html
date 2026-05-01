@@ -179,7 +179,21 @@ function renderBranches(){
 
       html += `</div></div>`;
     });
+    html += `
+  <div class="form-group" style="margin-top:15px;padding:10px;background:#fff8f0;border-radius:8px;">
+    <h4>➕ Thêm món mới</h4>
 
+    <input placeholder="Tên món" id="new-name-${bIndex}">
+    <input placeholder="Nhóm (VD: Nước, Bánh...)" id="new-category-${bIndex}">
+    <input placeholder="Đơn vị" id="new-unit-${bIndex}">
+
+    <input type="number" placeholder="Tồn kho" id="new-stock-${bIndex}">
+    <input type="number" placeholder="Giá nhập" id="new-cost-${bIndex}">
+    <input type="number" placeholder="Giá bán" id="new-price-${bIndex}">
+
+    <button onclick="addItem(${bIndex})">➕ Thêm món</button>
+  </div>
+`;
     div.innerHTML = html;
     container.appendChild(div);
   });
