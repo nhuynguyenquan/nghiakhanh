@@ -1,6 +1,6 @@
 {
-  "name": "Quản lý Nghĩa Khánh - Bán Hàng",
-  "short_name": "NK Bán Hàng",
+  "name": "Bán Hàng Nhụy Nguyên",
+  "short_name": "NN Bán Hàng",
   "start_url": "./banhang.html",
   "display": "standalone",
   "background_color": "#ffffff",
