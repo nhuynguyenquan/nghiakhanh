@@ -105,21 +105,9 @@ function renderBranches(){
     const div = document.createElement('div');
     div.className = 'branch';
 
-    let html = `<h2>${branch.name}</h2>
-      <div>
-        <label>Mã PIN:
-          <input type="password" id="pin-${bIndex}" value="${branch.pin || ''}" onchange="editPin(${bIndex},this.value)">
-        </label>
-        <button onclick="togglePin(${bIndex})">👁️</button>
-      </div>`;
+    let html = `<h2>${branch.name}</h2>`;
 
-    html += `<table>
-      <tr>
-        <th>Món</th><th>Nhóm</th><th>Đơn vị</th><th>Tồn kho</th>
-        <th>+ Tồn</th><th>Giá nhập</th><th>Giá bán</th>
-        <th>Bán</th><th>Trừ lỗi</th><th>Hành động</th>
-      </tr>`;
-
+    // ===== GROUP MENU =====
     const groupedMenu = {};
 
     branch.menu.forEach((item, iIndex) => {
@@ -130,73 +118,67 @@ function renderBranches(){
 
     Object.keys(groupedMenu).sort().forEach(cat => {
 
-       const safeCat = cat
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g,'-');
+      const safeCat = cat.toLowerCase().replace(/[^a-z0-9]/g,'-');
+      const catId = `cat-${bIndex}-${safeCat}`;
 
-  const catId = `cat-${bIndex}-${safeCat}`;
-
-      // header nhóm
       html += `
-        <tr onclick="toggleCat('${catId}')"
-          style="background:#eee;font-weight:bold;cursor:pointer">
-          <td colspan="10">📂 ${cat}</td>
-        </tr>
+        <div style="margin-top:10px;">
+          <div onclick="toggleCat('${catId}')"
+            style="background:#eee;padding:10px;font-weight:bold;cursor:pointer;border-radius:6px;">
+            📂 ${cat}
+          </div>
+
+          <div id="${catId}" style="display:none;padding:5px;">
       `;
 
-      // tbody nhóm (ẩn mặc định)
-      html += `<tbody id="${catId}">`;
+      groupedMenu[cat].forEach(({item, iIndex}) => {
 
-      groupedMenu[cat].forEach(({ item, iIndex }) => {
         html += `
-        <tr>
-          <td><input value="${item.name}" onchange="editItem(${bIndex},${iIndex},'name',this.value)"></td>
+          <div onclick="toggleItem('${bIndex}-${iIndex}')"
+            style="background:#fafafa;margin:5px 0;padding:8px;border-radius:6px;cursor:pointer;">
+            
+            👉 ${item.name} (${item.stock})
 
-          <td>
-            <input value="${item.category || 'Khác'}"
-              onchange="editItem(${bIndex},${iIndex},'category',this.value)">
-          </td>
+            <div id="item-${bIndex}-${iIndex}" style="display:none;margin-top:8px;">
+              
+              <input value="${item.name}"
+                onchange="editItem(${bIndex},${iIndex},'name',this.value)">
 
-          <td><input value="${item.unit || ''}" onchange="editItem(${bIndex},${iIndex},'unit',this.value)"></td>
+              <input value="${item.category || ''}"
+                onchange="editItem(${bIndex},${iIndex},'category',this.value)">
 
-          <td><input type="number" value="${item.stock}" onchange="editItem(${bIndex},${iIndex},'stock',this.value)"></td>
+              <input value="${item.unit || ''}"
+                onchange="editItem(${bIndex},${iIndex},'unit',this.value)">
 
-          <td>
-            <input type="number" id="add-stock-${bIndex}-${iIndex}">
-            <button onclick="addStock(${bIndex},${iIndex})">➕</button>
-          </td>
+              <input type="number" value="${item.stock}"
+                onchange="editItem(${bIndex},${iIndex},'stock',this.value)">
 
-          <td><input type="number" value="${item.cost || 0}" onchange="editItem(${bIndex},${iIndex},'cost',this.value)"></td>
+              <input type="number" value="${item.cost || 0}"
+                onchange="editItem(${bIndex},${iIndex},'cost',this.value)">
 
-          <td><input type="number" value="${item.price}" onchange="editItem(${bIndex},${iIndex},'price',this.value)"></td>
+              <input type="number" value="${item.price}"
+                onchange="editItem(${bIndex},${iIndex},'price',this.value)">
 
-          <td><input type="number" id="sell-${bIndex}-${iIndex}"></td>
+              <br>
 
-          <td><input type="number" id="waste-${bIndex}-${iIndex}"></td>
+              <input type="number" id="add-stock-${bIndex}-${iIndex}" placeholder="+ tồn">
+              <button onclick="addStock(${bIndex},${iIndex})">➕</button>
 
-          <td>
-            <button onclick="sell(${bIndex},${iIndex})">Bán</button>
-            <button onclick="waste(${bIndex},${iIndex})">Lỗi</button>
-            <button onclick="deleteItem(${bIndex},${iIndex})">🗑</button>
-          </td>
-        </tr>`;
+              <input type="number" id="sell-${bIndex}-${iIndex}" placeholder="bán">
+              <button onclick="sell(${bIndex},${iIndex})">Bán</button>
+
+              <input type="number" id="waste-${bIndex}-${iIndex}" placeholder="lỗi">
+              <button onclick="waste(${bIndex},${iIndex})">Lỗi</button>
+
+              <button onclick="deleteItem(${bIndex},${iIndex})">🗑 Xóa</button>
+
+            </div>
+          </div>
+        `;
       });
 
-      html += `</tbody>`;
+      html += `</div></div>`;
     });
-
-    html += `</table>
-
-      <div class="form-group">
-        <h4>➕ Thêm món</h4>
-        <input placeholder="Tên món" id="new-name-${bIndex}">
-        <input placeholder="Nhóm (VD: Nước, Bánh...)" id="new-category-${bIndex}">
-        <input placeholder="Đơn vị" id="new-unit-${bIndex}">
-        <input placeholder="Tồn kho" type="number" id="new-stock-${bIndex}">
-        <input placeholder="Giá nhập" type="number" id="new-cost-${bIndex}">
-        <input placeholder="Giá bán" type="number" id="new-price-${bIndex}">
-        <button onclick="addItem(${bIndex})">Thêm</button>
-      </div>`;
 
     div.innerHTML = html;
     container.appendChild(div);
@@ -319,13 +301,12 @@ function toggleMonth(id){
 }
 function toggleCat(id){
   const el = document.getElementById(id);
-  if(!el) return;
+  el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+}
 
-  if(el.style.display === 'none'){
-    el.style.display = 'table-row-group';
-  }else{
-    el.style.display = 'none';
-  }
+function toggleItem(id){
+  const el = document.getElementById('item-' + id);
+  el.style.display = (el.style.display === 'none') ? 'block' : 'none';
 }
 // =================== CRUD chi nhánh/món ===================
 function addBranch(){
