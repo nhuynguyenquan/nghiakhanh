@@ -168,6 +168,19 @@
     font-size: 14px;
     margin-bottom: 16px;
   }
+  .menu-item {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:6px;
+  background:var(--accent);
+}
+
+.menu-item:hover {
+  background:#ffe6d5;
+}
   </style>
 
   <script>
@@ -257,24 +270,57 @@
   const menuList = document.getElementById("menuList");
   menuList.innerHTML = "";
 
+  // 👉 group theo category
+  const grouped = {};
+
   branchData.menu.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "menu-item";
-    div.dataset.name = item.name;
-
-    div.innerHTML = `
-      <span>${item.name} (${item.stock})</span>
-      <input type="number" min="0" value="0"/>
-    `;
-
-    // 👇 thêm sự kiện input
-    const input = div.querySelector("input");
-    input.addEventListener("input", updateLiveTotal);
-
-    menuList.appendChild(div);
+    const cat = item.category || "Khác";
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(item);
   });
 
-  // reset tổng khi load lại menu
+  Object.keys(grouped).sort().forEach(cat => {
+
+    // tiêu đề nhóm
+    const title = document.createElement("h3");
+    title.textContent = "📂 " + cat;
+    title.style.marginTop = "16px";
+    menuList.appendChild(title);
+
+    grouped[cat].forEach(item => {
+
+      // ❌ bỏ món hết hàng
+      if (item.stock <= 0) return;
+
+      const div = document.createElement("div");
+      div.className = "menu-item";
+      div.dataset.name = item.name;
+
+      div.innerHTML = `
+        <span>
+          ${item.name} 
+          <br>
+          <small>${item.price.toLocaleString()}đ • còn ${item.stock} ${item.unit || ''}</small>
+        </span>
+        <input type="number" min="0" max="${item.stock}" value="0"/>
+      `;
+
+      const input = div.querySelector("input");
+
+      // ✅ không cho nhập quá tồn
+      input.addEventListener("input", () => {
+        let val = parseInt(input.value) || 0;
+        if (val > item.stock) {
+          val = item.stock;
+          input.value = val;
+        }
+        updateLiveTotal();
+      });
+
+      menuList.appendChild(div);
+    });
+  });
+
   updateLiveTotal();
 }
 
