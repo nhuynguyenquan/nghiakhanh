@@ -121,10 +121,12 @@ branch.menu.forEach((item, iIndex) => {
   groupedMenu[cat].push({item, iIndex});
 });
 
-Object.keys(groupedMenu).forEach(cat => {
-  html += `<tr style="background:#eee;font-weight:bold">
-    <td colspan="10">📂 ${cat}</td>
-  </tr>`;
+Object.keys(groupedMenu).sort().forEach(cat => {
+  html += `<tr onclick="toggleCat('${bIndex}-${cat}')"
+  style="background:#eee;font-weight:bold;cursor:pointer">
+  <td colspan="10">📂 ${cat}</td>
+</tr>
+<tbody id="cat-${bIndex}-${cat}">`;
 
   groupedMenu[cat].forEach(({item, iIndex}) => {
     html += `<tr>
