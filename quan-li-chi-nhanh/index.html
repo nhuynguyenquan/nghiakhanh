@@ -142,22 +142,22 @@ function renderBranches(){
             <div id="item-${bIndex}-${iIndex}"onclick="event.stopPropagation()" style="display:none;margin-top:8px;">
               
               <input value="${item.name}"
-                onchange="editItem(${bIndex},${iIndex},'name',this.value)">
+                oninput="editItem(${bIndex},${iIndex},'name',this.value)">
 
               <input value="${item.category || ''}"
-                onchange="editItem(${bIndex},${iIndex},'category',this.value)">
+                oninput="editItem(${bIndex},${iIndex},'category',this.value)">
 
               <input value="${item.unit || ''}"
-                onchange="editItem(${bIndex},${iIndex},'unit',this.value)">
+                oninput="editItem(${bIndex},${iIndex},'unit',this.value)">
 
               <input type="number" value="${item.stock}"
-                onchange="editItem(${bIndex},${iIndex},'stock',this.value)">
+                oninput="editItem(${bIndex},${iIndex},'stock',this.value)">
 
               <input type="number" value="${item.cost || 0}"
-                onchange="editItem(${bIndex},${iIndex},'cost',this.value)">
+                oninput="editItem(${bIndex},${iIndex},'cost',this.value)">
 
               <input type="number" value="${item.price}"
-                onchange="editItem(${bIndex},${iIndex},'price',this.value)">
+                oninput="editItem(${bIndex},${iIndex},'price',this.value)">
 
               <br>
 
@@ -346,7 +346,7 @@ function addItem(bIndex){
     name, unit, stock, price, cost, category
   });
 
-  saveData();renderBranches(); 
+  saveData();
 }
 
 function editItem(bIndex,iIndex,field,value){
@@ -354,7 +354,7 @@ function editItem(bIndex,iIndex,field,value){
   value = parseInt(value) || 0;
 }
   salesData.branches[bIndex].menu[iIndex][field]=value;
-  saveData(false);renderBranches(); 
+  saveData(false);
 }
 
 function deleteItem(bIndex,iIndex){
