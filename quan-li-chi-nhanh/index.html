@@ -380,6 +380,8 @@ function sell(bIndex,iIndex){
   const item=salesData.branches[bIndex].menu[iIndex];
   if(!qty||qty<=0||qty>item.stock) return alert('Số lượng không hợp lệ.');
   item.stock-=qty;
+  const label = document.getElementById(`label-${bIndex}-${iIndex}`);
+label.textContent = `👉 ${item.name} (${item.stock})`;
   salesData.logs.push({
   branch:salesData.branches[bIndex].name,
   item:item.name,
@@ -401,6 +403,8 @@ function waste(bIndex,iIndex){
   const item=salesData.branches[bIndex].menu[iIndex];
   if(!qty||qty<=0||qty>item.stock) return alert('Số lượng trừ lỗi không hợp lệ.');
   item.stock-=qty;
+  const label = document.getElementById(`label-${bIndex}-${iIndex}`);
+label.textContent = `👉 ${item.name} (${item.stock})`;
   salesData.logs.push({
     branch:salesData.branches[bIndex].name,
     item:item.name,
@@ -442,23 +446,24 @@ function addStock(bIndex,iIndex){
 
   const item = salesData.branches[bIndex].menu[iIndex];
 
-  item.stock += qty; // ✅ cộng dồn, không phá logic cũ
+  item.stock += qty;
 
-  const label = input.closest('[onclick]');
-  label.childNodes[0].textContent = `👉 ${item.name} (${item.stock})`;
-  // (tuỳ chọn) log lại nhập kho
+  // ✅ update label đúng cách
+  const label = document.getElementById(`label-${bIndex}-${iIndex}`);
+  label.textContent = `👉 ${item.name} (${item.stock})`;
+
   salesData.logs.push({
-  branch:salesData.branches[bIndex].name,
-  item:item.name,
-  unit:item.unit||'',
-  quantity:qty,
-  price:0,
-  cost:item.cost || 0,
-   type:'import',
-  time:new Date().toISOString()
-});
+    branch:salesData.branches[bIndex].name,
+    item:item.name,
+    unit:item.unit||'',
+    quantity:qty,
+    price:0,
+    cost:item.cost || 0,
+    type:'import',
+    time:new Date().toISOString()
+  });
 
-   saveData(false);
+  saveData(false);
   input.value = '';
 }
 // =================== Telegram ===================
