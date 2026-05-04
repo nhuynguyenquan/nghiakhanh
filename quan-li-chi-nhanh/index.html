@@ -348,29 +348,28 @@ function addItem(bIndex){
     name, unit, stock, price, cost, category
   });
 
-  saveData(true);
+  saveData();
 renderBranches(); 
 }
 
 let saveTimeout;
 
 function editItem(bIndex,iIndex,field,value){
-  if(field==='stock'||field==='price'||field==='cost'){
+  if(['stock','price','cost'].includes(field)){
     value = parseInt(value) || 0;
   }
 
-  const item = salesData.branches[bIndex].menu[iIndex];
-  item[field] = value;
+  salesData.branches[bIndex].menu[iIndex][field] = value;
 
-  // update UI
-  const label = document.getElementById(`label-${bIndex}-${iIndex}`);
-  label.textContent = `👉 ${item.name} (${item.stock})`;
-
-  // debounce save
   clearTimeout(saveTimeout);
   saveTimeout = setTimeout(()=>{
     saveData(false);
   }, 500);
+
+  // 🔥 update nhanh UI
+  const item = salesData.branches[bIndex].menu[iIndex];
+  const label = document.getElementById(`label-${bIndex}-${iIndex}`);
+  label.textContent = `👉 ${item.name} (${item.stock})`;
 }
 
 function deleteItem(bIndex,iIndex){
