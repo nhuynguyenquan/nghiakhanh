@@ -137,27 +137,29 @@ function renderBranches(){
           <div onclick="toggleItem('${bIndex}-${iIndex}')"
             style="background:#fafafa;margin:5px 0;padding:8px;border-radius:6px;cursor:pointer;">
             
-            👉 ${item.name} (${item.stock})
+            <div class="item-label" id="label-${bIndex}-${iIndex}">
+              👉 ${item.name} (${item.stock})
+            </div>
 
             <div id="item-${bIndex}-${iIndex}" onclick="event.stopPropagation()" style="display:none;margin-top:8px;">
               
               <input value="${item.name}"
-                oninput="editItem(${bIndex},${iIndex},'name',this.value)">
+                onchange="editItem(${bIndex},${iIndex},'name',this.value)">
 
               <input value="${item.category || ''}"
-                oninput="editItem(${bIndex},${iIndex},'category',this.value)">
+                onchange="editItem(${bIndex},${iIndex},'category',this.value)">
 
               <input value="${item.unit || ''}"
-                oninput="editItem(${bIndex},${iIndex},'unit',this.value)">
+                onchange="editItem(${bIndex},${iIndex},'unit',this.value)">
 
               <input type="number" value="${item.stock}"
-                oninput="editItem(${bIndex},${iIndex},'stock',this.value)">
+                onchange="editItem(${bIndex},${iIndex},'stock',this.value)">
 
               <input type="number" value="${item.cost || 0}"
-                oninput="editItem(${bIndex},${iIndex},'cost',this.value)">
+                onchange="editItem(${bIndex},${iIndex},'cost',this.value)">
 
               <input type="number" value="${item.price}"
-                oninput="editItem(${bIndex},${iIndex},'price',this.value)">
+                onchange="editItem(${bIndex},${iIndex},'price',this.value)">
 
               <br>
 
@@ -442,6 +444,8 @@ function addStock(bIndex,iIndex){
 
   item.stock += qty; // ✅ cộng dồn, không phá logic cũ
 
+  const label = input.closest('[onclick]');
+  label.childNodes[0].textContent = `👉 ${item.name} (${item.stock})`;
   // (tuỳ chọn) log lại nhập kho
   salesData.logs.push({
   branch:salesData.branches[bIndex].name,
