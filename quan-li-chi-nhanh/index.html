@@ -139,7 +139,7 @@ function renderBranches(){
             
             👉 ${item.name} (${item.stock})
 
-            <div id="item-${bIndex}-${iIndex}" style="display:none;margin-top:8px;">
+            <div id="item-${bIndex}-${iIndex}"onclick="event.stopPropagation()" style="display:none;margin-top:8px;">
               
               <input value="${item.name}"
                 onchange="editItem(${bIndex},${iIndex},'name',this.value)">
