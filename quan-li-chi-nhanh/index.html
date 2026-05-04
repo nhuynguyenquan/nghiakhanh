@@ -161,13 +161,16 @@ function renderBranches(){
 
               <br>
 
-              <button onclick="event.stopPropagation(); addStock(${bIndex},${iIndex})">➕</button>
+              <input type="number" id="add-stock-${bIndex}-${iIndex}" placeholder="+ tồn">
+              <button onclick="event.stopPropagation();addStock(${bIndex},${iIndex})">➕</button>
 
-              <button onclick="event.stopPropagation(); sell(${bIndex},${iIndex})">Bán</button>
+              <input type="number" id="sell-${bIndex}-${iIndex}" placeholder="bán">
+              <button onclick="event.stopPropagation();sell(${bIndex},${iIndex})">Bán</button>
 
-              <button onclick="event.stopPropagation(); waste(${bIndex},${iIndex})">Lỗi</button>
+              <input type="number" id="waste-${bIndex}-${iIndex}" placeholder="lỗi">
+              <button onclick="event.stopPropagation();waste(${bIndex},${iIndex})">Lỗi</button>
 
-              <button onclick="event.stopPropagation(); deleteItem(${bIndex},${iIndex})">🗑 Xóa</button>
+              <button onclick="event.stopPropagation();deleteItem(${bIndex},${iIndex})">🗑 Xóa</button>
 
             </div>
           </div>
