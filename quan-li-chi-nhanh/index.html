@@ -349,7 +349,6 @@ function addItem(bIndex){
   });
 
   saveData();
-renderBranches(); 
 }
 
 let saveTimeout;
@@ -369,7 +368,7 @@ function editItem(bIndex,iIndex,field,value){
   // debounce save
   clearTimeout(saveTimeout);
   saveTimeout = setTimeout(()=>{
-    saveData(false);renderBranches();
+    saveData(false);
   }, 500);
 }
 
