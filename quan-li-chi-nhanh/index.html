@@ -369,7 +369,7 @@ function editItem(bIndex,iIndex,field,value){
   clearTimeout(saveTimeout);
   saveTimeout = setTimeout(()=>{
     saveData(false);
-  }, 500);
+  }, 10);
 }
 
 function deleteItem(bIndex,iIndex){
