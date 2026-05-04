@@ -352,12 +352,25 @@ function addItem(bIndex){
 renderBranches(); 
 }
 
+let saveTimeout;
+
 function editItem(bIndex,iIndex,field,value){
- if(field==='stock'||field==='price'||field==='cost'){
-  value = parseInt(value) || 0;
-}
-  salesData.branches[bIndex].menu[iIndex][field]=value;
-  saveData();
+  if(field==='stock'||field==='price'||field==='cost'){
+    value = parseInt(value) || 0;
+  }
+
+  const item = salesData.branches[bIndex].menu[iIndex];
+  item[field] = value;
+
+  // update UI
+  const label = document.getElementById(`label-${bIndex}-${iIndex}`);
+  label.textContent = `👉 ${item.name} (${item.stock})`;
+
+  // debounce save
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(()=>{
+    saveData(false);
+  }, 500);
 }
 
 function deleteItem(bIndex,iIndex){
