@@ -135,11 +135,11 @@ function renderBranches(){
 
         html += `
           <div onclick="toggleItem('${bIndex}-${iIndex}')"
-            style="background:#fafafa;margin:5px 0;padding:8px;border-radius:6px;cursor:pointer;cursor:pointer;">
+            style="background:#fafafa;margin:5px 0;padding:8px;border-radius:6px;cursor:pointer;">
             
             👉 ${item.name} (${item.stock})
 
-            <div id="item-${bIndex}-${iIndex}"onclick="event.stopPropagation()" style="display:none;margin-top:8px;">
+            <div id="item-${bIndex}-${iIndex}" onclick="event.stopPropagation()" style="display:none;margin-top:8px;">
               
               <input value="${item.name}"
                 oninput="editItem(${bIndex},${iIndex},'name',this.value)">
@@ -346,7 +346,8 @@ function addItem(bIndex){
     name, unit, stock, price, cost, category
   });
 
-  saveData();
+  saveData(false);
+renderBranches(); 
 }
 
 function editItem(bIndex,iIndex,field,value){
@@ -388,7 +389,7 @@ function sell(bIndex,iIndex){
   time:new Date().toISOString()
 });
   sendTelegram(`Đã bán ${qty} ${item.unit||''} ${item.name} tại ${salesData.branches[bIndex].name}`);
-  saveData();
+   saveData(false);
   input.value='';
 }
 
@@ -408,7 +409,7 @@ function waste(bIndex,iIndex){
     time:new Date().toISOString()
   });
   sendTelegram(`Trừ lỗi ${qty} ${item.unit||''} ${item.name} tại ${salesData.branches[bIndex].name}`);
-  saveData();
+   saveData(false);
   input.value='';
 }
 
@@ -453,7 +454,7 @@ function addStock(bIndex,iIndex){
   time:new Date().toISOString()
 });
 
-  saveData();
+   saveData(false);
   input.value = '';
 }
 // =================== Telegram ===================
