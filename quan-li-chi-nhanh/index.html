@@ -134,7 +134,7 @@ function renderBranches(){
       groupedMenu[cat].forEach(({item, iIndex}) => {
 
         html += `
-          <div onclick="toggleItem('${bIndex}-${iIndex}')"
+          <div  style="cursor:pointer;" onclick="toggleItem('${bIndex}-${iIndex}')"
             style="background:#fafafa;margin:5px 0;padding:8px;border-radius:6px;cursor:pointer;">
             
             👉 ${item.name} (${item.stock})
