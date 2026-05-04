@@ -370,7 +370,7 @@ function editItem(bIndex,iIndex,field,value){
   clearTimeout(saveTimeout);
   saveTimeout = setTimeout(()=>{
     saveData(false);
-  }, 500);
+  }, 500);renderBranches();
 }
 
 function deleteItem(bIndex,iIndex){
