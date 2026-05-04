@@ -346,7 +346,7 @@ function addItem(bIndex){
     name, unit, stock, price, cost, category
   });
 
-  saveData();
+  saveData();renderBranches(); 
 }
 
 function editItem(bIndex,iIndex,field,value){
@@ -354,7 +354,7 @@ function editItem(bIndex,iIndex,field,value){
   value = parseInt(value) || 0;
 }
   salesData.branches[bIndex].menu[iIndex][field]=value;
-  saveData(false);
+  saveData(false);renderBranches(); 
 }
 
 function deleteItem(bIndex,iIndex){
