@@ -369,8 +369,8 @@ function editItem(bIndex,iIndex,field,value){
   // debounce save
   clearTimeout(saveTimeout);
   saveTimeout = setTimeout(()=>{
-    saveData(false);
-  }, 500);renderBranches();
+    saveData(false);renderBranches();
+  }, 500);
 }
 
 function deleteItem(bIndex,iIndex){
