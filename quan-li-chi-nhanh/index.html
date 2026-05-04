@@ -382,7 +382,7 @@ function moveItem(bIndex,iIndex,direction){
   const newIndex=iIndex+direction;
   if(newIndex<0||newIndex>=menu.length) return;
   [menu[iIndex],menu[newIndex]]=[menu[newIndex],menu[iIndex]];
-  saveData(false); renderBranches();
+  saveData(false); 
 }
 
 // =================== Bán / Trừ lỗi ===================
@@ -475,7 +475,7 @@ function addStock(bIndex,iIndex){
     time:new Date().toISOString()
   });
 
-  saveData(false);
+  saveData();
   input.value = '';
 }
 // =================== Telegram ===================
