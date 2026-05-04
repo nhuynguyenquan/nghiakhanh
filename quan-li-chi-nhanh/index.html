@@ -134,8 +134,8 @@ function renderBranches(){
       groupedMenu[cat].forEach(({item, iIndex}) => {
 
         html += `
-          <div  style="cursor:pointer;" onclick="toggleItem('${bIndex}-${iIndex}')"
-            style="background:#fafafa;margin:5px 0;padding:8px;border-radius:6px;cursor:pointer;">
+          <div onclick="toggleItem('${bIndex}-${iIndex}')"
+            style="background:#fafafa;margin:5px 0;padding:8px;border-radius:6px;cursor:pointer;cursor:pointer;">
             
             👉 ${item.name} (${item.stock})
 
@@ -161,16 +161,13 @@ function renderBranches(){
 
               <br>
 
-              <input type="number" id="add-stock-${bIndex}-${iIndex}" placeholder="+ tồn">
-              <button onclick="addStock(${bIndex},${iIndex})">➕</button>
+              <button onclick="event.stopPropagation(); addStock(${bIndex},${iIndex})">➕</button>
 
-              <input type="number" id="sell-${bIndex}-${iIndex}" placeholder="bán">
-              <button onclick="sell(${bIndex},${iIndex})">Bán</button>
+              <button onclick="event.stopPropagation(); sell(${bIndex},${iIndex})">Bán</button>
 
-              <input type="number" id="waste-${bIndex}-${iIndex}" placeholder="lỗi">
-              <button onclick="waste(${bIndex},${iIndex})">Lỗi</button>
+              <button onclick="event.stopPropagation(); waste(${bIndex},${iIndex})">Lỗi</button>
 
-              <button onclick="deleteItem(${bIndex},${iIndex})">🗑 Xóa</button>
+              <button onclick="event.stopPropagation(); deleteItem(${bIndex},${iIndex})">🗑 Xóa</button>
 
             </div>
           </div>
