@@ -62,7 +62,9 @@ if('serviceWorker' in navigator){
   <h2>📈 Báo cáo tổng hợp</h2>
   <div id="report"></div>
 </div>
-
+<button onclick="deleteOldLogs()">
+🗑 Xóa log cũ hơn 3 tháng
+</button>
 <div>
   <h2>➕ Thêm chi nhánh mới</h2>
   <input id="newBranchName" placeholder="Tên chi nhánh">
@@ -93,6 +95,31 @@ async function fetchSalesData(){
   renderBranches();
   renderReport();
 }
+
+async function deleteOldLogs(){
+
+  if(!confirm("Xóa toàn bộ log cũ hơn 3 tháng?"))
+    return;
+
+  const before = salesData.logs.length;
+
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - 3);
+
+  salesData.logs = salesData.logs.filter(log => {
+    if(!log.time) return false;
+    return new Date(log.time) >= cutoff;
+  });
+
+  const removed = before - salesData.logs.length;
+
+  await saveData(false);
+
+  renderReport();
+
+  alert(`Đã xóa ${removed} log cũ`);
+}
+
 
 function getFilterDate(){ return document.getElementById('filterDate').value; }
 
