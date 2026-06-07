@@ -230,324 +230,267 @@ function renderBranches(){
 
 // =================== Render báo cáo ===================
 function renderReport(){
+  const report = document.getElementById('report');
 
-const report = document.getElementById('report');
+  const grouped = {};
+  const itemStats = {};
 
-const grouped = {};
-const itemStats = {};
+  salesData.logs.forEach(log=>{
 
-salesData.logs.forEach(log=>{
+    if(!log.time) return;
 
-```
-if(!log.time) return;
+    const date = log.time.slice(0,10);
+    const month = log.time.slice(0,7);
 
-const date = log.time.slice(0,10);
-const month = log.time.slice(0,7);
+    if(!grouped[month]) grouped[month] = {};
+    if(!grouped[month][date]) grouped[month][date] = [];
 
-if(!grouped[month]) grouped[month] = {};
-if(!grouped[month][date]) grouped[month][date] = [];
+    grouped[month][date].push(log);
 
-grouped[month][date].push(log);
+    // ===== thống kê món =====
+    if((!log.type || log.type === 'sell')){
 
-if(!log.type || log.type === 'sell'){
+      const revenue = log.price * log.quantity;
+      const profit =
+        (log.price - (log.cost || 0)) * log.quantity;
 
-  const revenue = log.price * log.quantity;
-  const profit =
-    (log.price - (log.cost || 0)) * log.quantity;
+      if(!itemStats[date]){
+        itemStats[date] = {};
+      }
 
-  if(!itemStats[date]){
-    itemStats[date] = {
-      revenue:0,
-      profit:0,
-      items:{}
-    };
+      if(!itemStats[date][log.item]){
+        itemStats[date][log.item] = {
+          qty:0,
+          revenue:0,
+          profit:0
+        };
+      }
+
+      itemStats[date][log.item].qty += log.quantity;
+      itemStats[date][log.item].revenue += revenue;
+      itemStats[date][log.item].profit += profit;
+    }
+  });
+
+  const months = Object.keys(grouped)
+    .sort((a,b)=>b.localeCompare(a));
+
+  if(months.length===0){
+    report.innerHTML = 'Không có dữ liệu để hiển thị.';
+    return;
   }
 
-  if(!itemStats[date].items[log.item]){
-    itemStats[date].items[log.item] = {
-      qty:0,
-      revenue:0,
-      profit:0
-    };
-  }
+  let html = '';
 
-  itemStats[date].items[log.item].qty += log.quantity;
-  itemStats[date].items[log.item].revenue += revenue;
-  itemStats[date].items[log.item].profit += profit;
-
-  itemStats[date].revenue += revenue;
-  itemStats[date].profit += profit;
-}
-```
-
-});
-
-const months = Object.keys(grouped)
-.sort((a,b)=>b.localeCompare(a));
-
-if(months.length===0){
-report.innerHTML = 'Không có dữ liệu để hiển thị.';
-return;
-}
-
-let html = '';
-
-// =================================
-// THỐNG KÊ MÓN THEO NGÀY
-// =================================
-
-html += `
-
-  <div class="month-section">
-    <div class="month-header">
-      🍜 Thống kê món bán theo ngày
-    </div>
-  </div>
-  `;
-
-Object.keys(itemStats)
-.sort((a,b)=>b.localeCompare(a))
-.forEach((date,index)=>{
-
-```
-  const stat = itemStats[date];
-  const dayId = `item-day-${index}`;
+  // ==========================
+  // THỐNG KÊ MÓN
+  // ==========================
 
   html += `
   <div class="month-section">
-
     <div class="month-header"
-      onclick="toggleMonth('${dayId}')">
-
-      📅 ${date}
-      | Doanh thu:
-      ${stat.revenue.toLocaleString()}₫
-      | Lợi nhuận:
-      ${stat.profit.toLocaleString()}₫
-
+      onclick="toggleMonth('item-stat-report')">
+      🍜 Doanh thu theo món từng ngày
     </div>
 
-    <div id="${dayId}"
+    <div id="item-stat-report"
       class="month-content">
 
       <table>
-
         <thead>
           <tr>
+            <th>Ngày</th>
             <th>Món</th>
             <th>Số lượng</th>
             <th>Doanh thu</th>
             <th>Lợi nhuận</th>
           </tr>
         </thead>
-
         <tbody>
   `;
 
-  Object.entries(stat.items)
-    .sort((a,b)=>b[1].revenue-a[1].revenue)
-    .forEach(([item,data])=>{
+  Object.keys(itemStats)
+    .sort((a,b)=>b.localeCompare(a))
+    .forEach(date=>{
 
-      html += `
-      <tr>
-        <td data-label="Món">${item}</td>
+      Object.entries(itemStats[date])
+        .sort((a,b)=>b[1].revenue-a[1].revenue)
+        .forEach(([item,data])=>{
 
-        <td data-label="Số lượng">
-          ${data.qty}
-        </td>
+          html += `
+          <tr>
+            <td data-label="Ngày">${date}</td>
+            <td data-label="Món">${item}</td>
+            <td data-label="Số lượng">${data.qty}</td>
+            <td data-label="Doanh thu">
+              ${data.revenue.toLocaleString()}₫
+            </td>
+            <td data-label="Lợi nhuận">
+              ${data.profit.toLocaleString()}₫
+            </td>
+          </tr>
+          `;
+        });
 
-        <td data-label="Doanh thu">
-          ${data.revenue.toLocaleString()}₫
-        </td>
-
-        <td data-label="Lợi nhuận">
-          ${data.profit.toLocaleString()}₫
-        </td>
-      </tr>
-      `;
     });
 
   html += `
-        <tr style="
-          background:#f1f1f1;
-          font-weight:bold;
-        ">
-          <td>Tổng ngày</td>
-          <td></td>
-          <td>${stat.revenue.toLocaleString()}₫</td>
-          <td>${stat.profit.toLocaleString()}₫</td>
-        </tr>
-
         </tbody>
-
       </table>
-
     </div>
-
   </div>
   `;
-});
-```
 
-// =================================
-// BÁO CÁO CHI TIẾT THEO THÁNG
-// =================================
+  // ==========================
+  // BÁO CÁO THÁNG
+  // ==========================
 
-months.forEach((month,index)=>{
+  months.forEach((month,index)=>{
 
-```
-const monthId = `month-${index}`;
+    const monthId = `month-${index}`;
 
-let monthTotal = 0;
-let monthProfit = 0;
-let monthTable = '';
+    let monthTotal = 0;
+    let monthProfit = 0;
+    let monthTable = '';
 
-const days = Object.keys(grouped[month])
-  .sort((a,b)=>b.localeCompare(a));
+    const days = Object.keys(grouped[month])
+      .sort((a,b)=>b.localeCompare(a));
 
-days.forEach(date=>{
+    days.forEach(date=>{
 
-  let dayTotal = 0;
-  let dayProfit = 0;
-  let dayRows = '';
+      let dayTotal = 0;
+      let dayProfit = 0;
+      let dayRows = '';
 
-  grouped[month][date].forEach(log=>{
+      grouped[month][date].forEach(log=>{
 
-    let amount = 0;
-    let profit = 0;
+        let amount = 0;
+        let profit = 0;
 
-    if(!log.type || log.type === 'sell'){
-      amount = log.price * log.quantity;
-      profit =
-        (log.price - (log.cost || 0))
-        * log.quantity;
-    }
-
-    dayTotal += amount;
-    monthTotal += amount;
-
-    dayProfit += profit;
-    monthProfit += profit;
-
-    dayRows += `
-    <tr>
-
-      <td data-label="Ngày">
-        ${date}
-      </td>
-
-      <td data-label="Chi nhánh">
-        ${log.branch}
-      </td>
-
-      <td data-label="Món">
-        ${log.item}
-      </td>
-
-      <td data-label="Số lượng">
-        ${log.quantity} ${log.unit || ''}
-      </td>
-
-      <td data-label="Giá">
-        ${
-          (!log.type || log.type === 'sell')
-          ? log.price.toLocaleString() + '₫'
-          : '-'
+        if(!log.type || log.type === 'sell'){
+          amount = log.price * log.quantity;
+          profit =
+            (log.price - (log.cost || 0))
+            * log.quantity;
         }
-      </td>
 
-      <td data-label="Thành tiền">
-        ${
-          amount
-          ? amount.toLocaleString() + '₫'
-          : '-'
-        }
-      </td>
+        dayTotal += amount;
+        monthTotal += amount;
 
-      <td data-label="Lợi nhuận">
-        ${
-          profit
-          ? profit.toLocaleString() + '₫'
-          : '-'
-        }
-      </td>
+        dayProfit += profit;
+        monthProfit += profit;
 
-    </tr>
+        dayRows += `
+        <tr>
+          <td data-label="Ngày">${date}</td>
+
+          <td data-label="Chi nhánh">
+            ${log.branch}
+          </td>
+
+          <td data-label="Món">
+            ${log.item}
+          </td>
+
+          <td data-label="Số lượng">
+            ${log.quantity} ${log.unit || ''}
+          </td>
+
+          <td data-label="Giá">
+            ${
+              (!log.type || log.type==='sell')
+              ? log.price.toLocaleString()+'₫'
+              : '-'
+            }
+          </td>
+
+          <td data-label="Thành tiền">
+            ${
+              amount
+              ? amount.toLocaleString()+'₫'
+              : '-'
+            }
+          </td>
+
+          <td data-label="Lợi nhuận">
+            ${
+              profit
+              ? profit.toLocaleString()+'₫'
+              : '-'
+            }
+          </td>
+        </tr>
+        `;
+      });
+
+      dayRows += `
+      <tr style="
+        background:#f1f1f1;
+        font-weight:bold;
+      ">
+        <td colspan="5">
+          Tổng ngày ${date}
+        </td>
+
+        <td>
+          ${dayTotal.toLocaleString()}₫
+        </td>
+
+        <td>
+          ${dayProfit.toLocaleString()}₫
+        </td>
+      </tr>
+      `;
+
+      monthTable += dayRows;
+    });
+
+    html += `
+    <div class="month-section">
+
+      <div class="month-header"
+        onclick="toggleMonth('${monthId}')">
+
+        🗓 Tháng ${month}
+
+        — Doanh thu:
+        ${monthTotal.toLocaleString()}₫
+
+        | Lợi nhuận:
+        ${monthProfit.toLocaleString()}₫
+      </div>
+
+      <div id="${monthId}"
+        class="month-content">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Ngày</th>
+              <th>Chi nhánh</th>
+              <th>Món</th>
+              <th>Số lượng</th>
+              <th>Giá</th>
+              <th>Thành tiền</th>
+              <th>Lợi nhuận</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${monthTable}
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
     `;
   });
 
-  dayRows += `
-  <tr style="
-    background:#f1f1f1;
-    font-weight:bold;
-  ">
-    <td colspan="5">
-      Tổng ngày ${date}
-    </td>
-
-    <td>
-      ${dayTotal.toLocaleString()}₫
-    </td>
-
-    <td>
-      ${dayProfit.toLocaleString()}₫
-    </td>
-  </tr>
-  `;
-
-  monthTable += dayRows;
-});
-
-html += `
-<div class="month-section">
-
-  <div class="month-header"
-    onclick="toggleMonth('${monthId}')">
-
-    🗓 Tháng ${month}
-
-    — Doanh thu:
-    ${monthTotal.toLocaleString()}₫
-
-    | Lợi nhuận:
-    ${monthProfit.toLocaleString()}₫
-
-  </div>
-
-  <div id="${monthId}"
-    class="month-content">
-
-    <table>
-
-      <thead>
-        <tr>
-          <th>Ngày</th>
-          <th>Chi nhánh</th>
-          <th>Món</th>
-          <th>Số lượng</th>
-          <th>Giá</th>
-          <th>Thành tiền</th>
-          <th>Lợi nhuận</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        ${monthTable}
-      </tbody>
-
-    </table>
-
-  </div>
-
-</div>
-`;
-```
-
-});
-
-report.innerHTML = html;
+  report.innerHTML = html;
 }
-
 
 function toggleMonth(id){
   const el=document.getElementById(id);
