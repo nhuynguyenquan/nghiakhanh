@@ -229,265 +229,210 @@ function renderBranches(){
 }
 
 // =================== Render báo cáo ===================
-function renderReport(){
-  const report = document.getElementById('report');
+function renderReport() {
 
-  const grouped = {};
-  const itemStats = {};
+  const report = document.getElementById("report");
 
-  salesData.logs.forEach(log=>{
-
-    if(!log.time) return;
-
-    const date = log.time.slice(0,10);
-    const month = log.time.slice(0,7);
-
-    if(!grouped[month]) grouped[month] = {};
-    if(!grouped[month][date]) grouped[month][date] = [];
-
-    grouped[month][date].push(log);
-
-    // ===== thống kê món =====
-    if((!log.type || log.type === 'sell')){
-
-      const revenue = log.price * log.quantity;
-      const profit =
-        (log.price - (log.cost || 0)) * log.quantity;
-
-      if(!itemStats[date]){
-        itemStats[date] = {};
-      }
-
-      if(!itemStats[date][log.item]){
-        itemStats[date][log.item] = {
-          qty:0,
-          revenue:0,
-          profit:0
-        };
-      }
-
-      itemStats[date][log.item].qty += log.quantity;
-      itemStats[date][log.item].revenue += revenue;
-      itemStats[date][log.item].profit += profit;
-    }
-  });
-
-  const months = Object.keys(grouped)
-    .sort((a,b)=>b.localeCompare(a));
-
-  if(months.length===0){
-    report.innerHTML = 'Không có dữ liệu để hiển thị.';
+  if (!salesData.logs || salesData.logs.length === 0) {
+    report.innerHTML = "Không có dữ liệu.";
     return;
   }
 
-  let html = '';
+  const months = {};
 
-  // ==========================
-  // THỐNG KÊ MÓN
-  // ==========================
+  salesData.logs.forEach(log => {
 
-  html += `
-  <div class="month-section">
-    <div class="month-header"
-      onclick="toggleMonth('item-stat-report')">
-      🍜 Doanh thu theo món từng ngày
-    </div>
+    if (!log.time) return;
+    if (log.type && log.type !== "sell") return;
 
-    <div id="item-stat-report"
-      class="month-content">
+    const month = log.time.slice(0, 7);
+    const date = log.time.slice(0, 10);
 
-      <table>
-        <thead>
-          <tr>
-            <th>Ngày</th>
-            <th>Món</th>
-            <th>Số lượng</th>
-            <th>Doanh thu</th>
-            <th>Lợi nhuận</th>
-          </tr>
-        </thead>
-        <tbody>
-  `;
+    if (!months[month]) {
+      months[month] = {
+        revenue: 0,
+        profit: 0,
+        days: {}
+      };
+    }
 
-  Object.keys(itemStats)
-    .sort((a,b)=>b.localeCompare(a))
-    .forEach(date=>{
+    if (!months[month].days[date]) {
+      months[month].days[date] = {
+        revenue: 0,
+        profit: 0,
+        items: {}
+      };
+    }
 
-      Object.entries(itemStats[date])
-        .sort((a,b)=>b[1].revenue-a[1].revenue)
-        .forEach(([item,data])=>{
+    const revenue = log.price * log.quantity;
+    const profit =
+      (log.price - (log.cost || 0)) * log.quantity;
+
+    months[month].revenue += revenue;
+    months[month].profit += profit;
+
+    months[month].days[date].revenue += revenue;
+    months[month].days[date].profit += profit;
+
+    if (!months[month].days[date].items[log.item]) {
+      months[month].days[date].items[log.item] = {
+        qty: 0,
+        revenue: 0,
+        profit: 0
+      };
+    }
+
+    const item =
+      months[month].days[date].items[log.item];
+
+    item.qty += log.quantity;
+    item.revenue += revenue;
+    item.profit += profit;
+  });
+
+  let html = "";
+
+  Object.keys(months)
+    .sort((a, b) => b.localeCompare(a))
+    .forEach((month, monthIndex) => {
+
+      const monthData = months[month];
+      const monthId = `month-${monthIndex}`;
+
+      html += `
+      <div class="month-section">
+
+        <div class="month-header"
+          onclick="toggleMonth('${monthId}')">
+
+          🗓 Tháng ${month}
+          |
+          Doanh thu:
+          ${monthData.revenue.toLocaleString()}₫
+          |
+          Lợi nhuận:
+          ${monthData.profit.toLocaleString()}₫
+
+        </div>
+
+        <div id="${monthId}"
+          class="month-content">
+      `;
+
+      Object.keys(monthData.days)
+        .sort((a, b) => b.localeCompare(a))
+        .forEach((date, dayIndex) => {
+
+          const dayData = monthData.days[date];
+          const dayId =
+            `${monthId}-day-${dayIndex}`;
 
           html += `
-          <tr>
-            <td data-label="Ngày">${date}</td>
-            <td data-label="Món">${item}</td>
-            <td data-label="Số lượng">${data.qty}</td>
-            <td data-label="Doanh thu">
-              ${data.revenue.toLocaleString()}₫
-            </td>
-            <td data-label="Lợi nhuận">
-              ${data.profit.toLocaleString()}₫
-            </td>
-          </tr>
+          <div style="
+            margin-bottom:15px;
+            border:1px solid #ddd;
+            border-radius:6px;
+          ">
+
+            <div
+              onclick="toggleMonth('${dayId}')"
+              style="
+                padding:10px;
+                background:#f5f5f5;
+                cursor:pointer;
+                font-weight:bold;
+              ">
+
+              📅 ${date}
+              |
+              Doanh thu:
+              ${dayData.revenue.toLocaleString()}₫
+              |
+              Lợi nhuận:
+              ${dayData.profit.toLocaleString()}₫
+
+            </div>
+
+            <div
+              id="${dayId}"
+              style="
+                display:none;
+                padding:10px;
+              ">
+
+              <table>
+
+                <thead>
+                  <tr>
+                    <th>Món</th>
+                    <th>SL</th>
+                    <th>Doanh thu</th>
+                    <th>Lợi nhuận</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+          `;
+
+          Object.entries(dayData.items)
+            .sort((a, b) =>
+              b[1].revenue - a[1].revenue
+            )
+            .forEach(([itemName, item]) => {
+
+              html += `
+              <tr>
+
+                <td data-label="Món">
+                  ${itemName}
+                </td>
+
+                <td data-label="SL">
+                  ${item.qty}
+                </td>
+
+                <td data-label="Doanh thu">
+                  ${item.revenue.toLocaleString()}₫
+                </td>
+
+                <td data-label="Lợi nhuận">
+                  ${item.profit.toLocaleString()}₫
+                </td>
+
+              </tr>
+              `;
+            });
+
+          html += `
+                <tr style="
+                  background:#f1f1f1;
+                  font-weight:bold;
+                ">
+                  <td>Tổng ngày</td>
+                  <td></td>
+                  <td>
+                    ${dayData.revenue.toLocaleString()}₫
+                  </td>
+                  <td>
+                    ${dayData.profit.toLocaleString()}₫
+                  </td>
+                </tr>
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </div>
           `;
         });
 
-    });
-
-  html += `
-        </tbody>
-      </table>
-    </div>
-  </div>
-  `;
-
-  // ==========================
-  // BÁO CÁO THÁNG
-  // ==========================
-
-  months.forEach((month,index)=>{
-
-    const monthId = `month-${index}`;
-
-    let monthTotal = 0;
-    let monthProfit = 0;
-    let monthTable = '';
-
-    const days = Object.keys(grouped[month])
-      .sort((a,b)=>b.localeCompare(a));
-
-    days.forEach(date=>{
-
-      let dayTotal = 0;
-      let dayProfit = 0;
-      let dayRows = '';
-
-      grouped[month][date].forEach(log=>{
-
-        let amount = 0;
-        let profit = 0;
-
-        if(!log.type || log.type === 'sell'){
-          amount = log.price * log.quantity;
-          profit =
-            (log.price - (log.cost || 0))
-            * log.quantity;
-        }
-
-        dayTotal += amount;
-        monthTotal += amount;
-
-        dayProfit += profit;
-        monthProfit += profit;
-
-        dayRows += `
-        <tr>
-          <td data-label="Ngày">${date}</td>
-
-          <td data-label="Chi nhánh">
-            ${log.branch}
-          </td>
-
-          <td data-label="Món">
-            ${log.item}
-          </td>
-
-          <td data-label="Số lượng">
-            ${log.quantity} ${log.unit || ''}
-          </td>
-
-          <td data-label="Giá">
-            ${
-              (!log.type || log.type==='sell')
-              ? log.price.toLocaleString()+'₫'
-              : '-'
-            }
-          </td>
-
-          <td data-label="Thành tiền">
-            ${
-              amount
-              ? amount.toLocaleString()+'₫'
-              : '-'
-            }
-          </td>
-
-          <td data-label="Lợi nhuận">
-            ${
-              profit
-              ? profit.toLocaleString()+'₫'
-              : '-'
-            }
-          </td>
-        </tr>
-        `;
-      });
-
-      dayRows += `
-      <tr style="
-        background:#f1f1f1;
-        font-weight:bold;
-      ">
-        <td colspan="5">
-          Tổng ngày ${date}
-        </td>
-
-        <td>
-          ${dayTotal.toLocaleString()}₫
-        </td>
-
-        <td>
-          ${dayProfit.toLocaleString()}₫
-        </td>
-      </tr>
+      html += `
+        </div>
+      </div>
       `;
-
-      monthTable += dayRows;
     });
-
-    html += `
-    <div class="month-section">
-
-      <div class="month-header"
-        onclick="toggleMonth('${monthId}')">
-
-        🗓 Tháng ${month}
-
-        — Doanh thu:
-        ${monthTotal.toLocaleString()}₫
-
-        | Lợi nhuận:
-        ${monthProfit.toLocaleString()}₫
-      </div>
-
-      <div id="${monthId}"
-        class="month-content">
-
-        <table>
-
-          <thead>
-            <tr>
-              <th>Ngày</th>
-              <th>Chi nhánh</th>
-              <th>Món</th>
-              <th>Số lượng</th>
-              <th>Giá</th>
-              <th>Thành tiền</th>
-              <th>Lợi nhuận</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            ${monthTable}
-          </tbody>
-
-        </table>
-
-      </div>
-
-    </div>
-    `;
-  });
 
   report.innerHTML = html;
 }
