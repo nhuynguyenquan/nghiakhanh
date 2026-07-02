@@ -294,10 +294,9 @@
       try {
         await fetch(SCRIPT_URL, {
           method: "POST",
-          //headers: { "Content-Type": "application/json" },
-         // mode: "no-cors", 
-          body: JSON.stringify(salesData),
-          keepalive: true
+          headers: { "Content-Type": "application/json" },
+          mode: "no-cors", 
+          body: JSON.stringify(salesData)
         });
 
         alert("✅ Gửi đơn thành công!");
